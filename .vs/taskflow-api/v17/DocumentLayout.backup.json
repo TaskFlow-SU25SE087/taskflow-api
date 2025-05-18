@@ -1,0 +1,425 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\code\\dotNet\\SEP\\taskflow-api\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250518152358_Add-table-log.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:taskflow-api\\Migrations\\20250518152358_Add-table-log.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\data\\taskflowdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\data\\taskflowdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\logproject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\logproject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250518152028_InitialCreate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:taskflow-api\\Migrations\\20250518152028_InitialCreate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\taskuser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\taskuser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\enums\\sprintstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\enums\\sprintstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\enums\\taskpriority.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\enums\\taskpriority.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\enums\\projectrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\enums\\projectrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\model\\loginmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\model\\loginmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\enums\\userrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\enums\\userrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\model\\registermodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\model\\registermodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\sprint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\sprint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\projectmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\projectmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\taskproject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\taskproject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250517153849_InitialCreate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:taskflow-api\\Migrations\\20250517153849_InitialCreate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\project.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\project.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\board.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\board.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515085143_update-database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:taskflow-api\\Migrations\\20250515085143_update-database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515082818_sprin-and-task.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:taskflow-api\\Migrations\\20250515082818_sprin-and-task.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515082453_add-table-sprint_taskproject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:taskflow-api\\Migrations\\20250515082453_add-table-sprint_taskproject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|e:\\code\\dotnet\\sep\\taskflow-api\\taskflow-api\\entity\\issue.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A619E3CB-7D58-4916-8A5B-0E547EDB4737}|taskflow-api\\taskflow-api.csproj|solutionrelative:taskflow-api\\entity\\issue.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "20250518152358_Add-table-log.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250518152358_Add-table-log.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Migrations\\20250518152358_Add-table-log.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250518152358_Add-table-log.cs",
+              "RelativeToolTip": "taskflow-api\\Migrations\\20250518152358_Add-table-log.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-18T15:23:58.448Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "20250518152028_InitialCreate.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250518152028_InitialCreate.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Migrations\\20250518152028_InitialCreate.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250518152028_InitialCreate.cs",
+              "RelativeToolTip": "taskflow-api\\Migrations\\20250518152028_InitialCreate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-18T15:20:28.62Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LogProject.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\LogProject.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\LogProject.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\LogProject.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\LogProject.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAQAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-18T14:32:26.721Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "TaskFlowDbContext.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Data\\TaskFlowDbContext.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Data\\TaskFlowDbContext.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Data\\TaskFlowDbContext.cs",
+              "RelativeToolTip": "taskflow-api\\Data\\TaskFlowDbContext.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAA1wBcAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-18T14:05:47.345Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Program.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Program.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Program.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Program.cs",
+              "RelativeToolTip": "taskflow-api\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T02:13:53.188Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "User.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\User.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\User.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\User.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T02:31:57.948Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "TaskUser.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\TaskUser.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\TaskUser.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\TaskUser.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\TaskUser.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAgAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-16T08:55:43.754Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "SprintStatus.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\SprintStatus.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Enums\\SprintStatus.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\SprintStatus.cs",
+              "RelativeToolTip": "taskflow-api\\Enums\\SprintStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T07:38:50.465Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ProjectRole.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\ProjectRole.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Enums\\ProjectRole.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\ProjectRole.cs",
+              "RelativeToolTip": "taskflow-api\\Enums\\ProjectRole.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T12:11:27.554Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "RegisterModel.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Model\\RegisterModel.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Model\\RegisterModel.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Model\\RegisterModel.cs",
+              "RelativeToolTip": "taskflow-api\\Model\\RegisterModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAsAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-17T14:39:22.3Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "TaskPriority.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\TaskPriority.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Enums\\TaskPriority.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\TaskPriority.cs",
+              "RelativeToolTip": "taskflow-api\\Enums\\TaskPriority.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-16T08:52:30.335Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "UserRole.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\UserRole.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Enums\\UserRole.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Enums\\UserRole.cs",
+              "RelativeToolTip": "taskflow-api\\Enums\\UserRole.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T12:06:40.98Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\appsettings.json",
+              "RelativeDocumentMoniker": "taskflow-api\\appsettings.json",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\appsettings.json",
+              "RelativeToolTip": "taskflow-api\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-15T02:13:57.828Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "LoginModel.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Model\\LoginModel.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Model\\LoginModel.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Model\\LoginModel.cs",
+              "RelativeToolTip": "taskflow-api\\Model\\LoginModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAQAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-17T14:36:51.724Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Sprint.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Sprint.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\Sprint.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Sprint.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\Sprint.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAIA8wBMAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T07:05:04.134Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "ProjectMember.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\ProjectMember.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\ProjectMember.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\ProjectMember.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\ProjectMember.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAoAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T03:37:33.844Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "TaskProject.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\TaskProject.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\TaskProject.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\TaskProject.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\TaskProject.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAIAywBoAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T07:14:42.87Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "20250517153849_InitialCreate.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250517153849_InitialCreate.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Migrations\\20250517153849_InitialCreate.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250517153849_InitialCreate.cs",
+              "RelativeToolTip": "taskflow-api\\Migrations\\20250517153849_InitialCreate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-17T15:38:49.334Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "taskflow-api\\Properties\\launchSettings.json",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Properties\\launchSettings.json",
+              "RelativeToolTip": "taskflow-api\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-17T14:20:45.151Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "Issue.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Issue.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\Issue.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Issue.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\Issue.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAwA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-17T02:32:48.924Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Project.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Project.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\Project.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Project.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\Project.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAEwA8AAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T03:21:02.737Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Board.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Board.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Entity\\Board.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Entity\\Board.cs",
+              "RelativeToolTip": "taskflow-api\\Entity\\Board.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T04:11:03.036Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "20250515085143_update-database.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515085143_update-database.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Migrations\\20250515085143_update-database.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515085143_update-database.cs",
+              "RelativeToolTip": "taskflow-api\\Migrations\\20250515085143_update-database.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T08:51:43.86Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "20250515082818_sprin-and-task.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515082818_sprin-and-task.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Migrations\\20250515082818_sprin-and-task.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515082818_sprin-and-task.cs",
+              "RelativeToolTip": "taskflow-api\\Migrations\\20250515082818_sprin-and-task.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T08:28:18.775Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "20250515082453_add-table-sprint_taskproject.cs",
+              "DocumentMoniker": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515082453_add-table-sprint_taskproject.cs",
+              "RelativeDocumentMoniker": "taskflow-api\\Migrations\\20250515082453_add-table-sprint_taskproject.cs",
+              "ToolTip": "E:\\code\\dotNet\\SEP\\taskflow-api\\taskflow-api\\Migrations\\20250515082453_add-table-sprint_taskproject.cs",
+              "RelativeToolTip": "taskflow-api\\Migrations\\20250515082453_add-table-sprint_taskproject.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T08:24:53.862Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
