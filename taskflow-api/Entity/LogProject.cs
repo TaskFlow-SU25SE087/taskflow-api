@@ -12,9 +12,9 @@ namespace taskflow_api.Entity
         public Guid ProjectMemberId { get; set; }
         [Required]
         public Guid ProjectId { get; set; }
-        public Project Project { get; set; }
+        public Project Project { get; set; } = null!;
         public DateTime Timestamp { get; set; }
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
 
         //changes Board
         public Guid? OldBoard { get; set; }

@@ -12,8 +12,8 @@ using taskflow_api.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    [Migration("20250518152358_Add-table-log")]
-    partial class Addtablelog
+    [Migration("20250521121814_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

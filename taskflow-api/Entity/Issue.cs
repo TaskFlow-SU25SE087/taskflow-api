@@ -9,8 +9,8 @@ namespace taskflow_api.Entity
         public Guid TaskProjectID { get; set; }
         public TaskProject TaskProject { get; set; } = null!;
         [Required]
-        public string title { get; set; }
-        public string description { get; set; }
+        public string title { get; set; } = string.Empty;
+        public string description { get; set; } = string.Empty;
         public bool IsActive { get; set; } = false;
         public DateTime CreatedAt { get; set; }
 

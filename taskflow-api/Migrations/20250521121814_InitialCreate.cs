@@ -222,7 +222,7 @@ namespace taskflow_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Issue",
+                name: "Issues",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -234,9 +234,9 @@ namespace taskflow_api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Issue", x => x.Id);
+                    table.PrimaryKey("PK_Issues", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Issue_TaskProjects_TaskProjectID",
+                        name: "FK_Issues_TaskProjects_TaskProjectID",
                         column: x => x.TaskProjectID,
                         principalTable: "TaskProjects",
                         principalColumn: "Id",
@@ -244,7 +244,7 @@ namespace taskflow_api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskUsers",
+                name: "LogProjects",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -259,22 +259,22 @@ namespace taskflow_api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskUsers", x => x.Id);
+                    table.PrimaryKey("PK_LogProjects", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskUsers_Projects_ProjectId",
+                        name: "FK_LogProjects_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TaskUsers_TaskProjects_TaskProjectID",
+                        name: "FK_LogProjects_TaskProjects_TaskProjectID",
                         column: x => x.TaskProjectID,
                         principalTable: "TaskProjects",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskUser",
+                name: "TaskUsers",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -289,20 +289,20 @@ namespace taskflow_api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskUser", x => x.Id);
+                    table.PrimaryKey("PK_TaskUsers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskUser_Issue_IssueID",
+                        name: "FK_TaskUsers_Issues_IssueID",
                         column: x => x.IssueID,
-                        principalTable: "Issue",
+                        principalTable: "Issues",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_TaskUser_ProjectMembers_ProjectMemberID",
+                        name: "FK_TaskUsers_ProjectMembers_ProjectMemberID",
                         column: x => x.ProjectMemberID,
                         principalTable: "ProjectMembers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TaskUser_TaskProjects_TaskId",
+                        name: "FK_TaskUsers_TaskProjects_TaskId",
                         column: x => x.TaskId,
                         principalTable: "TaskProjects",
                         principalColumn: "Id",
@@ -337,8 +337,18 @@ namespace taskflow_api.Migrations
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Issue_TaskProjectID",
-                table: "Issue",
+                name: "IX_Issues_TaskProjectID",
+                table: "Issues",
+                column: "TaskProjectID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LogProjects_ProjectId",
+                table: "LogProjects",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LogProjects_TaskProjectID",
+                table: "LogProjects",
                 column: "TaskProjectID");
 
             migrationBuilder.CreateIndex(
@@ -372,29 +382,19 @@ namespace taskflow_api.Migrations
                 column: "SprintId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskUser_IssueID",
-                table: "TaskUser",
+                name: "IX_TaskUsers_IssueID",
+                table: "TaskUsers",
                 column: "IssueID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskUser_ProjectMemberID",
-                table: "TaskUser",
+                name: "IX_TaskUsers_ProjectMemberID",
+                table: "TaskUsers",
                 column: "ProjectMemberID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskUser_TaskId",
-                table: "TaskUser",
+                name: "IX_TaskUsers_TaskId",
+                table: "TaskUsers",
                 column: "TaskId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TaskUsers_ProjectId",
-                table: "TaskUsers",
-                column: "ProjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TaskUsers_TaskProjectID",
-                table: "TaskUsers",
-                column: "TaskProjectID");
         }
 
         /// <inheritdoc />
@@ -410,13 +410,13 @@ namespace taskflow_api.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "TaskUser");
+                name: "LogProjects");
 
             migrationBuilder.DropTable(
                 name: "TaskUsers");
 
             migrationBuilder.DropTable(
-                name: "Issue");
+                name: "Issues");
 
             migrationBuilder.DropTable(
                 name: "ProjectMembers");
