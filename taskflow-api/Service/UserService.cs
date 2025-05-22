@@ -6,6 +6,7 @@ using System.Text;
 using taskflow_api.Entity;
 using taskflow_api.Enums;
 using taskflow_api.Exceptions;
+using taskflow_api.Helpers;
 using taskflow_api.Model.Request;
 
 namespace taskflow_api.Service
@@ -15,13 +16,15 @@ namespace taskflow_api.Service
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _env;
 
-        public UserService(UserManager<User> userManager, 
-            SignInManager<User> signInManager, IConfiguration configuration)
+        public UserService(UserManager<User> userManager, SignInManager<User> signInManager, 
+            IConfiguration configuration, IWebHostEnvironment env)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _env = env;
         }
 
         public async Task<string> Login(LoginRequest model)
@@ -69,6 +72,7 @@ namespace taskflow_api.Service
                 throw new AppException(ErrorCode.EmailExists);
             }
 
+
             var user = new User
             {
                 FullName = model.FullName,
@@ -77,11 +81,24 @@ namespace taskflow_api.Service
                 Role = UserRole.User,
                 IsActive = true,
             };
+       
+            string avatarPath = string.Empty;
+            if (model.Avatar != null)
+            {
+                 avatarPath = await ImageHelper.UploadImage(model.Avatar, _env.WebRootPath,
+                      "Image/Avatars", Guid.NewGuid().ToString());
+                user.Avatar = avatarPath;
+            }
 
             var result = await _userManager.CreateAsync(user, model.Password);
+
             //error UserManager.CreateAsync
             if (!result.Succeeded)
             {
+                if (!string.IsNullOrEmpty(avatarPath))
+                {
+                    ImageHelper.DeleteImage(avatarPath, _env.WebRootPath);
+                }
                 var errorMessages = string.Join("; ", result.Errors.Select(e => e.Description));
                 throw new AppException(new ErrorDetail(
                     1000,

@@ -18,5 +18,7 @@ namespace taskflow_api.Model.Request
         [Required(ErrorMessage = "Confirm password is required.")]
         [Compare("Password", ErrorMessage = "Passwords do not match.")]
         public string ConfirmPassword { get; set; } = null!;
+
+        public IFormFile? Avatar { get; set; }
     }
 }
