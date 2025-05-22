@@ -16,13 +16,13 @@ artifacts/
 .vs/
 .vscode/
 
-# Rider
+# Rider IDE
 .idea/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
-# Node.js dependencies
+# Node.js dependencies and cache
 node_modules/
 
 # dotenv environment variables
@@ -34,6 +34,29 @@ node_modules/
 *.snupkg
 packages/
 
+# Debug/Release folders
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Logs
+*.log
+[Ll]og/
+
+# Static files
+wwwroot/*
+!wwwroot/.gitkeep
+
+# Migrations folder
+Migrations/
+taskflow-api/Migrations/
+
 # SQL Server files
 *.mdf
 *.ldf
@@ -41,11 +64,7 @@ packages/
 # Azure Pipelines
 .azure-pipelines/
 
-# Logs
-*.log
-[Ll]og/
-
-# Databases
+# Database files
 *.db
 *.sqlite
 *.db-shm
@@ -60,7 +79,7 @@ test-*.sqlite
 *.ncrunch*
 .*crunch*
 
-# Resharper
+# ReSharper
 _ReSharper*/
 *.[Rr]e[Ss]harper
 
@@ -89,10 +108,6 @@ Temporary ASP.NET Files/
 # Publish folder
 publish/
 
-# wwwroot static files
-wwwroot/*
-!wwwroot/.gitkeep
-
 # Test results
 TestResults/
 
@@ -111,5 +126,5 @@ docker-compose.*.yml
 # User secrets (ASP.NET Core)
 **/secrets.json
 
-# Entity Framework Migrations (if not using code-first migrations)
-taskflow-api/Migrations/
+# Git folder config
+.git/
