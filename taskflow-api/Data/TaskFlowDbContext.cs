@@ -14,14 +14,14 @@ namespace taskflow_api.Data
         {
         }
         //Define DbSet for each entity
-        public DbSet<Entity.Project> Projects { get; set; } = null!;
-        public DbSet<Entity.ProjectMember> ProjectMembers { get; set; } = null!;
-        public DbSet<Entity.Board> Boards { get; set; } = null!;
-        public DbSet<Entity.Sprint> Sprints { get; set; } = null!;
-        public DbSet<Entity.TaskProject> TaskProjects { get; set; } = null!;
-        public DbSet<Entity.TaskUser> TaskUsers { get; set; } = null!;
-        public DbSet<Entity.Issue> Issues { get; set; } = null!;
-        public DbSet<Entity.LogProject> LogProjects { get; set; } = null!;
+        public DbSet<Project> Projects { get; set; } = null!;
+        public DbSet<ProjectMember> ProjectMembers { get; set; } = null!;
+        public DbSet<Board> Boards { get; set; } = null!;
+        public DbSet<Sprint> Sprints { get; set; } = null!;
+        public DbSet<TaskProject> TaskProjects { get; set; } = null!;
+        public DbSet<TaskUser> TaskUsers { get; set; } = null!;
+        public DbSet<Issue> Issues { get; set; } = null!;
+        public DbSet<LogProject> LogProjects { get; set; } = null!;
 
 
 
@@ -73,11 +73,11 @@ namespace taskflow_api.Data
                .OnDelete(DeleteBehavior.Cascade);
 
             //1 user có nhìu task
-             modelBuilder.Entity<TaskUser>()
-                .HasOne(tu => tu.ProjectMember)
-                .WithMany(pm => pm.taskUsers)
-                .HasForeignKey(tu => tu.ProjectMemberID)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<TaskUser>()
+               .HasOne(tu => tu.ProjectMember)
+               .WithMany(pm => pm.taskUsers)
+               .HasForeignKey(tu => tu.ProjectMemberID)
+               .OnDelete(DeleteBehavior.Cascade);
 
             //1 task có nhìu issue
             modelBuilder.Entity<Issue>()
@@ -86,9 +86,9 @@ namespace taskflow_api.Data
                 .HasForeignKey(i => i.TaskProjectID)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            
+
 
         }
     }
-       
+
 }

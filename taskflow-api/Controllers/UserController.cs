@@ -25,7 +25,7 @@ namespace taskflow_api.Controllers
         }
 
         [HttpPost]
-        public async Task<ApiResponse<IdentityResult>> Register(RegisterAccountRequest model)
+        public async Task<ApiResponse<IdentityResult>> Register([FromForm] RegisterAccountRequest model)
         {
             return ApiResponse<IdentityResult>.Success(await _context.RegisterAccount(model));
         }
