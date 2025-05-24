@@ -5,11 +5,12 @@ using taskflow_api.Entity;
 
 namespace taskflow_api.Data
 {
-    public class TaskFlowDbContext : IdentityUserContext<User>
+    public class TaskFlowDbContext : IdentityUserContext<User, Guid>
     {
         public TaskFlowDbContext()
         {
         }
+
         public TaskFlowDbContext(DbContextOptions<TaskFlowDbContext> options) : base(options)
         {
         }
@@ -29,6 +30,24 @@ namespace taskflow_api.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Ignore<IdentityRole>();
+            modelBuilder.Ignore<IdentityUserClaim<Guid>>();
+            modelBuilder.Ignore<IdentityUserLogin<Guid>>();
+            modelBuilder.Ignore<IdentityUserToken<Guid>>();
+            modelBuilder.Ignore<IdentityUserRole<Guid>>();
+            modelBuilder.Ignore<IdentityRoleClaim<Guid>>();
+
+            //modelBuilder.Entity<User>().Ignore(x => x.NormalizedUserName);
+            //modelBuilder.Entity<User>().Ignore(x => x.NormalizedEmail);
+            //modelBuilder.Entity<User>().Ignore(x => x.EmailConfirmed);
+            //modelBuilder.Entity<User>().Ignore(x => x.SecurityStamp);
+            //modelBuilder.Entity<User>().Ignore(x => x.ConcurrencyStamp);
+            modelBuilder.Entity<User>().Ignore(x => x.PhoneNumberConfirmed);
+            modelBuilder.Entity<User>().Ignore(x => x.TwoFactorEnabled);
+            modelBuilder.Entity<User>().Ignore(x => x.LockoutEnd);
+            modelBuilder.Entity<User>().Ignore(x => x.LockoutEnabled);
+            modelBuilder.Entity<User>().Ignore(x => x.AccessFailedCount);
 
             //1 project có nhìu board
             modelBuilder.Entity<Board>()

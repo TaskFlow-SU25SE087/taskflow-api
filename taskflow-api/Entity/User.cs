@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace taskflow_api.Entity
 {
-    public class User : IdentityUser
+    public class User : IdentityUser<Guid>
     {
         public string? Avatar { get; set; }
         public string FullName { get; set; } = null!;

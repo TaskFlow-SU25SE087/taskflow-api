@@ -51,7 +51,6 @@ bld/
 
 # Static files
 wwwroot/*
-!wwwroot/.gitkeep
 
 # Migrations folder
 Migrations/

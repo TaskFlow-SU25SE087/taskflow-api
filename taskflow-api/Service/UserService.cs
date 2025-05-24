@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -30,36 +31,32 @@ namespace taskflow_api.Service
         public async Task<string> Login(LoginRequest model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                throw new AppException(ErrorCode.InvalidEmail);
-            }
-            if (!user.IsActive)
-            {
-                throw new AppException(ErrorCode.AccountBanned);
-            }
+            if (user == null) throw new AppException(ErrorCode.InvalidEmail);
+            if (!user.IsActive) throw new AppException(ErrorCode.AccountBanned);
+
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
-            if (!passwordValid)
-            {
-                throw new AppException(ErrorCode.InvalidPassword);
-            }
+            if (!passwordValid) throw new AppException(ErrorCode.InvalidPassword);
+
             var authClaims = new List<Claim>
             {
                 new Claim("ID", user.Id.ToString()),
-                new Claim("Email", user.Email !),
+                new Claim("Email", user.Email!),
                 new Claim("Role", user.Role.ToString()),
                 new Claim("Fullname", user.FullName!),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var authenKey = Encoding.UTF8.GetBytes(_configuration["JWT:Key"]!);
+            var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:ValidIssuer"],
                 audience: _configuration["Jwt:ValidAudience"],
                 expires: DateTime.UtcNow.AddHours(1),
                 claims: authClaims,
-                signingCredentials: new SigningCredentials(new SymmetricSecurityKey(authenKey), SecurityAlgorithms.HmacSha256)
+                signingCredentials: new SigningCredentials(authenKey, SecurityAlgorithms.HmacSha256)
+                
             );
+            
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
