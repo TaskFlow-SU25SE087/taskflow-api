@@ -1,4 +1,5 @@
-﻿using taskflow_api.Exceptions;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using taskflow_api.Exceptions;
 
 namespace taskflow_api.Enums
 {
@@ -20,6 +21,9 @@ namespace taskflow_api.Enums
 
         //Image related error codes(2)
         public static readonly ErrorDetail ImageExists = new(2001, "Image Exists", StatusCodes.Status404NotFound);
+
+        // Project related error codes(3)
+        public static readonly ErrorDetail CannotCreateProject = new(3001, "Cannot create project", StatusCodes.Status400BadRequest);
 
         // Authorization related error codes(9)
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);

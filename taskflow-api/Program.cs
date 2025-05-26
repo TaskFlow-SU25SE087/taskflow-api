@@ -12,12 +12,21 @@ using taskflow_api.Entity;
 using taskflow_api.Enums;
 using taskflow_api.Exceptions;
 using taskflow_api.Model.Common;
+using taskflow_api.Repository;
 using taskflow_api.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+
+//Repository
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
+builder.Services.AddScoped<IBoardRepository, BoardRepository>();
+
+
 builder.Services.AddScoped<ITaskFlowAuthorizationService, TaskFlowAuthorizationService>();
 
 builder.Services.AddControllers();
