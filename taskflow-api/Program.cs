@@ -5,18 +5,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using taskflow_api.Data;
 using taskflow_api.Entity;
+using taskflow_api.Enums;
 using taskflow_api.Exceptions;
-using taskflow_api.Model.Response;
+using taskflow_api.Model.Common;
 using taskflow_api.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
+builder.Services.AddScoped<ITaskFlowAuthorizationService, TaskFlowAuthorizationService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -75,12 +77,34 @@ builder.Services.AddAuthentication(options =>
         = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ClockSkew = TimeSpan.Zero,
             ValidateAudience = true,
             ValidIssuer = builder.Configuration["Jwt:ValidIssuer"],
             ValidAudience = builder.Configuration["Jwt:ValidAudience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
+    options.Events = new JwtBearerEvents
+    {
+        // Throwing AppException directly inside OnAuthenticationFailed event will NOT work as expected.
+        // The JwtBearer middleware does NOT catch exceptions thrown here, so the exception may be swallowed or cause unexpected behavior,
+        // and no proper JSON error response will be sent to the client.
+        // Therefore, we must handle the error by setting the response status code and writing the JSON error body directly in this event handler.
+        OnAuthenticationFailed = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            var error = new
+            {
+                Code = ErrorCode.Unauthorized.Code,
+                Message = ErrorCode.Unauthorized.Message,
+                Status = ErrorCode.Unauthorized.StatusCode
+            };
+            var json = JsonSerializer.Serialize(error);
+
+            return context.Response.WriteAsync(json);
+        },
+    };
 });
 
 var app = builder.Build();
@@ -98,6 +122,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

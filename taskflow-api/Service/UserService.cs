@@ -8,7 +8,9 @@ using taskflow_api.Entity;
 using taskflow_api.Enums;
 using taskflow_api.Exceptions;
 using taskflow_api.Helpers;
+using taskflow_api.Model.Common;
 using taskflow_api.Model.Request;
+using taskflow_api.Model.Response;
 
 namespace taskflow_api.Service
 {
@@ -28,6 +30,101 @@ namespace taskflow_api.Service
             _env = env;
         }
 
+        public async Task<UserResponse> BanUser(Guid userId)
+        {
+            var user = _userManager.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            if (user.Role == UserRole.Admin)
+            {
+                throw new AppException(ErrorCode.CannotBanAdmin);
+            }
+            if (!user.IsActive)
+            {
+                throw new AppException(ErrorCode.UserAlreadyBanned);
+            }
+            user.IsActive = false;
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errorMessages = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new AppException(new ErrorDetail(
+                    1000,
+                    errorMessages,
+                    StatusCodes.Status400BadRequest
+                    ));
+            }
+            return new UserResponse
+            {
+                Id = user.Id,
+                Email = user.Email!,
+                FullName = user.FullName,
+                Avatar = user.Avatar,
+                IsActive = user.IsActive,
+                Role = user.Role.ToString(),
+            };
+        }
+
+        public async Task<UserResponse> UnBanUser(Guid userId)
+        {
+            var user = _userManager.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            if (user.Role == UserRole.Admin)
+            {
+                throw new AppException(ErrorCode.CannotBanAdmin);
+            }
+            if (user.IsActive)
+            {
+                throw new AppException(ErrorCode.UserNotBanned);
+            }
+            user.IsActive = true;
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errorMessages = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new AppException(new ErrorDetail(
+                    1000,
+                    errorMessages,
+                    StatusCodes.Status400BadRequest
+                    ));
+            }
+            return new UserResponse
+            {
+                Id = user.Id,
+                Email = user.Email!,
+                FullName = user.FullName,
+                Avatar = user.Avatar,
+                IsActive = user.IsActive,
+                Role = user.Role.ToString(),
+            };
+        }
+
+        public async Task<PagedResult<UserResponse>> GetAllUser(PagingParams pagingParams)
+        {
+            var users = _userManager.Users
+                .Where(u => u.Role != UserRole.Admin)
+                .Select(u => new UserResponse
+                {
+                    Id = u.Id,
+                    Email = u.Email!,
+                    FullName = u.FullName,
+                    Avatar = u.Avatar,
+                    IsActive = u.IsActive,
+                    Role = u.Role.ToString(),
+                });
+            var pageUser = await users.ToPagedListAsync(pagingParams);
+            if (!pageUser.Items.Any())
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            return pageUser;
+        }
+
         public async Task<string> Login(LoginRequest model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -41,7 +138,7 @@ namespace taskflow_api.Service
             {
                 new Claim("ID", user.Id.ToString()),
                 new Claim("Email", user.Email!),
-                new Claim("Role", user.Role.ToString()),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim("Fullname", user.FullName!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };

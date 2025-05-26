@@ -1,5 +1,5 @@
 ﻿using taskflow_api.Enums;
-using taskflow_api.Model.Response;
+using taskflow_api.Model.Common;
 
 namespace taskflow_api.Exceptions
 {

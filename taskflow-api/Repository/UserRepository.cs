@@ -8,11 +8,11 @@ namespace taskflow_api.Repository
 {
     public class UserRepository : IUserRepository
     {
-        private readonly TaskFlowDbContext context;
+        private readonly TaskFlowDbContext _context;
 
         public UserRepository(TaskFlowDbContext context)
         {
-            this.context = context;
+            _context = context;
         }
 
     }

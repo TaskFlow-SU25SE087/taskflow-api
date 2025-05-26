@@ -1,4 +1,4 @@
-﻿namespace taskflow_api.Model.Response
+﻿namespace taskflow_api.Model.Common
 {
     public class ApiResponse<T>
     {

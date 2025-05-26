@@ -2,7 +2,7 @@
 
 namespace taskflow_api.Service
 {
-    public interface IAuthorizationService
+    public interface ITaskFlowAuthorizationService
     {
         Task<bool> AuthorizeAsync(Guid projectId, params ProjectRole[] allowedRoles);
     }
