@@ -7,13 +7,16 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using taskflow_api.Data;
-using taskflow_api.Entity;
-using taskflow_api.Enums;
-using taskflow_api.Exceptions;
-using taskflow_api.Model.Common;
-using taskflow_api.Repository;
-using taskflow_api.Service;
+using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Application.Mappings;
+using taskflow_api.TaskFlow.Application.Services;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
+using taskflow_api.TaskFlow.Infrastructure.Data;
+using taskflow_api.TaskFlow.Infrastructure.Interfaces;
+using taskflow_api.TaskFlow.Infrastructure.Repository;
+using taskflow_api.TaskFlow.Shared.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +29,8 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
 builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 
+// Mapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<ITaskFlowAuthorizationService, TaskFlowAuthorizationService>();
 
