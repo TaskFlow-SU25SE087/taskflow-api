@@ -6,5 +6,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task CreateRefreshTokenAsync(RefeshToken model);
         Task<RefeshToken?> GetRefreshTokenByToken(string token);
+        Task UpdateRefreshTokenAsync(RefeshToken model);
     }
 }

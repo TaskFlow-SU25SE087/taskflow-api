@@ -180,13 +180,14 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Email = model.Email,
                 UserName = model.Email,
                 Role = UserRole.User,
+                Avatar = "Image/Avatars/avatar.png",
                 IsActive = true,
             };
 
             string avatarPath = string.Empty;
             if (model.Avatar != null)
             {
-                avatarPath = await ImageHelper.UploadImage(model.Avatar, _env.WebRootPath,
+                 avatarPath = await ImageHelper.UploadImage(model.Avatar, _env.WebRootPath,
                      "Image/Avatars", Guid.NewGuid().ToString());
                 user.Avatar = avatarPath;
             }
@@ -285,7 +286,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 IsUsed = false,
                 IsRevoked = false,
                 IssueAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddHours(24) // Refresh token valid for 24 hours
+                ExpiresAt = DateTime.UtcNow.AddDays(7) // Refresh token valid for 7 days
             };
              await _refeshTokenRepository.CreateRefreshTokenAsync(refreshTokenEntity);
 
@@ -323,7 +324,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             // Mark the old refresh token as used
             stroredToken.IsRevoked = true;
             stroredToken.IsUsed = true;
-            await _refeshTokenRepository.CreateRefreshTokenAsync(stroredToken);
+            await _refeshTokenRepository.UpdateRefreshTokenAsync(stroredToken);
 
             //create new token
             var　user = await _userManager.FindByIdAsync(stroredToken.UserId.ToString());

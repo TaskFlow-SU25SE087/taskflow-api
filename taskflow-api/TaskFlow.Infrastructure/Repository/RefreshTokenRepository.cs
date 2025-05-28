@@ -22,5 +22,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return await _context.RefeshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
         }
+
+        public Task UpdateRefreshTokenAsync(RefeshToken model)
+        {
+            _context.RefeshTokens.Update(model);
+            return _context.SaveChangesAsync();
+        }
     }
 }
