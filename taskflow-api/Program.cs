@@ -78,6 +78,11 @@ builder.Services.AddIdentityCore<User>(options =>
     .AddEntityFrameworkStores<TaskFlowDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+
+// Configure Gmail
+builder.Services.Configure<MailSettings>(
+    builder.Configuration.GetSection("MailSetting"));
+
 // Configure JWT authentication
 builder.Services.AddAuthentication(options =>
 {
