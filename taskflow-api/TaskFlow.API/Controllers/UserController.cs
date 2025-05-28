@@ -22,10 +22,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _authorization = authorization;
         }
         [HttpPost("login")]
-        public async Task<ApiResponse<string>> Login(LoginRequest model)
+        public async Task<ApiResponse<TokenModel>> Login(LoginRequest model)
         {
             var token = await _context.Login(model);
-            return ApiResponse<string>.Success(token);
+            return ApiResponse<TokenModel>.Success(token);
         }
 
         [HttpPost]
@@ -72,6 +72,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             var user = await _context.UpdateUser(userId, model);
             return ApiResponse<UserResponse>.Success(user);
+        }
+
+        [HttpPost("RenewToken")]
+        public async Task<ApiResponse<TokenModel>> RenewToken(TokenModel model)
+        {
+            var newtoken = await _context.RenewToken(model);
+            return ApiResponse<TokenModel>.Success(newtoken);
         }
     }
 }

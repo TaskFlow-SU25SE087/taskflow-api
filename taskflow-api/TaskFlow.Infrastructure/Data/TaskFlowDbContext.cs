@@ -23,6 +23,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<TaskUser> TaskUsers { get; set; } = null!;
         public DbSet<Issue> Issues { get; set; } = null!;
         public DbSet<LogProject> LogProjects { get; set; } = null!;
+        public DbSet<RefeshToken> RefeshTokens { get; set; } = null!;
 
 
 

@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,6 +13,9 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 using taskflow_api.TaskFlow.Shared.Helpers;
+using System.Security.Cryptography;
+using taskflow_api.TaskFlow.Infrastructure.Interfaces;
+using taskflow_api.TaskFlow.Infrastructure.Repository;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -25,10 +27,12 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IWebHostEnvironment _env;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
+        private readonly IRefreshTokenRepository _refeshTokenRepository;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration configuration, IWebHostEnvironment env, 
-            IHttpContextAccessor httpContextAccessor, IMapper mapper)
+            IHttpContextAccessor httpContextAccessor, IMapper mapper,
+            IRefreshTokenRepository refeshTokenRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -36,6 +40,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _env = env;
             _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
+            _refeshTokenRepository = refeshTokenRepository;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -128,7 +133,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return pageUser;
         }
 
-        public async Task<string> Login(LoginRequest model)
+        public async Task<TokenModel> Login(LoginRequest model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null) throw new AppException(ErrorCode.InvalidEmail);
@@ -136,28 +141,27 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!passwordValid) throw new AppException(ErrorCode.InvalidPassword);
+            var token = await GenerateToken(user);
+            //var authClaims = new List<Claim>
+            //{
+            //    new Claim("ID", user.Id.ToString()),
+            //    new Claim("Email", user.Email!),
+            //    new Claim(ClaimTypes.Role, user.Role.ToString()),
+            //    new Claim("Fullname", user.FullName!),
+            //    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            //};
 
-            var authClaims = new List<Claim>
-            {
-                new Claim("ID", user.Id.ToString()),
-                new Claim("Email", user.Email!),
-                new Claim(ClaimTypes.Role, user.Role.ToString()),
-                new Claim("Fullname", user.FullName!),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+            //var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+            //var token = new JwtSecurityToken(
+            //    issuer: _configuration["Jwt:ValidIssuer"],
+            //    audience: _configuration["Jwt:ValidAudience"],
+            //    expires: DateTime.UtcNow.AddHours(1),
+            //    claims: authClaims,
+            //    signingCredentials: new SigningCredentials(authenKey, SecurityAlgorithms.HmacSha256)
 
-            var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:ValidIssuer"],
-                audience: _configuration["Jwt:ValidAudience"],
-                expires: DateTime.UtcNow.AddHours(1),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials(authenKey, SecurityAlgorithms.HmacSha256)
-
-            );
-
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            //);
+            //var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+            return token;
         }
 
         public async Task<IdentityResult> RegisterAccount(RegisterAccountRequest model)
@@ -248,6 +252,88 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             var result = _mapper.Map<UserResponse>(user);
             return result;
+        }
+
+        private async Task<TokenModel> GenerateToken(User user)
+        {
+            // Generate JWT token
+            var authClaims = new List<Claim>
+            {
+                new Claim("ID", user.Id.ToString()),
+                new Claim("Email", user.Email!),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim("Fullname", user.FullName!),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+            var authKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:ValidIssuer"],
+                audience: _configuration["Jwt:ValidAudience"],
+                expires: DateTime.UtcNow.AddMinutes(15),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha256)
+            );
+            var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+            var refreshToken = GenerateRefreshToken();
+
+            // Save refresh token to database
+            var refreshTokenEntity = new RefeshToken
+            {
+                UserId = user.Id,
+                JwtID = token.Id,
+                Token = refreshToken,
+                IsUsed = false,
+                IsRevoked = false,
+                IssueAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(24) // Refresh token valid for 24 hours
+            };
+             await _refeshTokenRepository.CreateRefreshTokenAsync(refreshTokenEntity);
+
+            return new TokenModel
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
+            };
+        }
+        private string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
+            }
+        }
+
+        public async Task<TokenModel> RenewToken(TokenModel model)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(model.AccessToken);
+            var jwtIdFromToken = jwtToken.Claims.First(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+            var stroredToken = await _refeshTokenRepository.GetRefreshTokenByToken(model.RefreshToken);
+            if (stroredToken == null || stroredToken.IsUsed || stroredToken.IsRevoked || stroredToken.JwtID != jwtIdFromToken)
+            {
+                throw new AppException(ErrorCode.InvalidRefreshToken);
+            }
+            if (stroredToken.ExpiresAt < DateTime.UtcNow)
+            {
+                throw new AppException(ErrorCode.RefreshTokenExpired);
+            }
+            // Mark the old refresh token as used
+            stroredToken.IsRevoked = true;
+            stroredToken.IsUsed = true;
+            await _refeshTokenRepository.CreateRefreshTokenAsync(stroredToken);
+
+            //create new token
+            var　user = await _userManager.FindByIdAsync(stroredToken.UserId.ToString());
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            var token = await GenerateToken(user);
+
+            return token;
         }
     }
 }

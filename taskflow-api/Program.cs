@@ -28,6 +28,7 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
 builder.Services.AddScoped<IBoardRepository, BoardRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 // Mapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -90,6 +91,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters 
         = new TokenValidationParameters
         {
+            ValidateLifetime = true,
             ValidateIssuer = true,
             ClockSkew = TimeSpan.Zero,
             ValidateAudience = true,

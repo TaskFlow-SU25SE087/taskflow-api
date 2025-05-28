@@ -26,6 +26,11 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         // Project related error codes(3)
         public static readonly ErrorDetail CannotCreateProject = new(3001, "Cannot create project", StatusCodes.Status400BadRequest);
 
+        //Token related error codes(4)
+        public static readonly ErrorDetail InvalidToken = new(4001, "Invalid token", StatusCodes.Status401Unauthorized);
+        public static readonly ErrorDetail RefreshTokenExpired = new(4002, "Refresh token expired", StatusCodes.Status401Unauthorized);
+        public static readonly ErrorDetail InvalidRefreshToken = new(4003, "Invalid refresh token", StatusCodes.Status401Unauthorized);
+
         // Authorization related error codes(9)
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail Unauthorized = new(9002, "Unauthorized access", StatusCodes.Status401Unauthorized);
