@@ -28,11 +28,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
         private readonly IRefreshTokenRepository _refeshTokenRepository;
+        private readonly IMailService _mailService;
+        private readonly IVerifyTokenRopository _verifyTokenRopository;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration configuration, IWebHostEnvironment env, 
             IHttpContextAccessor httpContextAccessor, IMapper mapper,
-            IRefreshTokenRepository refeshTokenRepository)
+            IRefreshTokenRepository refeshTokenRepository, IMailService mailService,
+            IVerifyTokenRopository verifyTokenRopository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -41,6 +44,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
             _refeshTokenRepository = refeshTokenRepository;
+            _mailService = mailService;
+            _verifyTokenRopository = verifyTokenRopository;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -170,7 +175,22 @@ namespace taskflow_api.TaskFlow.Application.Services
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
-                throw new AppException(ErrorCode.EmailExists);
+                if (existingUser.EmailConfirmed)
+                {
+                    throw new AppException(ErrorCode.EmailExists);
+                }
+                else
+                {
+                    await _userManager.DeleteAsync(existingUser);
+                    var verifyToken = await _verifyTokenRopository
+                        .GetVerifyTokenByUserIdAndType(existingUser.Id, VerifyTokenEnum.VerifyAccount);
+                    if (verifyToken != null)
+                    {
+                        verifyToken.IsUsed = true;
+                        await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
+                    }
+                }
+                
             }
 
 
@@ -180,8 +200,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Email = model.Email,
                 UserName = model.Email,
                 Role = UserRole.User,
-                Avatar = "Image/Avatars/avatar.png",
-                IsActive = true,
             };
 
             string avatarPath = string.Empty;
@@ -193,6 +211,21 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
 
             var result = await _userManager.CreateAsync(user, model.Password);
+            if (result.Succeeded)
+            {
+                string tokenVerify =  GenerateRandomToken();
+                var verifyToken = new VerifyToken
+                {
+                    UserId = user.Id,
+                    Token = tokenVerify,
+                    Type = VerifyTokenEnum.VerifyAccount,
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+                };
+                await _verifyTokenRopository.AddVerifyTokenAsync(verifyToken);
+                await _mailService.VerifyAccount(model.Email, tokenVerify);
+                Console.WriteLine($"Email server: {model.Email}"); 
+            }
 
             //error UserManager.CreateAsync
             if (!result.Succeeded)
@@ -275,7 +308,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha256)
             );
             var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-            var refreshToken = GenerateRefreshToken();
+            var refreshToken = GenerateRandomToken();
 
             // Save refresh token to database
             var refreshTokenEntity = new RefeshToken
@@ -296,14 +329,38 @@ namespace taskflow_api.TaskFlow.Application.Services
                 RefreshToken = refreshToken
             };
         }
-        private string GenerateRefreshToken()
+
+        public async Task<bool> VerifyAccount(string token)
+        {
+            var verifyToken = await _verifyTokenRopository.GetVerifyTokenAsync(token);
+            if (verifyToken == null || verifyToken.IsUsed || verifyToken.IsExpired)
+            {
+                throw new AppException(ErrorCode.InvalidToken);
+            }
+            var user = await _userManager.FindByIdAsync(verifyToken.UserId.ToString());
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+
+            user.IsActive = true;
+            user.EmailConfirmed = true;
+            verifyToken.IsUsed = true;
+            await _userManager.UpdateAsync(user);
+            await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
+            return true;
+        }
+        private string GenerateRandomToken()
         {
             var randomNumber = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomNumber);
-                return Convert.ToBase64String(randomNumber);
             }
+            var base64 = Convert.ToBase64String(randomNumber);
+            var urlSafe = base64.Replace('+', '-').Replace('/', '_').TrimEnd('=');
+
+            return urlSafe;
         }
 
         public async Task<TokenModel> RenewToken(TokenModel model)

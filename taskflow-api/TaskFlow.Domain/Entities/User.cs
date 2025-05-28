@@ -6,7 +6,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
 {
     public class User : IdentityUser<Guid>
     {
-        public string? Avatar { get; set; }
+        public string? Avatar { get; set; } = "Image/Avatars/avatar.png";
         public string FullName { get; set; } = null!;
         public bool IsActive { get; set; } = false;
 

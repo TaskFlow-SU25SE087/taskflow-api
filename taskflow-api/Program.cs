@@ -23,12 +23,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<IMailService, MailService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
 builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IVerifyTokenRopository, VerifyTokenRopository>();
 
 // Mapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -42,6 +44,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<TaskFlowDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("dbApp")));
+
+
 
 // Override default 400 validation error response to return custom ApiResponse format
 // This ensures all model validation errors are consistently returned in ApiResponse<T> structure
@@ -82,6 +86,9 @@ builder.Services.AddIdentityCore<User>(options =>
 // Configure Gmail
 builder.Services.Configure<MailSettings>(
     builder.Configuration.GetSection("MailSetting"));
+
+builder.Services.Configure<AppSetting>(
+    builder.Configuration.GetSection("AppSetting"));
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(options =>

@@ -9,7 +9,7 @@ using taskflow_api.TaskFlow.Application.Interfaces;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
-    [Route("user")]
+    [Route("")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -28,7 +28,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<TokenModel>.Success(token);
         }
 
-        [HttpPost]
+        [HttpPost("register")]
         public async Task<ApiResponse<IdentityResult>> Register([FromForm] RegisterAccountRequest model)
         {
             return ApiResponse<IdentityResult>.Success(await _context.RegisterAccount(model));
@@ -42,7 +42,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<PagedResult<UserAdminResponse>>.Success(users);
         }
 
-        [HttpPost("ban/{userId}")]
+        [HttpPost("admin/ban/{userId}")]
         [Authorize(Roles = "Admin")]
         public async Task<ApiResponse<UserAdminResponse>> BanUser(Guid userId)
         {
@@ -50,7 +50,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserAdminResponse>.Success(user);
         }
 
-        [HttpPost("unban/{userId}")]
+        [HttpPost("admin/unban/{userId}")]
         [Authorize(Roles = "Admin")]
         public async Task<ApiResponse<UserAdminResponse>> UnBanUser(Guid userId)
         {
@@ -58,7 +58,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserAdminResponse>.Success(user);
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("user/{userId}")]
         [Authorize]
         public async Task<ApiResponse<UserResponse>> GetUserById(Guid userId)
         {
@@ -66,7 +66,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserResponse>.Success(user);
         }
 
-        [HttpPut("{userId}")]
+        [HttpPut("user/{userId}")]
         [Authorize]
         public async Task<ApiResponse<UserResponse>> UpdateUser(Guid userId, [FromBody] UpdateUserRequest model)
         {
@@ -74,12 +74,18 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserResponse>.Success(user);
         }
 
-        [HttpPost("RenewToken")]
+        [HttpPost("token/RenewToken")]
         public async Task<ApiResponse<TokenModel>> RenewToken(TokenModel model)
         {
             var newtoken = await _context.RenewToken(model);
             return ApiResponse<TokenModel>.Success(newtoken);
         }
 
+        [HttpGet("auth/verify-account")]
+        public async Task<ApiResponse<bool>> VerifyAccount([FromQuery] string token)
+        {
+            var result = await _context.VerifyAccount(token);
+            return ApiResponse<bool>.Success(true);
+        }
     }
 }

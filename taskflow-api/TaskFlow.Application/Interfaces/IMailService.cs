@@ -5,5 +5,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     public interface IMailService
     {
         Task SendMailAsync(MailContent content);
+        Task VerifyAccount(string email, string token);
     }
 }
