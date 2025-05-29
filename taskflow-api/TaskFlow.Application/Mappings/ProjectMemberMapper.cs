@@ -4,12 +4,11 @@ using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Mappings
 {
-    public class UserProfile : Profile 
-    {
-        public UserProfile()
+    public class ProjectMemberMapper : Profile
+    { 
+        public ProjectMemberMapper()
         {
-            CreateMap<User, UserAdminResponse>();
-            CreateMap<User, UserResponse>();
+            CreateMap<ProjectMember, ProjectResponse>();
         }
     }
 }

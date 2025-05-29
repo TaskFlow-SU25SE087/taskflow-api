@@ -7,6 +7,8 @@ using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
@@ -29,6 +31,26 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             var project = await _context.CreateProject(request);
             return ApiResponse<ProjectResponse>.Success(project);
+        }
+
+        [HttpPost("add-member")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> AddMember([FromBody] AddMemberRequest request)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            var project = await _context.AddMember(request);
+            return ApiResponse<bool>.Success(project);
+        }
+
+        [HttpGet("auth/verify-join-project")]
+        public async Task<ApiResponse<bool>> VerifyJoinProject([FromQuery] string token)
+        {
+            bool result = await _context.VerifyJoinProject(token);
+            return ApiResponse<bool>.Success(result);
         }
     }
 }

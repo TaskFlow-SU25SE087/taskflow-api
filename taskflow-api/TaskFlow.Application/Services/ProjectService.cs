@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
@@ -6,6 +7,7 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -17,10 +19,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IProjectRepository _projectRepository;
         private readonly IProjectMemberRepository _projectMemberRepository;
         private readonly IBoardRepository _boardRepository;
+        private readonly IMailService _mailService;
+        private readonly IMapper _mapper;
+        private readonly IVerifyTokenRopository _verifyTokenRopository;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
-            IProjectMemberRepository projectMember, IBoardRepository boardRepository)
+            IProjectMemberRepository projectMember, IBoardRepository boardRepository,
+            IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -28,6 +34,48 @@ namespace taskflow_api.TaskFlow.Application.Services
             _projectRepository = projectRepository;
             _projectMemberRepository = projectMember;
             _boardRepository = boardRepository;
+             _mailService = mailService;
+            _mapper = mapper;
+            _verifyTokenRopository = verifyTokenRopository;
+        }
+
+        public async Task<bool> AddMember(AddMemberRequest request)
+        {
+            var user = _userManager.FindByEmailAsync(request.Email);
+            if (user.Result == null)
+                throw new AppException(ErrorCode.NoUserFound);
+            //save token to the database
+            var token = GenerateRandom.GenerateRandomToken();
+            await _verifyTokenRopository.AddVerifyTokenAsync(new VerifyToken
+            {
+                UserId = user.Result.Id,
+                ProjectId = request.ProjectId,
+                Token = token,
+                Type = VerifyTokenEnum.JoinProject,
+                IsUsed = false,
+                ExpiresAt = DateTime.UtcNow.AddDays(3),
+            });
+            //check member has been in the project
+            var member = _projectMemberRepository.FindMemberInProject(request.ProjectId, user.Result.Id);
+            if (member.Result != null)
+            {
+                //member back to the project
+                //send email to the user
+                await _mailService.SendMailJoinProject(request.Email, token, "come back to the project");
+                return true;
+            }
+            //create new member
+            var projectMember = new ProjectMember
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Result.Id,
+                ProjectId = request.ProjectId,
+                Role = ProjectRole.Member,
+                IsActive = false
+            };
+            await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
+            await _mailService.SendMailJoinProject(request.Email, token, "join the project");
+            return true;
         }
 
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
@@ -87,6 +135,28 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Id = projectId,
                 Title = request.title
             };
+        }
+
+        public async Task<bool> VerifyJoinProject(string token)
+        {
+            var verifyToken = await _verifyTokenRopository.GetVerifyTokenAsync(token);
+            if (verifyToken == null || verifyToken.IsUsed || verifyToken.IsExpired)
+            {
+                throw new AppException(ErrorCode.InvalidToken);
+            }
+            var user = await _projectMemberRepository.FindMemberInProject(verifyToken.ProjectId!.Value, verifyToken.UserId);
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            //Active the user in the project
+            user.IsActive = true;
+            await _projectMemberRepository.UpdateMember(user);
+
+            //Update token
+            verifyToken.IsUsed = true;
+            await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
+            return true;
         }
     }
 }

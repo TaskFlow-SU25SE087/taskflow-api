@@ -213,7 +213,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                string tokenVerify =  GenerateRandomToken();
+                string tokenVerify = GenerateRandom.GenerateRandomToken();
                 var verifyToken = new VerifyToken
                 {
                     UserId = user.Id,
@@ -308,7 +308,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha256)
             );
             var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-            var refreshToken = GenerateRandomToken();
+            var refreshToken = GenerateRandom.GenerateRandomToken();
 
             // Save refresh token to database
             var refreshTokenEntity = new RefeshToken
@@ -349,18 +349,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _userManager.UpdateAsync(user);
             await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
             return true;
-        }
-        private string GenerateRandomToken()
-        {
-            var randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-            }
-            var base64 = Convert.ToBase64String(randomNumber);
-            var urlSafe = base64.Replace('+', '-').Replace('/', '_').TrimEnd('=');
-
-            return urlSafe;
         }
 
         public async Task<TokenModel> RenewToken(TokenModel model)

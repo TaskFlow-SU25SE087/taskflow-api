@@ -6,5 +6,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     public interface IProjectService
     {
         public Task<ProjectResponse> CreateProject(CreateProjectRequest request);
+        public Task<bool> AddMember(AddMemberRequest request);
+        public Task<bool> VerifyJoinProject(string token);
     }
 }

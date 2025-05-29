@@ -50,6 +50,27 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
+        public async Task SendMailJoinProject(string email, string token, string type)
+        {
+            var verificationUrl = $"{_appSetting.BaseUrl}/project/auth/verify-join-project?token={token}";
+            var content = new MailContent
+            {
+                To = email,
+                Subject = "Account Verification",
+                Body = $"Wellcome {type} by clicking the following link: " +
+                       $"<a href='{verificationUrl}' target='_blank'>{type}</a><br/><br/>" +
+                       $"<span style='color: red;'>* This verification link will expire in 3 days.</span>"
+            };
+            try
+            {
+                await SendMailAsync(content);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending verification email: {ex.Message}");
+            }
+        }
+
         public async Task VerifyAccount(string email, string token)
         {
             var verificationUrl = $"{_appSetting.BaseUrl}/auth/verify-account?token={token}";

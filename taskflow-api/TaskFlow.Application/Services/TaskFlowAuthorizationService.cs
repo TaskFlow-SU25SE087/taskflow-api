@@ -23,19 +23,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return false;
 
-            var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            //var roleClaim = httpContext.User.FindFirst(ClaimTypes.Role);
-
+            //var roleClaim = httpContext.User.FindFirst(ClaimTypes.Role);;
+            var userIdClaim = httpContext.User.FindFirst("ID");
             if (userIdClaim == null) return false;
             var userId = Guid.Parse(userIdClaim.Value);
 
-
-
+            Console.WriteLine($"User ID: {userId}");
+            Console.WriteLine($"Project ID: {projectId}");
             var projectMember = await _context.ProjectMembers
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.User.Id == userId);
 
             if (projectMember == null || !projectMember.IsActive) return false;
 
+            Console.WriteLine($"Project Member Role: {projectMember.Role}");
             return allowedRoles.Contains(projectMember.Role);
         }
 
