@@ -7,5 +7,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task CreateBoardsAsync(Board data);
         Task CreateListBoardsAsync(List<Board> data);
         Task<int> GetMaxOrder(Guid ProjectID);
+        Task<Board?> GetBoardByIdAsync(Guid id);
+        Task UpdateBoard(Board data);
+        Task<List<Board>?> GetBoardsAfterOrderAsync(int order);
+        Task UpdateListBoardsAsync(List<Board> data);
     }
 }

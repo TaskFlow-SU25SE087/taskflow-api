@@ -104,5 +104,31 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.CreateBoard(request);
             return ApiResponse<bool>.Success(result);
         }
+
+        [HttpPut("board/update")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> UpdateBoard([FromBody] UpdateBoardRequest request)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            var result = await _context.UpdateBoard(request);
+            return ApiResponse<bool>.Success(result);
+        }
+
+        [HttpDelete("board/delete")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> DeleteBoard([FromQuery] Guid boardId)
+        {
+            var IsAuthorized = await _authorization.AuthorizeAsync(boardId, ProjectRole.PM);
+            if (!IsAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            var result = await _context.DeleteBoard(boardId);
+            return ApiResponse<bool>.Success(result);
+        }
     }
 }

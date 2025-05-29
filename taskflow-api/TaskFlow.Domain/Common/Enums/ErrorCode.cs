@@ -35,6 +35,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
 
         // Board related error codes(5)
         public static readonly ErrorDetail CannotCreateBoard = new(5001, "Cannot create board", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail BoardNotFound = new(5002, "Board not found", StatusCodes.Status404NotFound);
 
         // Authorization related error codes(9)
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);

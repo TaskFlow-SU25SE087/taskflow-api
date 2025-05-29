@@ -157,6 +157,32 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
         }
 
+        public async Task<bool> DeleteBoard(Guid boardId)
+        {
+            //No condition set to not be deleted. Will be in the future.
+
+            var boardDelete = await _boardRepository.GetBoardByIdAsync(boardId);
+            if (boardDelete == null)
+            {
+                throw new AppException(ErrorCode.BoardNotFound);
+            }
+            //Set the board as inactive
+            boardDelete!.IsActive = false;
+            await _boardRepository.UpdateBoard(boardDelete);
+
+            //Update the order of the boards after the deleted board
+            var listBoradsUpdate = await _boardRepository.GetBoardsAfterOrderAsync(boardDelete.Order);
+            if (listBoradsUpdate != null)
+            {
+                foreach (var board in listBoradsUpdate)
+                {
+                    board.Order--;
+                }
+                await _boardRepository.UpdateListBoardsAsync(listBoradsUpdate);
+            }
+            return true;
+        }
+
         public async Task<bool> LeaveTheProject(Guid projectId)
         {
             var httpContext = _httpContextAccessor.HttpContext;
@@ -191,6 +217,24 @@ namespace taskflow_api.TaskFlow.Application.Services
             //Remove the member from the project
             member!.IsActive = false;
             await _projectMemberRepository.UpdateMember(member);
+            return true;
+        }
+
+        public async Task<bool> UpdateBoard(UpdateBoardRequest request)
+        {
+            var board = await _boardRepository.GetBoardByIdAsync(request.BoardId);
+            if (board == null)
+            {
+                throw new AppException(ErrorCode.BoardNotFound);
+            }
+            //Update the board
+            board!.Name = request.Name;
+            board.Description = request.Description;
+            board.Order = request.Order;
+            board.IsActive = request.IsActive;
+            board.ProjectId = request.ProjectId;
+
+            await _boardRepository.UpdateBoard(board);
             return true;
         }
 

@@ -12,6 +12,8 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<bool> LeaveTheProject(Guid projectId);
         public Task<ProjectResponse> UpdateProject(UpdateProjectRequest request);
         public Task<bool> CreateBoard(CreateBoardRequest request);
+        public Task<bool> UpdateBoard(UpdateBoardRequest request);
+        public Task<bool> DeleteBoard(Guid boardId);
 
     }
 }
