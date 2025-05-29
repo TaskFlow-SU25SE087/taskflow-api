@@ -137,6 +137,43 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
         }
 
+        public async Task<bool> LeaveTheProject(Guid projectId)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var userId = httpContext?.User.FindFirst("id")?.Value;
+            if (userId == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            var member = await _projectMemberRepository.FindMemberInProject(projectId, Guid.Parse(userId));
+            if (member == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            //Check if the user is PM
+            if (member.Role == ProjectRole.PM)
+            {
+                throw new AppException(ErrorCode.CannotLeaveProjectAsPM);
+            }
+            //Remove the member from the project
+            member.IsActive = false;
+            await _projectMemberRepository.UpdateMember(member);
+            return true;
+        }
+
+        public async Task<bool> RemoveMember(Guid projectId, Guid userId)
+        {
+            var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
+            if (member == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            //Remove the member from the project
+            member!.IsActive = false;
+            await _projectMemberRepository.UpdateMember(member);
+            return true;
+        }
+
         public async Task<bool> VerifyJoinProject(string token)
         {
             var verifyToken = await _verifyTokenRopository.GetVerifyTokenAsync(token);

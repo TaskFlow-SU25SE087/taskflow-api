@@ -46,10 +46,36 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(project);
         }
 
-        [HttpGet("auth/verify-join-project")]
+        [HttpGet("project/verify-join")]
         public async Task<ApiResponse<bool>> VerifyJoinProject([FromQuery] string token)
         {
             bool result = await _context.VerifyJoinProject(token);
+            return ApiResponse<bool>.Success(result);
+        }
+
+        [HttpDelete("member/remove")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> RemoveMember([FromQuery] Guid projectId, [FromQuery] Guid userId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.PM);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            var result = await _context.RemoveMember(projectId, userId);
+            return ApiResponse<bool>.Success(result);
+        }
+
+        [HttpPost("leave")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> LeaveProject([FromQuery] Guid projectId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.PM, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            var result = await _context.LeaveTheProject(projectId);
             return ApiResponse<bool>.Success(result);
         }
     }

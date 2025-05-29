@@ -34,7 +34,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<IdentityResult>.Success(await _context.RegisterAccount(model));
         }
 
-        [HttpGet("admin")]
+        [HttpGet("admin/users")]
         [Authorize(Roles = "Admin")]
         public async Task<ApiResponse<PagedResult<UserAdminResponse>>> GetAllUser([FromQuery] PagingParams pagingParams)
         {
@@ -42,7 +42,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<PagedResult<UserAdminResponse>>.Success(users);
         }
 
-        [HttpPost("admin/ban/{userId}")]
+        [HttpPatch("admin/ban/{userId}")]
         [Authorize(Roles = "Admin")]
         public async Task<ApiResponse<UserAdminResponse>> BanUser(Guid userId)
         {
@@ -50,7 +50,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserAdminResponse>.Success(user);
         }
 
-        [HttpPost("admin/unban/{userId}")]
+        [HttpPatch("admin/unban/{userId}")]
         [Authorize(Roles = "Admin")]
         public async Task<ApiResponse<UserAdminResponse>> UnBanUser(Guid userId)
         {
@@ -74,7 +74,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserResponse>.Success(user);
         }
 
-        [HttpPost("token/RenewToken")]
+        [HttpPost("auth/refresh-token")]
         public async Task<ApiResponse<TokenModel>> RenewToken(TokenModel model)
         {
             var newtoken = await _context.RenewToken(model);

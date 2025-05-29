@@ -8,5 +8,8 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<ProjectResponse> CreateProject(CreateProjectRequest request);
         public Task<bool> AddMember(AddMemberRequest request);
         public Task<bool> VerifyJoinProject(string token);
+        public Task<bool> RemoveMember(Guid projectId, Guid userId);
+        public Task<bool> LeaveTheProject(Guid projectId);
+
     }
 }

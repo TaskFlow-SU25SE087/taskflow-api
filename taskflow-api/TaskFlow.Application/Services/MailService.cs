@@ -52,7 +52,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task SendMailJoinProject(string email, string token, string type)
         {
-            var verificationUrl = $"{_appSetting.BaseUrl}/project/auth/verify-join-project?token={token}";
+            var verificationUrl = $"{_appSetting.BaseUrl}/project/verify-join?token={token}";
             var content = new MailContent
             {
                 To = email,
