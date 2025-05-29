@@ -174,6 +174,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
+        public async Task<ProjectResponse> UpdateProject(UpdateProjectRequest request)
+        {
+            var project = await _projectRepository.GetProjectByIdAsync(request.ProjectId);
+            if (project == null)
+            {
+                throw new AppException(ErrorCode.ProjectNotFound);
+            }
+            //Update the project
+             project!.Title = request.Title;
+            await _projectRepository.UpdateProject(project);
+            return _mapper.Map<ProjectResponse>(project);
+        }
+
         public async Task<bool> VerifyJoinProject(string token)
         {
             var verifyToken = await _verifyTokenRopository.GetVerifyTokenAsync(token);

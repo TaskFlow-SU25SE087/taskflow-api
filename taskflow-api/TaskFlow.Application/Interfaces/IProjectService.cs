@@ -10,6 +10,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<bool> VerifyJoinProject(string token);
         public Task<bool> RemoveMember(Guid projectId, Guid userId);
         public Task<bool> LeaveTheProject(Guid projectId);
+        public Task<ProjectResponse> UpdateProject(UpdateProjectRequest request);
 
     }
 }
