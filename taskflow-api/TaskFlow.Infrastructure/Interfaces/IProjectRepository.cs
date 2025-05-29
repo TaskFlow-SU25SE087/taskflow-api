@@ -8,5 +8,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<Guid> CreateProjectAsync(string title);
         Task<Project?> GetProjectByIdAsync(Guid id);
         Task UpdateProject(Project data);
+
     }
 }

@@ -91,5 +91,18 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var project = await _context.UpdateProject(request);
             return ApiResponse<ProjectResponse>.Success(project);
         }
+
+        [HttpPost("board/create")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> CreateBoard([FromBody] CreateBoardRequest request)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            var result = await _context.CreateBoard(request);
+            return ApiResponse<bool>.Success(result);
+        }
     }
 }

@@ -33,6 +33,9 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail RefreshTokenExpired = new(4002, "Refresh token expired", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail InvalidRefreshToken = new(4003, "Invalid refresh token", StatusCodes.Status401Unauthorized);
 
+        // Board related error codes(5)
+        public static readonly ErrorDetail CannotCreateBoard = new(5001, "Cannot create board", StatusCodes.Status400BadRequest);
+
         // Authorization related error codes(9)
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail Unauthorized = new(9002, "Unauthorized access", StatusCodes.Status401Unauthorized);

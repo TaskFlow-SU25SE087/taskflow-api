@@ -78,6 +78,26 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
+        public async Task<bool> CreateBoard(CreateBoardRequest request)
+        {
+            if (request == null)
+            {
+                throw new AppException(ErrorCode.CannotCreateBoard);
+            }
+            int Order = await _boardRepository.GetMaxOrder(request.ProjectId)+1;
+            var board = new Board
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = request.ProjectId,
+                Name = request.Name,
+                Description = request.Description,
+                Order = Order,
+                IsActive = true
+            };
+            await _boardRepository.CreateBoardsAsync(board);
+            return true;
+        }
+
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
         {
             var httpContext = _httpContextAccessor.HttpContext;
