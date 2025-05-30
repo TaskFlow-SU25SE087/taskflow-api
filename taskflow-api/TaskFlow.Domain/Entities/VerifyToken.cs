@@ -1,9 +1,11 @@
-﻿using taskflow_api.TaskFlow.Domain.Common.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
     public class VerifyToken
     {
+        [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Token { get; set; } = null!;
         public Guid UserId { get; set; }

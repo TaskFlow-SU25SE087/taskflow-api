@@ -22,11 +22,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IMailService _mailService;
         private readonly IMapper _mapper;
         private readonly IVerifyTokenRopository _verifyTokenRopository;
+        private readonly ISpringRepository _springRepository;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
             IProjectMemberRepository projectMember, IBoardRepository boardRepository,
-            IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository)
+            IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository,
+            ISpringRepository springRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -37,6 +39,7 @@ namespace taskflow_api.TaskFlow.Application.Services
              _mailService = mailService;
             _mapper = mapper;
             _verifyTokenRopository = verifyTokenRopository;
+            _springRepository = springRepository;
         }
 
         public async Task<bool> AddMember(AddMemberRequest request)
@@ -115,6 +118,19 @@ namespace taskflow_api.TaskFlow.Application.Services
                 IsActive = true
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
+            //create SPring for the project
+            var newSprint = new Sprint
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = projectId,
+                Name = "Sprint 1",
+                Description = "First sprint of the project",
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(14),
+                Status = SprintStatus.NotStarted
+            };
+            await _springRepository.CreateSprintAsync(newSprint);
+
             //create default boards for the project
             Console.WriteLine(projectId);
             int Order = await _boardRepository.GetMaxOrder(projectId);
@@ -155,6 +171,22 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Id = projectId,
                 Title = request.title
             };
+        }
+
+        public async Task<bool> CreateSprint(CreateSprintRequest request)
+        {
+            var newSprint = new Sprint
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = request.ProjectId,
+                Name = request.Name,
+                Description = request.Description,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                Status = SprintStatus.NotStarted
+            };
+            await _springRepository.CreateSprintAsync(newSprint);
+            return true;
         }
 
         public async Task<bool> DeleteBoard(Guid boardId)
@@ -238,6 +270,18 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
+        public async Task<bool> UpdateBoardOrder(List<UpdateBoardRequest> request)
+        {
+            var listBoards = _mapper.Map<List<Board>>(request);
+            if (listBoards == null || listBoards.Count == 0)
+            {
+                throw new AppException(ErrorCode.CannotUpdateBoard);
+            }
+            //Update the order of the boards
+            await _boardRepository.UpdateListBoardsAsync(listBoards);
+            return true;
+        }
+
         public async Task<ProjectResponse> UpdateProject(UpdateProjectRequest request)
         {
             var project = await _projectRepository.GetProjectByIdAsync(request.ProjectId);
@@ -250,6 +294,22 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _projectRepository.UpdateProject(project);
             return _mapper.Map<ProjectResponse>(project);
         }
+
+        public async Task<bool> UpdateSprint(UpdateSprintRequest request)
+        {
+            var UpdateSprint = new Sprint
+            {
+                Id = request.SprintId,
+                Name = request.Name,
+                Description = request.Description,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                Status = request.Status,
+            };
+            await _springRepository.UpdateSprintAsync(UpdateSprint);
+            return true;
+        }
+        
 
         public async Task<bool> VerifyJoinProject(string token)
         {

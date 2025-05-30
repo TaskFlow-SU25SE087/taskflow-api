@@ -14,6 +14,8 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<bool> CreateBoard(CreateBoardRequest request);
         public Task<bool> UpdateBoard(UpdateBoardRequest request);
         public Task<bool> DeleteBoard(Guid boardId);
-
+        public Task<bool> UpdateBoardOrder(List<UpdateBoardRequest> request);
+        public Task<bool> CreateSprint(CreateSprintRequest request);
+        public Task<bool> UpdateSprint(UpdateSprintRequest request);
     }
 }
