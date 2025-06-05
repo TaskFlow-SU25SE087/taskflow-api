@@ -20,7 +20,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             var project = new Project
             {
                 Id = Guid.NewGuid(),
-                Title = title,
+                Description  = title,
             };
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();

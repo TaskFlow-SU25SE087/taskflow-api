@@ -8,11 +8,15 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     {
         public string? Avatar { get; set; } = "Image/Avatars/avatar.png";
         public string FullName { get; set; } = null!;
-        public bool IsActive { get; set; } = false;
+        public bool IsBanned { get; set; } = false;
+        public bool IsPermanentlyBanned { get; set; } = false;
+        public int ReportCount { get; set; } = 0;
 
         public UserRole Role { get; set; } = UserRole.User;
 
         public List<ProjectMember> ProjectMembers { get; set; } = new();
+        public List<UserBans> Bans { get; set; } = new();
+        public List<UserReports> Reports { get; set; } = new();
 
     }
 }
