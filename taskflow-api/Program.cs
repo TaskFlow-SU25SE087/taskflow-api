@@ -24,6 +24,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<ISprintService, SprintService>();
+builder.Services.AddScoped<ITaskFlowAuthorizationService, TaskFlowAuthorizationService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
+
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -31,6 +36,8 @@ builder.Services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
 builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IVerifyTokenRopository, VerifyTokenRopository>();
+builder.Services.AddScoped<ISprintRepository, SprintRepository>();
+
 
 // Mapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

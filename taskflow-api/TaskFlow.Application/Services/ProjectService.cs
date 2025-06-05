@@ -22,13 +22,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IMailService _mailService;
         private readonly IMapper _mapper;
         private readonly IVerifyTokenRopository _verifyTokenRopository;
-        private readonly ISpringRepository _springRepository;
+        private readonly ISprintRepository _sprintRepository;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
             IProjectMemberRepository projectMember, IBoardRepository boardRepository,
             IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository,
-            ISpringRepository springRepository)
+            ISprintRepository springRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -39,66 +39,7 @@ namespace taskflow_api.TaskFlow.Application.Services
              _mailService = mailService;
             _mapper = mapper;
             _verifyTokenRopository = verifyTokenRopository;
-            _springRepository = springRepository;
-        }
-
-        public async Task<bool> AddMember(AddMemberRequest request)
-        {
-            var user = _userManager.FindByEmailAsync(request.Email);
-            if (user.Result == null)
-                throw new AppException(ErrorCode.NoUserFound);
-            //save token to the database
-            var token = GenerateRandom.GenerateRandomToken();
-            await _verifyTokenRopository.AddVerifyTokenAsync(new VerifyToken
-            {
-                UserId = user.Result.Id,
-                ProjectId = request.ProjectId,
-                Token = token,
-                Type = VerifyTokenEnum.JoinProject,
-                IsUsed = false,
-                ExpiresAt = DateTime.UtcNow.AddDays(3),
-            });
-            //check member has been in the project
-            var member = _projectMemberRepository.FindMemberInProject(request.ProjectId, user.Result.Id);
-            if (member.Result != null)
-            {
-                //member back to the project
-                //send email to the user
-                await _mailService.SendMailJoinProject(request.Email, token, "come back to the project");
-                return true;
-            }
-            //create new member
-            var projectMember = new ProjectMember
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Result.Id,
-                ProjectId = request.ProjectId,
-                Role = ProjectRole.Member,
-                IsActive = false
-            };
-            await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
-            await _mailService.SendMailJoinProject(request.Email, token, "join the project");
-            return true;
-        }
-
-        public async Task<bool> CreateBoard(CreateBoardRequest request)
-        {
-            if (request == null)
-            {
-                throw new AppException(ErrorCode.CannotCreateBoard);
-            }
-            int Order = await _boardRepository.GetMaxOrder(request.ProjectId)+1;
-            var board = new Board
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = request.ProjectId,
-                Name = request.Name,
-                Description = request.Description,
-                Order = Order,
-                IsActive = true
-            };
-            await _boardRepository.CreateBoardsAsync(board);
-            return true;
+            _sprintRepository = springRepository;
         }
 
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
@@ -129,7 +70,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 EndDate = DateTime.UtcNow.AddDays(14),
                 Status = SprintStatus.NotStarted
             };
-            await _springRepository.CreateSprintAsync(newSprint);
+            await _sprintRepository.CreateSprintAsync(newSprint);
 
             //create default boards for the project
             Console.WriteLine(projectId);
@@ -173,115 +114,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
         }
 
-        public async Task<bool> CreateSprint(CreateSprintRequest request)
-        {
-            var newSprint = new Sprint
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = request.ProjectId,
-                Name = request.Name,
-                Description = request.Description,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
-                Status = SprintStatus.NotStarted
-            };
-            await _springRepository.CreateSprintAsync(newSprint);
-            return true;
-        }
-
-        public async Task<bool> DeleteBoard(Guid boardId)
-        {
-            //No condition set to not be deleted. Will be in the future.
-
-            var boardDelete = await _boardRepository.GetBoardByIdAsync(boardId);
-            if (boardDelete == null)
-            {
-                throw new AppException(ErrorCode.BoardNotFound);
-            }
-            //Set the board as inactive
-            boardDelete!.IsActive = false;
-            await _boardRepository.UpdateBoard(boardDelete);
-
-            //Update the order of the boards after the deleted board
-            var listBoradsUpdate = await _boardRepository.GetBoardsAfterOrderAsync(boardDelete.Order);
-            if (listBoradsUpdate != null)
-            {
-                foreach (var board in listBoradsUpdate)
-                {
-                    board.Order--;
-                }
-                await _boardRepository.UpdateListBoardsAsync(listBoradsUpdate);
-            }
-            return true;
-        }
-
-        public async Task<bool> LeaveTheProject(Guid projectId)
-        {
-            var httpContext = _httpContextAccessor.HttpContext;
-            var userId = httpContext?.User.FindFirst("id")?.Value;
-            if (userId == null)
-            {
-                throw new AppException(ErrorCode.NoUserFound);
-            }
-            var member = await _projectMemberRepository.FindMemberInProject(projectId, Guid.Parse(userId));
-            if (member == null)
-            {
-                throw new AppException(ErrorCode.NoUserFound);
-            }
-            //Check if the user is PM
-            if (member.Role == ProjectRole.PM)
-            {
-                throw new AppException(ErrorCode.CannotLeaveProjectAsPM);
-            }
-            //Remove the member from the project
-            member.IsActive = false;
-            await _projectMemberRepository.UpdateMember(member);
-            return true;
-        }
-
-        public async Task<bool> RemoveMember(Guid projectId, Guid userId)
-        {
-            var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
-            if (member == null)
-            {
-                throw new AppException(ErrorCode.NoUserFound);
-            }
-            //Remove the member from the project
-            member!.IsActive = false;
-            await _projectMemberRepository.UpdateMember(member);
-            return true;
-        }
-
-        public async Task<bool> UpdateBoard(UpdateBoardRequest request)
-        {
-            var board = await _boardRepository.GetBoardByIdAsync(request.BoardId);
-            if (board == null)
-            {
-                throw new AppException(ErrorCode.BoardNotFound);
-            }
-            //Update the board
-            board!.Name = request.Name;
-            board.Description = request.Description;
-            board.Order = request.Order;
-            board.IsActive = request.IsActive;
-            board.ProjectId = request.ProjectId;
-
-            await _boardRepository.UpdateBoard(board);
-            return true;
-        }
-
-        public async Task<bool> UpdateBoardOrder(List<UpdateBoardRequest> request)
-        {
-            var listBoards = _mapper.Map<List<Board>>(request);
-            if (listBoards == null || listBoards.Count == 0)
-            {
-                throw new AppException(ErrorCode.CannotUpdateBoard);
-            }
-            //Update the order of the boards
-            await _boardRepository.UpdateListBoardsAsync(listBoards);
-            return true;
-        }
-
         public async Task<ProjectResponse> UpdateProject(UpdateProjectRequest request)
         {
             var project = await _projectRepository.GetProjectByIdAsync(request.ProjectId);
@@ -295,42 +127,5 @@ namespace taskflow_api.TaskFlow.Application.Services
             return _mapper.Map<ProjectResponse>(project);
         }
 
-        public async Task<bool> UpdateSprint(UpdateSprintRequest request)
-        {
-            var UpdateSprint = new Sprint
-            {
-                Id = request.SprintId,
-                Name = request.Name,
-                Description = request.Description,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
-                Status = request.Status,
-            };
-            await _springRepository.UpdateSprintAsync(UpdateSprint);
-            return true;
-        }
-        
-
-        public async Task<bool> VerifyJoinProject(string token)
-        {
-            var verifyToken = await _verifyTokenRopository.GetVerifyTokenAsync(token);
-            if (verifyToken == null || verifyToken.IsUsed || verifyToken.IsExpired)
-            {
-                throw new AppException(ErrorCode.InvalidToken);
-            }
-            var user = await _projectMemberRepository.FindMemberInProject(verifyToken.ProjectId!.Value, verifyToken.UserId);
-            if (user == null)
-            {
-                throw new AppException(ErrorCode.NoUserFound);
-            }
-            //Active the user in the project
-            user.IsActive = true;
-            await _projectMemberRepository.UpdateMember(user);
-
-            //Update token
-            verifyToken.IsUsed = true;
-            await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
-            return true;
-        }
     }
 }

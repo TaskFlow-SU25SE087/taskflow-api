@@ -52,7 +52,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task SendMailJoinProject(string email, string token, string type)
         {
-            var verificationUrl = $"{_appSetting.BaseUrl}/project/verify-join?token={token}";
+            var verificationUrl = $"{_appSetting.BaseUrl}/project/member/verify-join?token={token}";
             var content = new MailContent
             {
                 To = email,
@@ -77,7 +77,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var content = new MailContent
             {
                 To = email,
-                Subject = "Account Verification",
+                Subject = "Verification Join Project",
                 Body = $"Please verify your account by clicking the following link: " +
                        $"<a href='{verificationUrl}' target='_blank'>Verify Account</a><br/><br/>" +
                        $"<span style='color: red;'>* This verification link will expire in 30 minutes.</span>"

@@ -4,11 +4,11 @@ using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Repository
 {
-    public class SpringRepository : ISpringRepository
+    public class SprintRepository : ISprintRepository
     {
         private readonly TaskFlowDbContext _context;
 
-        public SpringRepository(TaskFlowDbContext context)
+        public SprintRepository(TaskFlowDbContext context)
         {
             _context = context;
         }

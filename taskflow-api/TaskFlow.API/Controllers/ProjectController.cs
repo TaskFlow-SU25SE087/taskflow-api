@@ -33,52 +33,6 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<ProjectResponse>.Success(project);
         }
 
-        [HttpPost("add-member")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> AddMember([FromBody] AddMemberRequest request)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var project = await _context.AddMember(request);
-            return ApiResponse<bool>.Success(project);
-        }
-
-        [HttpGet("project/verify-join")]
-        public async Task<ApiResponse<bool>> VerifyJoinProject([FromQuery] string token)
-        {
-            bool result = await _context.VerifyJoinProject(token);
-            return ApiResponse<bool>.Success(result);
-        }
-
-        [HttpDelete("member/remove")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> RemoveMember([FromQuery] Guid projectId, [FromQuery] Guid userId)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.PM);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.RemoveMember(projectId, userId);
-            return ApiResponse<bool>.Success(result);
-        }
-
-        [HttpPost("leave")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> LeaveProject([FromQuery] Guid projectId)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.PM, ProjectRole.Member);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.LeaveTheProject(projectId);
-            return ApiResponse<bool>.Success(result);
-        }
-
         [HttpPut("update")]
         [Authorize]
         public async Task<ApiResponse<ProjectResponse>> UpdateProject([FromBody] UpdateProjectRequest request)
@@ -90,84 +44,6 @@ namespace taskflow_api.TaskFlow.API.Controllers
             }
             var project = await _context.UpdateProject(request);
             return ApiResponse<ProjectResponse>.Success(project);
-        }
-
-        [HttpPost("board/create")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> CreateBoard([FromBody] CreateBoardRequest request)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.CreateBoard(request);
-            return ApiResponse<bool>.Success(result);
-        }
-
-        [HttpPut("board/update")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> UpdateBoard([FromBody] UpdateBoardRequest request)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.UpdateBoard(request);
-            return ApiResponse<bool>.Success(result);
-        }
-
-        [HttpDelete("board/delete")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> DeleteBoard([FromQuery] Guid boardId)
-        {
-            var IsAuthorized = await _authorization.AuthorizeAsync(boardId, ProjectRole.PM);
-            if (!IsAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.DeleteBoard(boardId);
-            return ApiResponse<bool>.Success(result);
-        }
-
-        [HttpPut("board/order")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> UpdateBoardOrder([FromBody] List<UpdateBoardRequest> request)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(request[0].ProjectId, ProjectRole.PM);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.UpdateBoardOrder(request);
-            return ApiResponse<bool>.Success(result);
-        }
-
-        [HttpPost("sprint/create")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> CreateSprint([FromBody] CreateSprintRequest request)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.CreateSprint(request);
-            return ApiResponse<bool>.Success(result);
-        }
-
-        [HttpPut("sprint/update")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> UpdateSprint([FromBody] UpdateSprintRequest request)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.UpdateSprint(request);
-            return ApiResponse<bool>.Success(result);
         }
     }
 }
