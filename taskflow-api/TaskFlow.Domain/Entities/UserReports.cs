@@ -8,6 +8,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Guid Id { get; set; } = Guid.NewGuid();
         [Required]
         public Guid UserReportId { get; set; }
+        public User ReportedUser { get; set; } = null!;
         [Required]
         public Guid UserBeenReportId { get; set; }
         [Required]

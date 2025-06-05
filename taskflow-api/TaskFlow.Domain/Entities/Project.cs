@@ -6,10 +6,12 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; }
-
+        [Required]
+        public string Title { get; set; } = string.Empty;
         [Required]
         public string Description  { get; set; } = string.Empty;
         public Guid OwnerId { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime LastUpdate { get; set; }
         public List<ProjectMember> Members { get; set; } = new();
         public List<Board> Boards { get; set; } = new List<Board>();

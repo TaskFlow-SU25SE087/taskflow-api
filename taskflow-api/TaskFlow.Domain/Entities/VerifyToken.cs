@@ -14,6 +14,8 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public DateTime ExpiresAt { get; set; }
         public VerifyTokenEnum Type { get; set; }
         public bool IsUsed { get; set; } = false;
+        public bool IsLocked { get; set; } = false;
         public bool IsExpired => DateTime.UtcNow > ExpiresAt;
+        public int Attempts { get; set; } = 0;
     }
 }

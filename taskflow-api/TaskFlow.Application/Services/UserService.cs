@@ -16,6 +16,7 @@ using taskflow_api.TaskFlow.Shared.Helpers;
 using System.Security.Cryptography;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Infrastructure.Repository;
+using Microsoft.AspNetCore.Http;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -140,9 +141,10 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<TokenModel> Login(LoginRequest model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null) throw new AppException(ErrorCode.InvalidEmail);
-            if (!user.IsPermanentlyBanned) throw new AppException(ErrorCode.AccountBanned);
+            if (user.IsPermanentlyBanned) throw new AppException(ErrorCode.AccountBanned);
+            if (user.IsBanned) throw new AppException(ErrorCode.AccountBanned);
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!passwordValid) throw new AppException(ErrorCode.InvalidPassword);
@@ -166,39 +168,50 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             //);
             //var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-            return token;
+            return token!;
         }
 
-        public async Task<IdentityResult> RegisterAccount(RegisterAccountRequest model)
+        public async Task<TokenModel> RegisterAccount(RegisterAccountRequest model)
         {
-            //check email exists
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
+            var existingGmail = await _userManager.FindByEmailAsync(model.Email);
+            var existingUserName = await _userManager.FindByNameAsync(model.Email);
+
+            //check Username
+            if (existingUserName != null)
             {
-                if (existingUser.EmailConfirmed)
+                if (existingUserName.IsBanned)
+                {
+                    throw new AppException(ErrorCode.AccountBanned);
+                }
+                throw new AppException(ErrorCode.UsernameExists);
+            }
+
+            //check email exists
+            if (existingGmail != null)
+            {
+                if (existingGmail.EmailConfirmed)
                 {
                     throw new AppException(ErrorCode.EmailExists);
                 }
                 else
                 {
-                    await _userManager.DeleteAsync(existingUser);
+                    await _userManager.DeleteAsync(existingGmail);
                     var verifyToken = await _verifyTokenRopository
-                        .GetVerifyTokenByUserIdAndType(existingUser.Id, VerifyTokenEnum.VerifyAccount);
+                        .GetVerifyTokenByUserIdAndType(existingGmail.Id, VerifyTokenEnum.VerifyAccount);
                     if (verifyToken != null)
                     {
-                        verifyToken.IsUsed = true;
+                        verifyToken.IsLocked = true;
                         await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
                     }
                 }
                 
             }
 
-
             var user = new User
             {
                 FullName = model.FullName,
                 Email = model.Email,
-                UserName = model.Email,
+                UserName = model.Username,
                 Role = UserRole.User,
             };
 
@@ -210,38 +223,42 @@ namespace taskflow_api.TaskFlow.Application.Services
                 user.Avatar = avatarPath;
             }
 
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (result.Succeeded)
+            var saveUser = await _userManager.CreateAsync(user, model.Password);
+            
+            if (saveUser.Succeeded)
             {
-                string tokenVerify = GenerateRandom.GenerateRandomToken();
+                string tokenVerify = GenerateRandom.GenerateRandomNumber();
                 var verifyToken = new VerifyToken
                 {
                     UserId = user.Id,
                     Token = tokenVerify,
                     Type = VerifyTokenEnum.VerifyAccount,
-                    CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(30),
                 };
                 await _verifyTokenRopository.AddVerifyTokenAsync(verifyToken);
                 await _mailService.VerifyAccount(model.Email, tokenVerify);
-                Console.WriteLine($"Email server: {model.Email}"); 
             }
 
             //error UserManager.CreateAsync
-            if (!result.Succeeded)
+            if (!saveUser.Succeeded)
             {
                 if (!string.IsNullOrEmpty(avatarPath))
                 {
                     ImageHelper.DeleteImage(avatarPath, _env.WebRootPath);
                 }
-                var errorMessages = string.Join("; ", result.Errors.Select(e => e.Description));
+                var errorMessages = string.Join("; ", saveUser.Errors.Select(e => e.Description));
                 throw new AppException(new ErrorDetail(
                     1000,
                     errorMessages,
                     StatusCodes.Status400BadRequest
                     ));
             }
-            return result;
+            var result = await Login(new LoginRequest
+            {
+                Username = model.Username,
+                Password = model.Password
+            });
+            return result!;
 
         }
 
@@ -332,22 +349,24 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<bool> VerifyAccount(string token)
         {
-            var verifyToken = await _verifyTokenRopository.GetVerifyTokenAsync(token);
-            if (verifyToken == null || verifyToken.IsUsed || verifyToken.IsExpired)
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var verifyToken = await _verifyTokenRopository.GetVerifyTokenByUserIdAndType(Guid.Parse(UserId!), VerifyTokenEnum.VerifyAccount);
+            if (!verifyToken!.Token.Equals(token))
             {
+                verifyToken.Attempts++;
+                if (verifyToken.Attempts >= 6)
+                {
+                    verifyToken.IsLocked = true;
+                    throw new AppException(ErrorCode.TooManyAttempts);
+                }
+                await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
                 throw new AppException(ErrorCode.InvalidToken);
             }
-            var user = await _userManager.FindByIdAsync(verifyToken.UserId.ToString());
-            if (user == null)
-            {
-                throw new AppException(ErrorCode.NoUserFound);
-            }
-
-            user.IsPermanentlyBanned = true;
-            user.EmailConfirmed = true;
             verifyToken.IsUsed = true;
+            var user = await _userManager.FindByIdAsync(UserId!.ToString());
+            user!.EmailConfirmed = true;
             await _userManager.UpdateAsync(user);
-            await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
             return true;
         }
 

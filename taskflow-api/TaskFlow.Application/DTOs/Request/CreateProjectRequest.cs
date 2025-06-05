@@ -6,5 +6,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
     {
         [Required(ErrorMessage = "Please enter project name")]
         public string title { get; set; } = null!;
+        [Required(ErrorMessage = "Please enter project description")]
+        public string description { get; set; } = null!;
     }
 }

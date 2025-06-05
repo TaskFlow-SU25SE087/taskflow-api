@@ -16,5 +16,11 @@ namespace taskflow_api.TaskFlow.Shared.Helpers
 
             return urlSafe;
         }
+
+        public static string GenerateRandomNumber()
+        {
+            int code = RandomNumberGenerator.GetInt32(100000, 1000000);
+            return code.ToString();
+        }
     }
 }

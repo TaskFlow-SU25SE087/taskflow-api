@@ -15,12 +15,15 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
-        public async Task<Guid> CreateProjectAsync(string title)
+        public async Task<Guid> CreateProjectAsync(string title, string description)
         {
             var project = new Project
             {
                 Id = Guid.NewGuid(),
-                Description  = title,
+                Title  = title,
+                Description = description,
+                CreatedAt = DateTime.UtcNow,
+                LastUpdate = DateTime.UtcNow,
             };
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();

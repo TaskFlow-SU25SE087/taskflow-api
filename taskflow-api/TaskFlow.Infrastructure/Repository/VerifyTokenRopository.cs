@@ -31,7 +31,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public Task<VerifyToken?> GetVerifyTokenByUserIdAndType(Guid id, VerifyTokenEnum Type)
         {
             var verifyToken = _context.VerifyTokens
-                .FirstOrDefaultAsync(t => t.UserId == id && t.Type == Type && !t.IsUsed);
+                .FirstOrDefaultAsync(t => t.UserId == id && t.Type == Type && !t.IsUsed && !t.IsLocked);
             return verifyToken;
         }
 

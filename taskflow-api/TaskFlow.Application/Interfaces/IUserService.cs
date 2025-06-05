@@ -7,7 +7,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface IUserService
     {
-        Task<IdentityResult> RegisterAccount(RegisterAccountRequest model);
+        Task<TokenModel> RegisterAccount(RegisterAccountRequest model);
         Task<TokenModel> Login(LoginRequest model);
         Task<PagedResult<UserAdminResponse>> GetAllUser(PagingParams pagingParams);
         Task<UserAdminResponse> BanUser(Guid userId);

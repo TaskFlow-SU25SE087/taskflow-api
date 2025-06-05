@@ -56,7 +56,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var content = new MailContent
             {
                 To = email,
-                Subject = "Account Verification",
+                Subject = "Verification Join Project",
                 Body = $"Wellcome {type} by clicking the following link: " +
                        $"<a href='{verificationUrl}' target='_blank'>{type}</a><br/><br/>" +
                        $"<span style='color: red;'>* This verification link will expire in 3 days.</span>"
@@ -73,14 +73,22 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task VerifyAccount(string email, string token)
         {
-            var verificationUrl = $"{_appSetting.BaseUrl}/auth/verify-account?token={token}";
             var content = new MailContent
             {
                 To = email,
-                Subject = "Verification Join Project",
-                Body = $"Please verify your account by clicking the following link: " +
-                       $"<a href='{verificationUrl}' target='_blank'>Verify Account</a><br/><br/>" +
-                       $"<span style='color: red;'>* This verification link will expire in 30 minutes.</span>"
+                Subject = "🔐 Account Verification",
+                Body = $@"
+            <div style='font-family: Arial, sans-serif; font-size: 14px; color: #333;'>
+                <p>Hi,</p>
+                <p>Your email verification code is:</p>
+                <h2 style='color: #007bff;'>{token}</h2>
+                <p>Please enter this code in the application to complete your registration.</p>
+                <p style='color: red;'><strong>* This code will expire in 30 minutes.</strong></p>
+                <br/>
+                <p>If you did not request this, you can ignore this email.</p>
+                <br/>
+                <p>Thanks,<br/>Task Flow</p>
+            </div>"
             };
             try
             {

@@ -17,6 +17,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail CannotBanAdmin = new(1006, "Cannot ban admin user", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail UserAlreadyBanned = new(1007, "User is already banned", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail UserNotBanned = new(1008, "User not banned", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail UsernameExists = new(1009, "Username already exists", StatusCodes.Status400BadRequest);
 
 
         //Image related error codes(2)
@@ -32,6 +33,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail InvalidToken = new(4001, "Invalid token", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail RefreshTokenExpired = new(4002, "Refresh token expired", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail InvalidRefreshToken = new(4003, "Invalid refresh token", StatusCodes.Status401Unauthorized);
+        public static readonly ErrorDetail TooManyAttempts = new(4004, "Too many attempts, please try again later", StatusCodes.Status429TooManyRequests);
 
         // Board related error codes(5)
         public static readonly ErrorDetail CannotCreateBoard = new(5001, "Cannot create board", StatusCodes.Status400BadRequest);

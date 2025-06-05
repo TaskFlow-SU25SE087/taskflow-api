@@ -47,7 +47,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
             //create project
-            var projectId = await _projectRepository.CreateProjectAsync(request.title);
+            var projectId = await _projectRepository.CreateProjectAsync(request.title, request.description);
             if (projectId == Guid.Empty)
                 throw new AppException(ErrorCode.CannotCreateProject);
             //create Pm for the project

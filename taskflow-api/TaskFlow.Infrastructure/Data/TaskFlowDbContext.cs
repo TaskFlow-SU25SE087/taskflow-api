@@ -25,8 +25,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<LogProject> LogProjects { get; set; } = null!;
         public DbSet<RefeshToken> RefeshTokens { get; set; } = null!;
         public DbSet<VerifyToken> VerifyTokens { get; set; } = null!;
-
-
+        public DbSet<UserBans> UserBans { get; set; } = null!;
+        public DbSet<UserReports> UserReports { get; set; } = null!;
+        public DbSet<UserAppeals> UserAppeals { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,65 +52,98 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
             modelBuilder.Entity<User>().Ignore(x => x.LockoutEnabled);
             modelBuilder.Entity<User>().Ignore(x => x.AccessFailedCount);
 
-            //1 project có nhìu board
+            //Project <-> Board
             modelBuilder.Entity<Board>()
                 .HasOne(b => b.Project)
                 .WithMany(p => p.Boards)
                 .HasForeignKey(b => b.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
-            //1 project có nhìu sprint
+            // Project <-> Sprint
             modelBuilder.Entity<Sprint>()
                 .HasOne(s => s.Project)
                 .WithMany(p => p.Sprints)
                 .HasForeignKey(s => s.ProjectId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Restrict);
 
-            //1 board có nhìu task
+            // Board <-> TaskProject
             modelBuilder.Entity<TaskProject>()
                 .HasOne(t => t.Board)
                 .WithMany(b => b.TaskProject)
                 .HasForeignKey(t => t.BoardId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
-            //1 sprint có nhìu task
+            //Sprint <-> TaskProject
             modelBuilder.Entity<TaskProject>()
                 .HasOne(t => t.Sprint)
                 .WithMany(s => s.TaskProject)
                 .HasForeignKey(t => t.SprintId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
-            //1 project có nhìu task
+            // Project <-> Task
             modelBuilder.Entity<TaskProject>()
                 .HasOne(t => t.Project)
                 .WithMany(p => p.TaskProject)
                 .HasForeignKey(t => t.ProjectId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Restrict);
 
-            //1 task có nhìu user
+            //TaskProject <-> TaskUser
             modelBuilder.Entity<TaskUser>()
                .HasOne(tu => tu.Task)
                .WithMany(tp => tp.taskUsers)
                .HasForeignKey(tu => tu.TaskId)
-               .OnDelete(DeleteBehavior.Cascade);
+               .OnDelete(DeleteBehavior.Restrict);
 
-            //1 user có nhìu task
+            //ProjectMember <-> TaskUser
             modelBuilder.Entity<TaskUser>()
                .HasOne(tu => tu.ProjectMember)
                .WithMany(pm => pm.taskUsers)
                .HasForeignKey(tu => tu.ProjectMemberID)
-               .OnDelete(DeleteBehavior.Cascade);
+               .OnDelete(DeleteBehavior.Restrict);
 
-            //1 task có nhìu issue
+            // TaskUser <-> Issue
             modelBuilder.Entity<Issue>()
                 .HasOne(i => i.TaskProject)
                 .WithMany(tp => tp.issues)
                 .HasForeignKey(i => i.TaskProjectID)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
+            //User <-> UserReport
+            modelBuilder.Entity<UserReports>()
+                .HasOne(ur => ur.ReportedUser)
+                .WithMany(u => u.Reports)
+                .HasForeignKey(ur => ur.UserReportId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            //User <-> UserAppeal
+            modelBuilder.Entity<UserAppeals>()
+                .HasOne(ua => ua.User)
+                .WithMany(u => u.Appeals)
+                .HasForeignKey(ua => ua.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //User <-> UserBan
+            modelBuilder.Entity<UserBans>()
+                .HasOne(ub => ub.User)
+                .WithMany(u => u.Bans)
+                .HasForeignKey(ub => ub.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var now = DateTime.UtcNow;
+            var modifiedProjects = ChangeTracker.Entries<Project>()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+            foreach (var entry in modifiedProjects)
+            {
+                entry.Entity.LastUpdate = now;
+            }
+
+                return await base.SaveChangesAsync(cancellationToken);
+        }
+
     }
 
 }

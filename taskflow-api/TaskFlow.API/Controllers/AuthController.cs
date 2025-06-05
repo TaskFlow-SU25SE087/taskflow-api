@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
@@ -26,10 +27,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ApiResponse<IdentityResult>> Register([FromForm] RegisterAccountRequest model)
+        public async Task<ApiResponse<TokenModel>> Register([FromForm] RegisterAccountRequest model)
         {
             var result = await _userService.RegisterAccount(model);
-            return ApiResponse<IdentityResult>.Success(result);
+            return ApiResponse<TokenModel>.Success(result);
         }
 
         [HttpPost("refresh-token")]
@@ -39,7 +40,8 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<TokenModel>.Success(newToken);
         }
 
-        [HttpGet("verify-account")]
+        [HttpGet("verify-email")]
+        [Authorize]
         public async Task<ApiResponse<bool>> VerifyAccount([FromQuery] string token)
         {
             var result = await _userService.VerifyAccount(token);

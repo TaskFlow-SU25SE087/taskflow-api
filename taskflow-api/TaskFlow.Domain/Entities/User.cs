@@ -17,6 +17,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public List<ProjectMember> ProjectMembers { get; set; } = new();
         public List<UserBans> Bans { get; set; } = new();
         public List<UserReports> Reports { get; set; } = new();
+        public List<UserAppeals> Appeals { get; set; } = new();
 
     }
 }
