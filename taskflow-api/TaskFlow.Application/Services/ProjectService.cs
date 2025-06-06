@@ -110,7 +110,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             return new ProjectResponse
             {
                 Id = projectId,
-                Title = request.title
+                Title = request.title,
+                Description = request.description,
             };
         }
 

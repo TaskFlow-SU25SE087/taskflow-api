@@ -8,6 +8,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     {
         public string? Avatar { get; set; } = "Image/Avatars/avatar.png";
         public string FullName { get; set; } = null!;
+        public bool? Gender { get; set; }
         public bool IsBanned { get; set; } = false;
         public bool IsPermanentlyBanned { get; set; } = false;
         public int ReportCount { get; set; } = 0;

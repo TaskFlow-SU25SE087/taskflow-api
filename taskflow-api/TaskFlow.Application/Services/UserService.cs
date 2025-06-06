@@ -25,15 +25,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
-        private readonly IWebHostEnvironment _env;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
         private readonly IRefreshTokenRepository _refeshTokenRepository;
         private readonly IMailService _mailService;
         private readonly IVerifyTokenRopository _verifyTokenRopository;
+        private readonly IPhotoService _photoService;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
-            IConfiguration configuration, IWebHostEnvironment env, 
+            IConfiguration configuration, IPhotoService photoService, 
             IHttpContextAccessor httpContextAccessor, IMapper mapper,
             IRefreshTokenRepository refeshTokenRepository, IMailService mailService,
             IVerifyTokenRopository verifyTokenRopository)
@@ -41,12 +41,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
-            _env = env;
             _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
             _refeshTokenRepository = refeshTokenRepository;
             _mailService = mailService;
             _verifyTokenRopository = verifyTokenRopository;
+            _photoService = photoService;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -123,14 +123,17 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
         }
 
-        public async Task<PagedResult<UserAdminResponse>> GetAllUser(PagingParams pagingParams)
+        public async Task<PagedResult<UserAdminResponse>> GetAllUser(int Page)
         {
             var users = _userManager.Users
                 .Where(u => u.Role != UserRole.Admin);
 
             var usersResponse = _mapper.ProjectTo<UserAdminResponse>(users);
-
-            pagingParams.PageSize = 5;
+            PagingParams pagingParams = new PagingParams
+            {
+                PageNumber = Page,
+                PageSize = 5
+            };
             var pageUser = await usersResponse.ToPagedListAsync(pagingParams);
             if (!pageUser.Items.Any())
             {
@@ -142,12 +145,12 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<TokenModel> Login(LoginRequest model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
-            if (user == null) throw new AppException(ErrorCode.InvalidEmail);
+            if (user == null) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
             if (user.IsPermanentlyBanned) throw new AppException(ErrorCode.AccountBanned);
             if (user.IsBanned) throw new AppException(ErrorCode.AccountBanned);
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
-            if (!passwordValid) throw new AppException(ErrorCode.InvalidPassword);
+            if (!passwordValid) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
             var token = await GenerateToken(user);
             //var authClaims = new List<Claim>
             //{
@@ -174,17 +177,6 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<TokenModel> RegisterAccount(RegisterAccountRequest model)
         {
             var existingGmail = await _userManager.FindByEmailAsync(model.Email);
-            var existingUserName = await _userManager.FindByNameAsync(model.Email);
-
-            //check Username
-            if (existingUserName != null)
-            {
-                if (existingUserName.IsBanned)
-                {
-                    throw new AppException(ErrorCode.AccountBanned);
-                }
-                throw new AppException(ErrorCode.UsernameExists);
-            }
 
             //check email exists
             if (existingGmail != null)
@@ -195,7 +187,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
                 else
                 {
-                    await _userManager.DeleteAsync(existingGmail);
                     var verifyToken = await _verifyTokenRopository
                         .GetVerifyTokenByUserIdAndType(existingGmail.Id, VerifyTokenEnum.VerifyAccount);
                     if (verifyToken != null)
@@ -203,25 +194,28 @@ namespace taskflow_api.TaskFlow.Application.Services
                         verifyToken.IsLocked = true;
                         await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
                     }
+                    await _userManager.DeleteAsync(existingGmail);
                 }
                 
             }
-
+            var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
+            var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
             var user = new User
             {
                 FullName = model.FullName,
                 Email = model.Email,
-                UserName = model.Username,
+                UserName = model.Email,
                 Role = UserRole.User,
+                Avatar = avatarPath,
             };
 
-            string avatarPath = string.Empty;
-            if (model.Avatar != null)
-            {
-                 avatarPath = await ImageHelper.UploadImage(model.Avatar, _env.WebRootPath,
-                     "Image/Avatars", Guid.NewGuid().ToString());
-                user.Avatar = avatarPath;
-            }
+            //string avatarPath = string.Empty;
+            //if (model.Avatar != null)
+            //{
+            //     avatarPath = await ImageHelper.UploadImage(model.Avatar, _env.WebRootPath,
+            //         "Image/Avatars", Guid.NewGuid().ToString());
+            //    user.Avatar = avatarPath;
+            //}
 
             var saveUser = await _userManager.CreateAsync(user, model.Password);
             
@@ -242,10 +236,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             //error UserManager.CreateAsync
             if (!saveUser.Succeeded)
             {
-                if (!string.IsNullOrEmpty(avatarPath))
-                {
-                    ImageHelper.DeleteImage(avatarPath, _env.WebRootPath);
-                }
+                //if (!string.IsNullOrEmpty(avatarPath))
+                //{
+                //    ImageHelper.DeleteImage(avatarPath, _env.WebRootPath);
+                //}
                 var errorMessages = string.Join("; ", saveUser.Errors.Select(e => e.Description));
                 throw new AppException(new ErrorDetail(
                     1000,
@@ -255,7 +249,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             var result = await Login(new LoginRequest
             {
-                Username = model.Username,
+                Username = model.Email,
                 Password = model.Password
             });
             return result!;
@@ -293,8 +287,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     // Delete old avatar image if it exists???
                     //ImageHelper.DeleteImage(user.Avatar, _env.WebRootPath);
                 }
-                user.Avatar = await ImageHelper.UploadImage(model.Avatar, _env.WebRootPath,
-                     "Image/Avatars", Guid.NewGuid().ToString());
+                user.Avatar = "https://res.cloudinary.com/dpw9sgxab/image/upload/v1749247007/avatar/lx7r0awye6slafyufoq7.jpg";
             }
             var saveImage = await _userManager.UpdateAsync(user);
             if (!saveImage.Succeeded)
@@ -351,11 +344,19 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var email = httpContext?.User.FindFirst("email")?.Value;
+            //check email exists
+            bool isEmailExists = await _userManager.Users.AnyAsync(u => u.Email == email && u.EmailConfirmed);
+            if (isEmailExists)
+            {
+                throw new AppException(ErrorCode.EmailAlreadyVerified);
+            }
+
             var verifyToken = await _verifyTokenRopository.GetVerifyTokenByUserIdAndType(Guid.Parse(UserId!), VerifyTokenEnum.VerifyAccount);
             if (!verifyToken!.Token.Equals(token))
             {
                 verifyToken.Attempts++;
-                if (verifyToken.Attempts >= 6)
+                if (verifyToken.Attempts > 5)
                 {
                     verifyToken.IsLocked = true;
                     throw new AppException(ErrorCode.TooManyAttempts);
@@ -364,6 +365,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.InvalidToken);
             }
             verifyToken.IsUsed = true;
+            await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
             var user = await _userManager.FindByIdAsync(UserId!.ToString());
             user!.EmailConfirmed = true;
             await _userManager.UpdateAsync(user);
@@ -399,6 +401,83 @@ namespace taskflow_api.TaskFlow.Application.Services
             var token = await GenerateToken(user);
 
             return token;
+        }
+
+        public async Task SendMailAgain()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var email = httpContext?.User.FindFirst("email")?.Value;
+            var OldToken = await _verifyTokenRopository
+                .GetVerifyTokenByUserIdAndType(Guid.Parse(UserId!), VerifyTokenEnum.VerifyAccount);
+
+            //Clocked token 
+            OldToken!.IsLocked = true;
+            await _verifyTokenRopository.UpdateTokenAsync(OldToken);
+
+            var newToken = GenerateRandom.GenerateRandomNumber();
+            await _verifyTokenRopository.AddVerifyTokenAsync(new VerifyToken
+            {
+                UserId = Guid.Parse(UserId!),
+                Token = newToken,
+                Type = VerifyTokenEnum.VerifyAccount,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+            });
+            //send mail again
+            await _mailService.VerifyAccount(email!, newToken);
+
+        }
+
+        public async Task<UserResponse> AddUserName(AddProfileUser model)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var user = await _userManager.FindByIdAsync(UserId!);
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            if (!user.EmailConfirmed)
+            {
+                throw new AppException(ErrorCode.EmailNotConfirmed);
+            }
+            if (!user.Email.Equals(user.UserName))
+            {
+                throw new AppException(ErrorCode.UsernameAlreadyAdded);
+            }
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null && existingUser.Id != user.Id)
+            {
+                throw new AppException(ErrorCode.UsernameAlreadyExists);
+            }
+            if (model.Avatar != null)
+            {
+                var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
+                var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
+                user.Avatar = avatarPath;
+            }
+            user.PhoneNumber=model.PhoneNumber;
+            if (model.PhoneNumber != null) user.PhoneNumberConfirmed = true;
+            user.Gender = model.Gender;
+            user.UserName = model.Username;
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errorMessages = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new AppException(new ErrorDetail(
+                    1000,
+                    errorMessages,
+                    StatusCodes.Status400BadRequest
+                    ));
+            }
+            if (model.Avatar != null)
+            {
+                var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
+                var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
+                user.Avatar = avatarPath;
+                await _userManager.UpdateAsync(user);
+            }
+            return _mapper.Map<UserResponse>(user);
         }
     }
 }

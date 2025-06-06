@@ -1,9 +1,17 @@
-﻿using System.IO;
+﻿using Microsoft.Extensions.Options;
+using System.IO;
+using taskflow_api.TaskFlow.Application.DTOs.Common;
 
 namespace taskflow_api.TaskFlow.Shared.Helpers
 {
     public class ImageHelper
     {
+        private readonly AppSetting _appSetting;
+
+        public ImageHelper(IOptions<AppSetting> appSetting)
+        {
+            _appSetting = appSetting.Value;
+        }
         public static async Task<string> UploadImage(IFormFile file,
             string wwwRootPath, string folderPath, string fileName)
         {
@@ -38,6 +46,13 @@ namespace taskflow_api.TaskFlow.Shared.Helpers
             {
                 File.Delete(fullPath);
             }
+        }
+        public string GetImageLink(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath))
+                return string.Empty;
+
+            return $"{_appSetting.BaseUrl}/{relativePath}";
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
@@ -7,6 +8,7 @@ using taskflow_api.TaskFlow.Application.Interfaces;
 namespace taskflow_api.TaskFlow.API.Controllers
 {
     [Route("admin/users")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class UserAdminController : ControllerBase
     {
@@ -17,9 +19,9 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ApiResponse<PagedResult<UserAdminResponse>>> GetAllUser([FromQuery] PagingParams pagingParams)
+        public async Task<ApiResponse<PagedResult<UserAdminResponse>>> GetAllUser(int page)
         {
-            var users = await _userService.GetAllUser(pagingParams);
+            var users = await _userService.GetAllUser(page);
             return ApiResponse<PagedResult<UserAdminResponse>>.Success(users);
         }
 

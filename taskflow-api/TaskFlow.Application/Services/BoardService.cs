@@ -42,11 +42,16 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<bool> DeleteBoard(Guid boardId)
         {
             //No condition set to not be deleted. Will be in the future.
-
             var boardDelete = await _boardRepository.GetBoardByIdAsync(boardId);
             if (boardDelete == null)
             {
                 throw new AppException(ErrorCode.BoardNotFound);
+            }
+            //check max board order
+            var maxOrder = await _boardRepository.GetMaxOrder(boardDelete.ProjectId);
+            if (boardDelete.Order <= 3 )
+            {
+                throw new AppException(ErrorCode.CannotDeleteBoard);
             }
             //Set the board as inactive
             boardDelete!.IsActive = false;
