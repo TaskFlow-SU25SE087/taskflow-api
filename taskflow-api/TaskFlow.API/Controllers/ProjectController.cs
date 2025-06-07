@@ -45,5 +45,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var project = await _context.UpdateProject(request);
             return ApiResponse<ProjectResponse>.Success(project);
         }
+
+        [HttpGet("list")]
+        [Authorize]
+        public async Task<ApiResponse<PagedResult<ProjectsResponse>>> ListProjects(int page = 1)
+        {
+            var projects = await _context.ListProjectResponse(page);
+            return ApiResponse<PagedResult<ProjectsResponse>>.Success(projects);
+        }
     }
 }

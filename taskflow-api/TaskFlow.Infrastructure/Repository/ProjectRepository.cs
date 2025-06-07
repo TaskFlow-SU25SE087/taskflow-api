@@ -15,13 +15,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
-        public async Task<Guid> CreateProjectAsync(string title, string description)
+        public async Task<Guid> CreateProjectAsync(string title, string description, Guid OwnerId)
         {
             var project = new Project
             {
                 Id = Guid.NewGuid(),
                 Title  = title,
                 Description = description,
+                OwnerId = OwnerId,
                 CreatedAt = DateTime.UtcNow,
                 LastUpdate = DateTime.UtcNow,
             };
@@ -39,6 +40,17 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Include(p => p.TaskProject)
                 .FirstOrDefaultAsync(p => p.Id == id);
             return project;
+        }
+
+        public IQueryable<Project> GetProjectsByUserIdAsync(Guid userId)
+        {
+            return _context.Projects
+                .Include(p => p.Members)
+                .Include(p => p.Boards)
+                .Include(p => p.Sprints)
+                .Include(p => p.TaskProject)
+                .Where(p => p.Members.Any(m => m.UserId == userId && m.IsActive))
+                .OrderByDescending(p => p.LastUpdate);
         }
 
         public async Task UpdateProject(Project data)

@@ -287,7 +287,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                     // Delete old avatar image if it exists???
                     //ImageHelper.DeleteImage(user.Avatar, _env.WebRootPath);
                 }
-                user.Avatar = "https://res.cloudinary.com/dpw9sgxab/image/upload/v1749247007/avatar/lx7r0awye6slafyufoq7.jpg";
+                var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
+                var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
+                user.Avatar = avatarPath;
             }
             var saveImage = await _userManager.UpdateAsync(user);
             if (!saveImage.Succeeded)

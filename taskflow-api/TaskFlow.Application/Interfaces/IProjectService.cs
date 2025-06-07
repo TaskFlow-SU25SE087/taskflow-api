@@ -1,4 +1,6 @@
-﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
@@ -7,6 +9,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         public Task<ProjectResponse> CreateProject(CreateProjectRequest request);
         public Task<ProjectResponse> UpdateProject(UpdateProjectRequest request);
+        Task<PagedResult<ProjectsResponse>> ListProjectResponse(int Page);
 
         //public Task<bool> AddMember(AddMemberRequest request);
         //public Task<bool> VerifyJoinProject(string token);

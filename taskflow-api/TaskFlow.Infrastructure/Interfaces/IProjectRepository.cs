@@ -5,9 +5,10 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
     public interface IProjectRepository
     {
-        Task<Guid> CreateProjectAsync(string title, string description);
+        Task<Guid> CreateProjectAsync(string title, string description, Guid OwnerId);
         Task<Project?> GetProjectByIdAsync(Guid id);
         Task UpdateProject(Project data);
+        IQueryable<Project> GetProjectsByUserIdAsync(Guid userId);
 
     }
 }
