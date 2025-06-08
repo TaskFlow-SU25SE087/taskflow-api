@@ -9,7 +9,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Guid? Assigner { get; set; }
         public Guid TaskId { get; set; }
         public TaskProject Task { get; set; } = null!;
-        public Guid ProjectMemberID { get; set; }
+        public Guid Implementer { get; set; }
         public ProjectMember ProjectMember { get; set; } = null!;
         public Guid? IssueID { get; set; }
         public Issue? Issue { get; set; } = null!;

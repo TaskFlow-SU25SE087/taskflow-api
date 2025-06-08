@@ -44,6 +44,16 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             return listBoard;
         }
 
+        public async Task<Guid> GetIdBoardOrderFirtsAsync(Guid ProjectId)
+        {
+            var BoardId = await _context.Boards
+                .Where(b => b.ProjectId == ProjectId && b.IsActive && b.Order ==1)
+                .OrderBy(b => b.Order)
+                .Select(b => b.Id)
+                .FirstOrDefaultAsync();
+            return BoardId;
+        }
+
         public async Task<int> GetMaxOrder(Guid projectId)
         {
             var maxOrder = await _context.Boards

@@ -11,5 +11,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task UpdateBoard(Board data);
         Task<List<Board>?> GetBoardsAfterOrderAsync(int order);
         Task UpdateListBoardsAsync(List<Board> data);
+        Task<Guid> GetIdBoardOrderFirtsAsync(Guid ProjectId);
     }
 }

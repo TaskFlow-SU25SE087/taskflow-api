@@ -30,10 +30,10 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IRefreshTokenRepository _refeshTokenRepository;
         private readonly IMailService _mailService;
         private readonly IVerifyTokenRopository _verifyTokenRopository;
-        private readonly IPhotoService _photoService;
+        private readonly IFileService _fileService;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
-            IConfiguration configuration, IPhotoService photoService, 
+            IConfiguration configuration, IFileService fileService, 
             IHttpContextAccessor httpContextAccessor, IMapper mapper,
             IRefreshTokenRepository refeshTokenRepository, IMailService mailService,
             IVerifyTokenRopository verifyTokenRopository)
@@ -46,7 +46,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _refeshTokenRepository = refeshTokenRepository;
             _mailService = mailService;
             _verifyTokenRopository = verifyTokenRopository;
-            _photoService = photoService;
+            _fileService = fileService;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -474,9 +474,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             if (model.Avatar != null)
             {
-                var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
-                var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
-                user.Avatar = avatarPath;
+                var baseAvatarUrl = _fileService.UploadFileAsync(model.Avatar);
+                user.Avatar = baseAvatarUrl.Result;
                 await _userManager.UpdateAsync(user);
             }
             return _mapper.Map<UserResponse>(user);

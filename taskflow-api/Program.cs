@@ -30,8 +30,9 @@ builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<ITaskFlowAuthorizationService, TaskFlowAuthorizationService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
-builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
+builder.Services.AddScoped<ITaskProjectService, TaskProjectService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -42,6 +43,8 @@ builder.Services.AddScoped<IVerifyTokenRopository, VerifyTokenRopository>();
 builder.Services.AddScoped<ISprintRepository, SprintRepository>();
 builder.Services.AddScoped<ILabelRepository, LabelRepository>();
 builder.Services.AddScoped<ITaskLabelRepository, TaskLabelRepository>();
+builder.Services.AddScoped<ITaskProjectRepository, TaskProjectRepository>();
+
 
 
 // Mapper

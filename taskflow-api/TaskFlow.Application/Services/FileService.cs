@@ -4,16 +4,16 @@ using taskflow_api.TaskFlow.Application.Interfaces;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
-    public class PhotoService : IPhotoService
+    public class FileService : IFileService
     {
         private readonly Cloudinary _cloudinary;
 
-        public PhotoService(Cloudinary cloudinary)
+        public FileService(Cloudinary cloudinary)
         {
             _cloudinary = cloudinary;
         }
 
-        public async Task<string> UploadPhotoAsync(IFormFile file)
+        public async Task<string> UploadFileAsync(IFormFile file)
         {
             if (file.Length > 0)
             {

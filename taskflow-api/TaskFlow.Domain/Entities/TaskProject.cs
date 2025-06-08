@@ -22,11 +22,13 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public TaskPriority Priority { get; set; } = TaskPriority.High;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string? File { get; set; } = string.Empty;
         public bool IsActive { get; set; } = false;
 
         public List<TaskUser> TaskUsers { get; set; } = new List<TaskUser>();
         public List<Issue> Issues { get; set; } = new List<Issue>();
         public List<TaskLabels> TaskLabels { get; set; } = new List<TaskLabels>();
+        public List<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
         public TaskProject()
         {
             CreatedAt = DateTime.UtcNow;

@@ -30,6 +30,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<UserAppeals> UserAppeals { get; set; } = null!;
         public DbSet<Labels> Labels { get; set; } = null!;
         public DbSet<TaskLabels> TaskLabels { get; set; } = null!;
+        public DbSet<TaskComment> TaskComments { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -100,7 +101,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
             modelBuilder.Entity<TaskUser>()
                .HasOne(tu => tu.ProjectMember)
                .WithMany(pm => pm.taskUsers)
-               .HasForeignKey(tu => tu.ProjectMemberID)
+               .HasForeignKey(tu => tu.Implementer)
                .OnDelete(DeleteBehavior.Restrict);
 
             // TaskUser <-> Issue
@@ -151,21 +152,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(l => l.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            //Task <-> TaskComment
+            modelBuilder.Entity<TaskComment>()
+                .HasOne(tc => tc.Task)
+                .WithMany(t => t.TaskComments)
+                .HasForeignKey(tc => tc.TaskId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
-
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            var now = DateTime.UtcNow;
-            var modifiedProjects = ChangeTracker.Entries<Project>()
-                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
-            foreach (var entry in modifiedProjects)
-            {
-                entry.Entity.LastUpdate = now;
-            }
-
-                return await base.SaveChangesAsync(cancellationToken);
-        }
-
     }
 
 }

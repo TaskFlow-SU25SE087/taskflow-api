@@ -9,16 +9,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
     [ApiController]
     public class TestImageController : ControllerBase
     {
-        private readonly IPhotoService _photoService;
+        private readonly IFileService _photoService;
 
-        public TestImageController(IPhotoService photoService)
+        public TestImageController(IFileService photoService)
         {
             _photoService = photoService;
         }
         [HttpPost("image")]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
-            var result = await _photoService.UploadPhotoAsync(file);
+            var result = await _photoService.UploadFileAsync(file);
             if (result != null)
                 return Ok(result);
 

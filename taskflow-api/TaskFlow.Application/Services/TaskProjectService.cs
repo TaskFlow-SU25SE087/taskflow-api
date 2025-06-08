@@ -1,0 +1,76 @@
+﻿using Microsoft.Extensions.Configuration;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
+using taskflow_api.TaskFlow.Infrastructure.Interfaces;
+using taskflow_api.TaskFlow.Infrastructure.Repository;
+using taskflow_api.TaskFlow.Shared.Exceptions;
+
+namespace taskflow_api.TaskFlow.Application.Services
+{
+    public class TaskProjectService : ITaskProjectService
+    {
+        private readonly ITaskProjectRepository _taskProjectRepository;
+        private readonly IBoardRepository _boardRepository;
+        private readonly FileService _fileService;
+
+        public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
+            FileService fileService)
+        {
+            _taskProjectRepository = taskProjectRepository;
+            _boardRepository = boardRepository;
+            _fileService = fileService;
+        }
+
+        public async Task<TaskProject> AddTask(AddTaskRequest request)
+        {
+            var BoardId = _boardRepository.GetIdBoardOrderFirtsAsync(request.ProjectId);
+            var task = new TaskProject
+            {
+                ProjectId = request.ProjectId,
+                Title = request.Title,
+                BoardId = BoardId.Result,
+                Description = request.Description,
+                Priority = request.Priority,
+            };
+            await _taskProjectRepository.AddTaskAsync(task);
+            return task;
+        }
+
+        public async Task<bool> DeleteTask(Guid taskId)
+        {
+            var deleteTask = await _taskProjectRepository.GetTaskByIdAsync(taskId);
+            if (deleteTask == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+            //check :.....
+            deleteTask.IsActive = false;
+            await _taskProjectRepository.UpdateTaskAsync(deleteTask);
+            return true;
+        }
+
+        public async Task<TaskProject> UpdateTask(UpdateTaskRequest request)
+        {
+            var taskUpdate = await _taskProjectRepository.GetTaskByIdAsync(request.Id);
+            if (taskUpdate == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+            taskUpdate.Title = request.Title;
+            taskUpdate.Description = request.Description;
+            taskUpdate.Priority = request.Priority;
+            taskUpdate.BoardId = request.BoardID;
+            taskUpdate.SprintId = request.SprintId;
+            taskUpdate.UpdatedAt = DateTime.UtcNow;
+            if (request.File != null)
+            {
+                var filePath = await _fileService.UploadFileAsync(request.File);
+                taskUpdate.File = filePath;
+            }
+            await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
+            return taskUpdate;
+        }
+    }
+}
