@@ -128,7 +128,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             //create default labels for the user
             var label = new Labels
             {
-                Id = Guid.NewGuid(),
                 Name = user!.FullName,
                 ProjectId = verifyToken.ProjectId!.Value,
                 Description = "Label of "+user!.FullName,

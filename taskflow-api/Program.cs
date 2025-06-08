@@ -31,6 +31,7 @@ builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<ITaskFlowAuthorizationService, TaskFlowAuthorizationService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.AddScoped<ILabelService, LabelService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();

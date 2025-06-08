@@ -47,6 +47,10 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         // Project related error codes(6)
         public static readonly ErrorDetail NoProjectsFound = new(6001, "No projects found", StatusCodes.Status404NotFound);
 
+        // Label related error codes(7)
+        public static readonly ErrorDetail LabelIsNull = new(7001, "Label cannot be null", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail LabelNotFound = new(7002, "Label not found", StatusCodes.Status404NotFound);
+        
         // Authorization related error codes(9)
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail Unauthorized = new(9002, "Unauthorized access", StatusCodes.Status401Unauthorized);

@@ -68,7 +68,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             //create SPring for the project
             var newSprint = new Sprint
             {
-                Id = Guid.NewGuid(),
                 ProjectId = projectId,
                 Name = "Sprint 1",
                 Description = "First sprint of the project",
