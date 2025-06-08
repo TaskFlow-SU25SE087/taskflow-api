@@ -28,6 +28,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<UserBans> UserBans { get; set; } = null!;
         public DbSet<UserReports> UserReports { get; set; } = null!;
         public DbSet<UserAppeals> UserAppeals { get; set; } = null!;
+        public DbSet<Labels> Labels { get; set; } = null!;
+        public DbSet<TaskLabels> TaskLabels { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -90,7 +92,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
             //TaskProject <-> TaskUser
             modelBuilder.Entity<TaskUser>()
                .HasOne(tu => tu.Task)
-               .WithMany(tp => tp.taskUsers)
+               .WithMany(tp => tp.TaskUsers)
                .HasForeignKey(tu => tu.TaskId)
                .OnDelete(DeleteBehavior.Restrict);
 
@@ -104,7 +106,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
             // TaskUser <-> Issue
             modelBuilder.Entity<Issue>()
                 .HasOne(i => i.TaskProject)
-                .WithMany(tp => tp.issues)
+                .WithMany(tp => tp.Issues)
                 .HasForeignKey(i => i.TaskProjectID)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -127,6 +129,26 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasOne(ub => ub.User)
                 .WithMany(u => u.Bans)
                 .HasForeignKey(ub => ub.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //Task <-> TaskLabels
+            modelBuilder.Entity<TaskLabels>()
+                .HasOne(tl => tl.Task)
+                .WithMany(t => t.TaskLabels)
+                .HasForeignKey(tl => tl.TaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+            // Labels <-> TaskLabels
+            modelBuilder.Entity<TaskLabels>()
+                .HasOne(tl => tl.Label)
+                .WithMany(l => l.TaskLabels)
+                .HasForeignKey(tl => tl.LabelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //Labels <-> Project
+            modelBuilder.Entity<Labels>()
+                .HasOne(l => l.Project)
+                .WithMany(p => p.Labels)
+                .HasForeignKey(l => l.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

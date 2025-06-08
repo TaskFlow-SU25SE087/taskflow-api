@@ -24,12 +24,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IMapper _mapper;
         private readonly IVerifyTokenRopository _verifyTokenRopository;
         private readonly ISprintRepository _sprintRepository;
+        private readonly ILabelRepository _labelRepository;
+        private readonly ITaskLabelRepository _taskLabelRepository;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
             IProjectMemberRepository projectMember, IBoardRepository boardRepository,
             IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository,
-            ISprintRepository springRepository)
+            ISprintRepository springRepository, ILabelRepository labelRepository, ITaskLabelRepository taskLabelRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -41,12 +43,15 @@ namespace taskflow_api.TaskFlow.Application.Services
             _mapper = mapper;
             _verifyTokenRopository = verifyTokenRopository;
             _sprintRepository = springRepository;
+            _labelRepository = labelRepository;
+            _taskLabelRepository = taskLabelRepository;
         }
 
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var user = await _userManager.FindByIdAsync(UserId!);
             //create project
             var projectId = await _projectRepository.CreateProjectAsync(request.title, request.description, Guid.Parse(UserId!));
             if (projectId == Guid.Empty)
@@ -108,6 +113,16 @@ namespace taskflow_api.TaskFlow.Application.Services
                 },
             };
             await _boardRepository.CreateListBoardsAsync(defaultBoards);
+
+            //create Labels for the project
+            var label = new Labels
+            {
+                Id = Guid.NewGuid(),
+                Name = user!.FullName,
+                ProjectId = projectId,
+                Description = "Label of "+ user!.FullName,
+            };
+            await _labelRepository.AddLabelAsync(label);
             return new ProjectResponse
             {
                 Id = projectId,

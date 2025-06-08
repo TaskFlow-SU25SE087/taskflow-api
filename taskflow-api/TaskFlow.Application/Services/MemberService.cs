@@ -17,10 +17,12 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IProjectMemberRepository _projectMemberRepository;
         private readonly IMailService _mailService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILabelRepository _labelRepository;
 
         public MemberService(UserManager<User> userManager, IVerifyTokenRopository verifyTokenRopository,
                             IProjectRepository projectRepository, IProjectMemberRepository projectMemberRepository,
-                            IMailService mailService, IHttpContextAccessor httpContextAccessor)
+                            IMailService mailService, IHttpContextAccessor httpContextAccessor,
+                            ILabelRepository labelRepository)
         {
             _userManager = userManager;
             _verifyTokenRopository = verifyTokenRopository;
@@ -28,6 +30,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _projectMemberRepository = projectMemberRepository;
             _mailService = mailService;
             _httpContextAccessor = httpContextAccessor;
+            _labelRepository = labelRepository;
         }
         public async Task<bool> AddMember(AddMemberRequest request)
         {
@@ -109,18 +112,28 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.InvalidToken);
             }
-            var user = await _projectMemberRepository.FindMemberInProject(verifyToken.ProjectId!.Value, verifyToken.UserId);
-            if (user == null)
+            var user = await _userManager.FindByIdAsync(verifyToken.UserId!.ToString());
+            var memberProject = await _projectMemberRepository.FindMemberInProject(verifyToken.ProjectId!.Value, verifyToken.UserId);
+            if (memberProject == null)
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
             //Active the user in the project
-            user.IsActive = true;
-            await _projectMemberRepository.UpdateMember(user);
+            memberProject.IsActive = true;
+            await _projectMemberRepository.UpdateMember(memberProject);
 
             //Update token
             verifyToken.IsUsed = true;
             await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
+            //create default labels for the user
+            var label = new Labels
+            {
+                Id = Guid.NewGuid(),
+                Name = user!.FullName,
+                ProjectId = verifyToken.ProjectId!.Value,
+                Description = "Label of "+user!.FullName,
+            };
+            await _labelRepository.AddLabelAsync(label);
             return true;
         }
 
