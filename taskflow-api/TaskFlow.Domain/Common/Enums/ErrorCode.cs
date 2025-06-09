@@ -47,9 +47,9 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         // Project related error codes(6)
         public static readonly ErrorDetail NoProjectsFound = new(6001, "No projects found", StatusCodes.Status404NotFound);
 
-        // Label related error codes(7)
-        public static readonly ErrorDetail LabelIsNull = new(7001, "Label cannot be null", StatusCodes.Status400BadRequest);
-        public static readonly ErrorDetail LabelNotFound = new(7002, "Label not found", StatusCodes.Status404NotFound);
+        // Tag related error codes(7)
+        public static readonly ErrorDetail TagIsNull = new(7001, "Tag cannot be null", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail TagNotFound = new(7002, "Tag not found", StatusCodes.Status404NotFound);
 
         // Task related error codes(8)
         public static readonly ErrorDetail TaskNotFound = new(8001, "Task not found", StatusCodes.Status404NotFound);

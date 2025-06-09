@@ -2,7 +2,7 @@
 
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
-    public class Labels
+    public class Tag
     {
         [Key]
         public Guid Id { get; set; } = new Guid();
@@ -15,6 +15,6 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         [MaxLength(100)]
         public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
-        public List<TaskLabels> TaskLabels { get; set; } = new List<TaskLabels>();
+        public List<TaskTag> TaskTags { get; set; } = new List<TaskTag>();
     }
 }

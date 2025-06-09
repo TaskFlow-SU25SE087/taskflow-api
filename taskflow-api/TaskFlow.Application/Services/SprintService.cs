@@ -30,7 +30,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
-        public async Task<List<Sprint>> ListPrint(Guid ProjectId)
+        public async Task<List<Sprint>> ListPrints(Guid ProjectId)
         {
             var result = await _sprintRepository.GetListPrintAsync(ProjectId);
             return result;

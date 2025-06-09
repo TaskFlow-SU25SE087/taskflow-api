@@ -14,6 +14,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public List<Board> Boards { get; set; } = new List<Board>();
         public List<Sprint> Sprints { get; set; } = new List<Sprint>();
         public List<TaskProject> TaskProject { get; set; } = new List<TaskProject>();
-        public List<Labels> Labels { get; set; } = new List<Labels>();
+        public List<Tag> Tags { get; set; } = new List<Tag>();
     }
 }

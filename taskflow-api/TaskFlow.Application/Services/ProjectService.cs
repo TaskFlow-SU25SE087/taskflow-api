@@ -24,14 +24,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IMapper _mapper;
         private readonly IVerifyTokenRopository _verifyTokenRopository;
         private readonly ISprintRepository _sprintRepository;
-        private readonly ILabelRepository _labelRepository;
-        private readonly ITaskLabelRepository _taskLabelRepository;
+        private readonly ITagRepository _TagRepository;
+        private readonly ITaskTagRepository _taskTagRepository;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
             IProjectMemberRepository projectMember, IBoardRepository boardRepository,
             IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository,
-            ISprintRepository springRepository, ILabelRepository labelRepository, ITaskLabelRepository taskLabelRepository)
+            ISprintRepository springRepository, ITagRepository TagRepository, ITaskTagRepository taskTagRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -43,8 +43,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             _mapper = mapper;
             _verifyTokenRopository = verifyTokenRopository;
             _sprintRepository = springRepository;
-            _labelRepository = labelRepository;
-            _taskLabelRepository = taskLabelRepository;
+            _TagRepository = TagRepository;
+            _taskTagRepository = taskTagRepository;
         }
 
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
@@ -113,15 +113,15 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
             await _boardRepository.CreateListBoardsAsync(defaultBoards);
 
-            //create Labels for the project
-            var label = new Labels
+            //create Tags for the project
+            var Tag = new Tag
             {
                 Id = Guid.NewGuid(),
                 Name = user!.FullName,
                 ProjectId = projectId,
-                Description = "Label of "+ user!.FullName,
+                Description = "Tag of "+ user!.FullName,
             };
-            await _labelRepository.AddLabelAsync(label);
+            await _TagRepository.AddTagAsync(Tag);
             return new ProjectResponse
             {
                 Id = projectId,

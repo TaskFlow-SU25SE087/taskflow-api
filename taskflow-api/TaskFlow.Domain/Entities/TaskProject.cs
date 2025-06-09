@@ -27,7 +27,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
 
         public List<TaskUser> TaskUsers { get; set; } = new List<TaskUser>();
         public List<Issue> Issues { get; set; } = new List<Issue>();
-        public List<TaskLabels> TaskLabels { get; set; } = new List<TaskLabels>();
+        public List<TaskTag> TaskTags { get; set; } = new List<TaskTag>();
         public List<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
         public TaskProject()
         {

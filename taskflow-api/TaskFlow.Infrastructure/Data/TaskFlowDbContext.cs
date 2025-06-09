@@ -28,8 +28,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<UserBans> UserBans { get; set; } = null!;
         public DbSet<UserReports> UserReports { get; set; } = null!;
         public DbSet<UserAppeals> UserAppeals { get; set; } = null!;
-        public DbSet<Labels> Labels { get; set; } = null!;
-        public DbSet<TaskLabels> TaskLabels { get; set; } = null!;
+        public DbSet<Tag> Tags { get; set; } = null!;
+        public DbSet<TaskTag> TaskTags { get; set; } = null!;
         public DbSet<TaskComment> TaskComments { get; set; } = null!;
 
 
@@ -132,23 +132,23 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(ub => ub.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //Task <-> TaskLabels
-            modelBuilder.Entity<TaskLabels>()
+            //Task <-> TaskTag
+            modelBuilder.Entity<TaskTag>()
                 .HasOne(tl => tl.Task)
-                .WithMany(t => t.TaskLabels)
+                .WithMany(t => t.TaskTags)
                 .HasForeignKey(tl => tl.TaskId)
                 .OnDelete(DeleteBehavior.Restrict);
-            // Labels <-> TaskLabels
-            modelBuilder.Entity<TaskLabels>()
-                .HasOne(tl => tl.Label)
-                .WithMany(l => l.TaskLabels)
-                .HasForeignKey(tl => tl.LabelId)
+            // Tag <-> TaskTag
+            modelBuilder.Entity<TaskTag>()
+                .HasOne(tl => tl.Tag)
+                .WithMany(l => l.TaskTags)
+                .HasForeignKey(tl => tl.TagId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //Labels <-> Project
-            modelBuilder.Entity<Labels>()
+            //Tag <-> Project
+            modelBuilder.Entity<Tag>()
                 .HasOne(l => l.Project)
-                .WithMany(p => p.Labels)
+                .WithMany(p => p.Tags)
                 .HasForeignKey(l => l.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 

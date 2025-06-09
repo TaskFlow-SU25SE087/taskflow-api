@@ -2,7 +2,7 @@
 
 namespace taskflow_api.TaskFlow.Application.DTOs.Request
 {
-    public class UpdateLabelRequest
+    public class UpdateTagRequest
     {
         public Guid Id { get; set; }
         [Required(ErrorMessage = "Name cannot empty")]

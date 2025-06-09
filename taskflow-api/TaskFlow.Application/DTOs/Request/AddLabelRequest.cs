@@ -2,7 +2,7 @@
 
 namespace taskflow_api.TaskFlow.Application.DTOs.Request
 {
-    public class AddLabelRequest
+    public class AddTagRequest
     {
         [Required(ErrorMessage ="Name cannot empty")]
         public string Name { get; set; } = null!;

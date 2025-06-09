@@ -58,7 +58,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             {
                 return ApiResponse<List<Sprint>>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.ListPrint(ProjectId);
+            var result = await _context.ListPrints(ProjectId);
             return ApiResponse<List<Sprint>>.Success(result);
         } 
     }

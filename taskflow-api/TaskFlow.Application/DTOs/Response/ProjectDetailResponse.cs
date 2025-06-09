@@ -35,7 +35,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public bool IsActive { get; set; }
         public string? SprintName { get; set; }
         public List<CommentDetailResponse> Comments { get; set; } = new();
-        public List<LabelDetailResponse> Labels { get; set; } = new();
+        public List<TagDetailResponse> Tags { get; set; } = new();
     }
 
     public class CommentDetailResponse
@@ -46,7 +46,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public Guid UserId { get; set; }
     }
 
-    public class LabelDetailResponse
+    public class TagDetailResponse
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

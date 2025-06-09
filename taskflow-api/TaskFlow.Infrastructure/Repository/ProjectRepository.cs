@@ -40,8 +40,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ThenInclude(t => t.TaskComments)
         .Include(p => p.Boards)
             .ThenInclude(b => b.TaskProject)
-                .ThenInclude(t => t.TaskLabels)
-                    .ThenInclude(tl => tl.Label)
+                .ThenInclude(t => t.TaskTags)
+                    .ThenInclude(tl => tl.Tag)
         .Include(p => p.Sprints)
         .FirstOrDefaultAsync(p => p.Id == id);
 

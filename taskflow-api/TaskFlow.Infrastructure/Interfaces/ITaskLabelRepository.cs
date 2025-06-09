@@ -2,8 +2,8 @@
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
-    public interface ITaskLabelRepository
+    public interface ITaskTagRepository
     {
-        Task AddTaskLabelAsync(TaskLabels taskLabel);
+        Task AddTaskTagAsync(TaskTag taskTag);
     }
 }

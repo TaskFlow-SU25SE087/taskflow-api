@@ -17,12 +17,12 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IProjectMemberRepository _projectMemberRepository;
         private readonly IMailService _mailService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILabelRepository _labelRepository;
+        private readonly ITagRepository _TagRepository;
 
         public MemberService(UserManager<User> userManager, IVerifyTokenRopository verifyTokenRopository,
                             IProjectRepository projectRepository, IProjectMemberRepository projectMemberRepository,
                             IMailService mailService, IHttpContextAccessor httpContextAccessor,
-                            ILabelRepository labelRepository)
+                            ITagRepository TagRepository)
         {
             _userManager = userManager;
             _verifyTokenRopository = verifyTokenRopository;
@@ -30,7 +30,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _projectMemberRepository = projectMemberRepository;
             _mailService = mailService;
             _httpContextAccessor = httpContextAccessor;
-            _labelRepository = labelRepository;
+            _TagRepository = TagRepository;
         }
         public async Task<bool> AddMember(AddMemberRequest request)
         {
@@ -125,14 +125,14 @@ namespace taskflow_api.TaskFlow.Application.Services
             //Update token
             verifyToken.IsUsed = true;
             await _verifyTokenRopository.UpdateTokenAsync(verifyToken);
-            //create default labels for the user
-            var label = new Labels
+            //create default Tags for the user
+            var Tag = new Tag
             {
                 Name = user!.FullName,
                 ProjectId = verifyToken.ProjectId!.Value,
-                Description = "Label of "+user!.FullName,
+                Description = "Tag of "+user!.FullName,
             };
-            await _labelRepository.AddLabelAsync(label);
+            await _TagRepository.AddTagAsync(Tag);
             return true;
         }
 

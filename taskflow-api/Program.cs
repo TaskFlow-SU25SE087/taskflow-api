@@ -31,7 +31,7 @@ builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<ITaskFlowAuthorizationService, TaskFlowAuthorizationService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IFileService, FileService>();
-builder.Services.AddScoped<ILabelService, LabelService>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<ITaskProjectService, TaskProjectService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 
@@ -42,8 +42,8 @@ builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IVerifyTokenRopository, VerifyTokenRopository>();
 builder.Services.AddScoped<ISprintRepository, SprintRepository>();
-builder.Services.AddScoped<ILabelRepository, LabelRepository>();
-builder.Services.AddScoped<ITaskLabelRepository, TaskLabelRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ITaskTagRepository, TaskTagRepository>();
 builder.Services.AddScoped<ITaskProjectRepository, TaskProjectRepository>();
 builder.Services.AddScoped<ITaskCommentRepository, TaskCommentRepository>();
 

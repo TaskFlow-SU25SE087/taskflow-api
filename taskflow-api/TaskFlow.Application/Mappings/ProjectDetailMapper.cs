@@ -16,12 +16,12 @@ namespace taskflow_api.TaskFlow.Application.Mappings
             CreateMap<TaskProject, TaskDetailResponse>()
                 .ForMember(dest => dest.SprintName, opt => opt.MapFrom(src => src.Sprint != null ? src.Sprint.Name : null))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.TaskComments))
-                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.TaskLabels.Select(tl => tl.Label)));
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.TaskTags.Select(tl => tl.Tag)));
 
 
             CreateMap<TaskComment, CommentDetailResponse>();
 
-            CreateMap<Labels, LabelDetailResponse>();
+            CreateMap<Tag, TagDetailResponse>();
 
             CreateMap<Sprint, SprintDetailResponse>();
         }
