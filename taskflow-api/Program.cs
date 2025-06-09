@@ -33,6 +33,7 @@ builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<ITaskProjectService, TaskProjectService>();
+builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -44,6 +45,7 @@ builder.Services.AddScoped<ISprintRepository, SprintRepository>();
 builder.Services.AddScoped<ILabelRepository, LabelRepository>();
 builder.Services.AddScoped<ITaskLabelRepository, TaskLabelRepository>();
 builder.Services.AddScoped<ITaskProjectRepository, TaskProjectRepository>();
+builder.Services.AddScoped<ITaskCommentRepository, TaskCommentRepository>();
 
 
 

@@ -1,4 +1,6 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
 {
@@ -8,5 +10,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<bool> UpdateBoard(UpdateBoardRequest request);
         public Task<bool> DeleteBoard(Guid boardId);
         public Task<bool> UpdateBoardOrder(List<UpdateBoardRequest> request);
+        public Task<List<BoardResponse>> ListBoardAsync(Guid ProjectId);
     }
 }

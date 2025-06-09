@@ -8,6 +8,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.API.Controllers
@@ -52,6 +53,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             var projects = await _context.ListProjectResponse(page);
             return ApiResponse<PagedResult<ProjectsResponse>>.Success(projects);
+        }
+
+        [HttpGet("{projectid}")]
+        public async Task<ApiResponse<ProjectDetailResponse>> GetProject(Guid projectid)
+        {
+            var project = await _context.GetProject(projectid);
+            return ApiResponse<ProjectDetailResponse>.Success(project);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -68,6 +69,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await _boardRepository.UpdateListBoardsAsync(listBoradsUpdate);
             }
             return true;
+        }
+
+        public async Task<List<BoardResponse>> ListBoardAsync(Guid ProjectId)
+        {
+            var boards = await _boardRepository.GetListBoardAsync(ProjectId);
+            var result = _mapper.Map<List<BoardResponse>>(boards);
+            return result;
         }
 
         public async Task<bool> UpdateBoard(UpdateBoardRequest request)

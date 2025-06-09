@@ -129,6 +129,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Description = request.description,
             };
         }
+
+        public async Task<ProjectDetailResponse> GetProject(Guid ProjectId)
+        {
+            var project = await _projectRepository.GetProjectByIdAsync(ProjectId);
+
+            var result = _mapper.Map<ProjectDetailResponse>(project);
+            return result;
+        }
+
         public async Task<PagedResult<ProjectsResponse>> ListProjectResponse(int Page)
         {
             var userIdStr = _httpContextAccessor.HttpContext?.User.FindFirst("id")?.Value;

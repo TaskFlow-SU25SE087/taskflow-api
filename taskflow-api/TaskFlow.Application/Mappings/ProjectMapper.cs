@@ -24,6 +24,8 @@ namespace taskflow_api.TaskFlow.Application.Mappings
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId))
                 .ForMember(dest => dest.LastUpdate, opt => opt.MapFrom(src => src.LastUpdate));
+
+            CreateMap<Project, OneProjectResponse>();
         }
 
     }

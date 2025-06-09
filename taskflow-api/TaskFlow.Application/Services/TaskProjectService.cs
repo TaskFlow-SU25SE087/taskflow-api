@@ -13,10 +13,10 @@ namespace taskflow_api.TaskFlow.Application.Services
     {
         private readonly ITaskProjectRepository _taskProjectRepository;
         private readonly IBoardRepository _boardRepository;
-        private readonly FileService _fileService;
+        private readonly IFileService _fileService;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
-            FileService fileService)
+            IFileService fileService)
         {
             _taskProjectRepository = taskProjectRepository;
             _boardRepository = boardRepository;

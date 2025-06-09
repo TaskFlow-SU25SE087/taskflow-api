@@ -34,11 +34,17 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public Task<Project?> GetProjectByIdAsync(Guid id)
         {
             var project = _context.Projects
-                .Include(p => p.Members)
-                .Include(p => p.Boards)
-                .Include(p => p.Sprints)
-                .Include(p => p.TaskProject)
-                .FirstOrDefaultAsync(p => p.Id == id);
+        .Include(p => p.Members)
+        .Include(p => p.Boards)
+            .ThenInclude(b => b.TaskProject)
+                .ThenInclude(t => t.TaskComments)
+        .Include(p => p.Boards)
+            .ThenInclude(b => b.TaskProject)
+                .ThenInclude(t => t.TaskLabels)
+                    .ThenInclude(tl => tl.Label)
+        .Include(p => p.Sprints)
+        .FirstOrDefaultAsync(p => p.Id == id);
+
             return project;
         }
 

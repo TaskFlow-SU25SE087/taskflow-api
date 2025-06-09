@@ -1,4 +1,5 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
 {
@@ -6,5 +7,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         public Task<bool> CreateSprint(CreateSprintRequest request);
         public Task<bool> UpdateSprint(UpdateSprintRequest request);
+        public Task<List<Sprint>> ListPrint(Guid ProjectId);
     }
 }

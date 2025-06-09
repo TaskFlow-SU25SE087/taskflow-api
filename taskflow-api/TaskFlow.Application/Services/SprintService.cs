@@ -23,11 +23,19 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Description = request.Description,
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
+                IsActive = true,
                 Status = SprintStatus.NotStarted
             };
             await _sprintRepository.CreateSprintAsync(newSprint);
             return true;
         }
+
+        public async Task<List<Sprint>> ListPrint(Guid ProjectId)
+        {
+            var result = await _sprintRepository.GetListPrintAsync(ProjectId);
+            return result;
+        }
+
         public async Task<bool> UpdateSprint(UpdateSprintRequest request)
         {
             var UpdateSprint = new Sprint

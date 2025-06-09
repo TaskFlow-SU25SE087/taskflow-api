@@ -2,13 +2,15 @@
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface IProjectService
     {
-        public Task<ProjectResponse> CreateProject(CreateProjectRequest request);
-        public Task<ProjectResponse> UpdateProject(UpdateProjectRequest request);
+         Task<ProjectResponse> CreateProject(CreateProjectRequest request);
+         Task<ProjectResponse> UpdateProject(UpdateProjectRequest request);
+        Task<ProjectDetailResponse> GetProject(Guid ProjectId);
         Task<PagedResult<ProjectsResponse>> ListProjectResponse(int Page);
 
         //public Task<bool> AddMember(AddMemberRequest request);

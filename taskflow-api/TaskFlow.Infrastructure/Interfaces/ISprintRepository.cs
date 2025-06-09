@@ -6,5 +6,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task CreateSprintAsync(Sprint sprint);
         Task UpdateSprintAsync(Sprint sprint);
+        Task<List<Sprint>> GetListPrintAsync(Guid projectId);
     }
 }

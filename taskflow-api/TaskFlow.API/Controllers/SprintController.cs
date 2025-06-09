@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
@@ -46,5 +48,18 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.UpdateSprint(request);
             return ApiResponse<bool>.Success(result);
         }
+
+        [HttpGet("list")]
+        [Authorize]
+        public async Task<ApiResponse<List<Sprint>>> GetListSprint(Guid ProjectId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.PM, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<List<Sprint>>.Error(9002, "Unauthorized access");
+            }
+            var result = await _context.ListPrint(ProjectId);
+            return ApiResponse<List<Sprint>>.Success(result);
+        } 
     }
 }

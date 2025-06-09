@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Application.Services;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 
@@ -16,11 +17,27 @@ namespace taskflow_api.TaskFlow.API.Controllers
     {
         private readonly ITaskProjectService _context;
         private readonly ITaskFlowAuthorizationService _authorization;
+        private readonly ITaskCommentService _taskCommentService;
 
-        public TaskController(ITaskProjectService context, ITaskFlowAuthorizationService authorization)
+        public TaskController(ITaskProjectService context, ITaskFlowAuthorizationService authorization,
+            ITaskCommentService taskCommentService)
         {
             _context = context;
             _authorization = authorization;
+            _taskCommentService = taskCommentService;
+        }
+
+        [HttpGet("comment/add")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> CreateComment([FromBody]AddTaskCommentRequest request)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectID, ProjectRole.PM, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            await _taskCommentService.AddComentTask(request);
+            return ApiResponse<bool>.Success(true);
         }
 
         [HttpPost("create")]
