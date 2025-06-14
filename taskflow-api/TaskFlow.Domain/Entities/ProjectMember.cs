@@ -13,6 +13,6 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public User User { get; set; } = null!;
         public bool IsActive { get; set; } = false;
 
-        public List<TaskUser> taskUsers { get; set; } = new List<TaskUser>();
+        public List<TaskAssignee> taskUsers { get; set; } = new List<TaskAssignee>();
     }
 }

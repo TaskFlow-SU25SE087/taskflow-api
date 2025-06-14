@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
+using System.Threading.Tasks;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -14,13 +17,46 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITaskProjectRepository _taskProjectRepository;
         private readonly IBoardRepository _boardRepository;
         private readonly IFileService _fileService;
+        private readonly IMapper _mapper;
+        private readonly ITaskTagRepository _taskTagRepository;
+        private readonly ITagRepository _tagRepository;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
-            IFileService fileService)
+            IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
+            ITagRepository tagRepository)
         {
             _taskProjectRepository = taskProjectRepository;
             _boardRepository = boardRepository;
             _fileService = fileService;
+            _mapper = mapper;
+            _taskTagRepository = taskTagRepository;
+            _tagRepository = tagRepository;
+        }
+
+        public async Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId)
+        {
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId)
+              ?? throw new AppException(ErrorCode.TaskNotFound);
+
+            var tag = await _tagRepository.GetTagByIdAsync(TagId)
+               ?? throw new AppException(ErrorCode.TagNotFound);
+
+            if (!task.ProjectId.Equals(tag.ProjectId))
+            {
+                throw new AppException(ErrorCode.NoPermission);
+            }
+            var existingTaskTag = await _taskTagRepository.GetTaskTagAsync(TaskId, TagId);
+            if (existingTaskTag != null)
+            {
+                throw new AppException(ErrorCode.TagAlreadyExistsInTask);
+            }
+
+            var newTaskTag = new TaskTag
+            {
+                TagId = TagId,
+                TaskId = TaskId
+            };
+            await _taskTagRepository.AddTaskTagAsync(newTaskTag);
         }
 
         public async Task<TaskProject> AddTask(AddTaskRequest request)
@@ -33,6 +69,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 BoardId = BoardId.Result,
                 Description = request.Description,
                 Priority = request.Priority,
+                IsActive = true,
             };
             await _taskProjectRepository.AddTaskAsync(task);
             return task;
@@ -49,6 +86,14 @@ namespace taskflow_api.TaskFlow.Application.Services
             deleteTask.IsActive = false;
             await _taskProjectRepository.UpdateTaskAsync(deleteTask);
             return true;
+        }
+
+        public async Task<List<TaskProjectResponse>> GetAllTask(Guid projectId)
+        {
+            var listTask = await _taskProjectRepository.GetAllTaskProjectAsync(projectId);
+            var result = _mapper.Map<List<TaskProjectResponse>>(listTask);
+            return result;
+
         }
 
         public async Task<TaskProject> UpdateTask(UpdateTaskRequest request)

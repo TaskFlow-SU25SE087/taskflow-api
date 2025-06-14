@@ -1,4 +1,5 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
@@ -8,5 +9,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<TaskProject> AddTask(AddTaskRequest request);
         Task<TaskProject> UpdateTask(UpdateTaskRequest request);
         Task<bool> DeleteTask(Guid taskId);
+        Task<List<TaskProjectResponse>> GetAllTask(Guid projectId);
+        Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId);
     }
 }

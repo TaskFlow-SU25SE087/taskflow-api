@@ -2,7 +2,7 @@
 
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
-    public class TaskUser
+    public class TaskAssignee
     {
         [Key]
         public Guid Id { get; set; }
@@ -20,7 +20,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public bool IsActive { get; set; } = false;
 
 
-        public TaskUser()
+        public TaskAssignee()
         {
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;

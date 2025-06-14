@@ -27,7 +27,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> CreateSprint([FromBody] CreateSprintRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -40,7 +40,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateSprint([FromBody] UpdateSprintRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -53,7 +53,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<List<Sprint>>> GetListSprint(Guid ProjectId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.PM, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<List<Sprint>>.Error(9002, "Unauthorized access");

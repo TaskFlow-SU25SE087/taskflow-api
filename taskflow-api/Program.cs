@@ -124,6 +124,16 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFE", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") //Adress FE
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Configure Identity
 builder.Services.AddIdentityCore<User>(options =>
 {
@@ -153,7 +163,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.SaveToken = true;
     options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters 
+    options.TokenValidationParameters
         = new TokenValidationParameters
         {
             ValidateLifetime = true,
@@ -191,7 +201,7 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseMiddleware< GlobalExceptionHandlerMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -203,6 +213,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowFE");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

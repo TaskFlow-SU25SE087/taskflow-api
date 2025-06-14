@@ -27,6 +27,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 await _context.SaveChangesAsync();
         }
 
+        public async Task<List<Tag>> GetListTagsync(Guid ProjectId)
+        {
+            return await _context.Tags
+                .Where(t => t.ProjectId == ProjectId && t.IsActive)
+                .ToListAsync();
+        }
+
         public async Task<Tag?> GetTagByIdAsync(Guid TagId)
         {
             return await _context.Tags

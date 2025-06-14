@@ -33,19 +33,19 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
 
         public Task<Project?> GetProjectByIdAsync(Guid id)
         {
-            var project = _context.Projects
-        .Include(p => p.Members)
-        .Include(p => p.Boards)
-            .ThenInclude(b => b.TaskProject)
-                .ThenInclude(t => t.TaskComments)
-        .Include(p => p.Boards)
-            .ThenInclude(b => b.TaskProject)
-                .ThenInclude(t => t.TaskTags)
-                    .ThenInclude(tl => tl.Tag)
-        .Include(p => p.Sprints)
-        .FirstOrDefaultAsync(p => p.Id == id);
+                var project = _context.Projects
+            .Include(p => p.Members)
+            .Include(p => p.Boards)
+                .ThenInclude(b => b.TaskProject)
+                    .ThenInclude(t => t.TaskComments)
+            .Include(p => p.Boards)
+                .ThenInclude(b => b.TaskProject)
+                    .ThenInclude(t => t.TaskTags)
+                        .ThenInclude(tl => tl.Tag)
+            .Include(p => p.Sprints)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
-            return project;
+                return project;
         }
 
         public IQueryable<Project> GetProjectsByUserIdAsync(Guid userId)

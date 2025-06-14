@@ -7,5 +7,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task AddTaskAsync(TaskProject task);
         Task<TaskProject?> GetTaskByIdAsync(Guid id);
         Task UpdateTaskAsync(TaskProject task);
+        Task<List<TaskProject>> GetAllTaskProjectAsync(Guid projectId);
     }
 }

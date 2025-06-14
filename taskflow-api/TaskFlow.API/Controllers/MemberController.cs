@@ -24,7 +24,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> AddMember([FromBody] AddMemberRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -37,7 +37,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> LeaveProject([FromQuery] Guid projectId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.PM, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -50,7 +50,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> RemoveMember([FromQuery] Guid projectId, [FromQuery] Guid userId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");

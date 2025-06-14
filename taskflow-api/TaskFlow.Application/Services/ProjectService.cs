@@ -61,7 +61,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 UserId = Guid.Parse(UserId!),
                 ProjectId = projectId,
-                Role = ProjectRole.PM,
+                Role = ProjectRole.Leader,
                 IsActive = true
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);

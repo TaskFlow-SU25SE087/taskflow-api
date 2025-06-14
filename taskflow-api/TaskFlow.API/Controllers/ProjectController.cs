@@ -38,7 +38,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<ProjectResponse>> UpdateProject([FromBody] UpdateProjectRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<ProjectResponse>.Error(9002, "Unauthorized access");

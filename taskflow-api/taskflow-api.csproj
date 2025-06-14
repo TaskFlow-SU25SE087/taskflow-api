@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
     <Folder Include="TaskFlow.AIService\DTOs\" />
     <Folder Include="TaskFlow.AIService\Services\" />
     <Folder Include="wwwroot\" />

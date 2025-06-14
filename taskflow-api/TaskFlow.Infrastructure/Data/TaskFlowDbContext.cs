@@ -20,7 +20,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<Board> Boards { get; set; } = null!;
         public DbSet<Sprint> Sprints { get; set; } = null!;
         public DbSet<TaskProject> TaskProjects { get; set; } = null!;
-        public DbSet<TaskUser> TaskUsers { get; set; } = null!;
+        public DbSet<TaskAssignee> TaskAssignees { get; set; } = null!;
         public DbSet<Issue> Issues { get; set; } = null!;
         public DbSet<LogProject> LogProjects { get; set; } = null!;
         public DbSet<RefeshToken> RefeshTokens { get; set; } = null!;
@@ -90,15 +90,15 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(t => t.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //TaskProject <-> TaskUser
-            modelBuilder.Entity<TaskUser>()
+            //TaskProject <-> TaskAssignee
+            modelBuilder.Entity<TaskAssignee>()
                .HasOne(tu => tu.Task)
-               .WithMany(tp => tp.TaskUsers)
+               .WithMany(tp => tp.TaskAssignees)
                .HasForeignKey(tu => tu.TaskId)
                .OnDelete(DeleteBehavior.Restrict);
 
-            //ProjectMember <-> TaskUser
-            modelBuilder.Entity<TaskUser>()
+            //ProjectMember <-> TaskAssignee
+            modelBuilder.Entity<TaskAssignee>()
                .HasOne(tu => tu.ProjectMember)
                .WithMany(pm => pm.taskUsers)
                .HasForeignKey(tu => tu.Implementer)
@@ -157,6 +157,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasOne(tc => tc.Task)
                 .WithMany(t => t.TaskComments)
                 .HasForeignKey(tc => tc.TaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //Issue <-> TaskAsignee
+            modelBuilder.Entity<TaskAssignee>()
+                .HasOne(ta => ta.Issue)
+                .WithMany(i => i.TaskAssignees)
+                .HasForeignKey(ta => ta.IssueID)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

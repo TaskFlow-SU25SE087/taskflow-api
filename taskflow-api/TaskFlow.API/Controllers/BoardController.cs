@@ -27,7 +27,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> CreateBoard([FromBody] CreateBoardRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -40,7 +40,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> DeleteBoard([FromQuery] Guid boardId)
         {
-            var IsAuthorized = await _authorization.AuthorizeAsync(boardId, ProjectRole.PM);
+            var IsAuthorized = await _authorization.AuthorizeAsync(boardId, ProjectRole.Leader);
             if (!IsAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -53,7 +53,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateBoardOrder([FromBody] List<UpdateBoardRequest> request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request[0].ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(request[0].ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -66,7 +66,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateBoard([FromBody] UpdateBoardRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -79,7 +79,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<List<BoardResponse>>> ListBoard(Guid ProjectId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.PM);
+            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<List<BoardResponse>>.Error(9002, "Unauthorized access");

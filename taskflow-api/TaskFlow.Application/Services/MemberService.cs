@@ -84,7 +84,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.NoUserFound);
             }
             //Check if the user is PM
-            if (member.Role == ProjectRole.PM)
+            if (member.Role == ProjectRole.Leader)
             {
                 throw new AppException(ErrorCode.CannotLeaveProjectAsPM);
             }

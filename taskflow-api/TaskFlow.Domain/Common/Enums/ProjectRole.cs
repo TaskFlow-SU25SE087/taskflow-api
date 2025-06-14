@@ -2,7 +2,8 @@
 {
     public enum ProjectRole
     {
-        PM,
+        Leader,
         Member,
+        Unknown
     }
 }

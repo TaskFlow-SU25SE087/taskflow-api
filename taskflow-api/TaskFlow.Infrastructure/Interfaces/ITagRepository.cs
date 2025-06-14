@@ -8,6 +8,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task DeleteTagAsync(Guid TagId);
         Task<Tag?> GetTagByIdAsync(Guid TagId);
         Task UpdateTagAsync(Tag Tag);
+        Task<List<Tag>> GetListTagsync(Guid ProjectId);
 
 
     }

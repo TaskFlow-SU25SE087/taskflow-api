@@ -20,6 +20,21 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<TaskProject>> GetAllTaskProjectAsync(Guid projectId)
+        {
+            var tasks = await _context.TaskProjects
+                .Where(t => t.ProjectId == projectId && t.IsActive)
+                .Include(t => t.Issues)
+                .Include(t => t.TaskTags)
+                    .ThenInclude(tt => tt.Tag)
+                .Include(t => t.Board)
+                .Include(t => t.TaskAssignees)
+                    .ThenInclude(ta => ta.ProjectMember)
+                        .ThenInclude(pm => pm.User)
+                .ToListAsync();
+            return tasks;
+        }
+
         public async Task<TaskProject?> GetTaskByIdAsync(Guid id)
         {
             var task = await _context.TaskProjects

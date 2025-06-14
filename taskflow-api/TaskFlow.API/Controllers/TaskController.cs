@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Application.Services;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
@@ -31,7 +32,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> CreateComment([FromBody]AddTaskCommentRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectID, ProjectRole.PM, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectID, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -44,7 +45,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<TaskProject>> CreateTask([FromBody] AddTaskRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<TaskProject>.Error(9002, "Unauthorized access");
@@ -56,7 +57,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateTask(Guid ProjectId, Guid TaskID)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.PM, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -69,13 +70,35 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<TaskProject>> UpdateTask([FromBody] UpdateTaskRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.PM, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<TaskProject>.Error(9002, "Unauthorized access");
             }
             var result = await _context.UpdateTask(request);
             return ApiResponse<TaskProject>.Success(result);
+        }
+
+        [HttpGet("alltask")]
+        [Authorize]
+        public async Task<ApiResponse<List<TaskProjectResponse>>> GetAllTask(Guid projectId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<List<TaskProjectResponse>>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.GetAllTask(projectId);
+            return ApiResponse<List<TaskProjectResponse>>.Success(result);
+        }
+
+        [HttpPost("addtag")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> AddTag(Guid taskID, Guid tagId, Guid projectId)
+        {
+            await _context.AddTagForTask(projectId, taskID, tagId);
+            return ApiResponse<bool>.Success(true);
         }
     }
 }

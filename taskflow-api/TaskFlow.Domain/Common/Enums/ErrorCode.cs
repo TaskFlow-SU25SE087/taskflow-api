@@ -50,6 +50,8 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         // Tag related error codes(7)
         public static readonly ErrorDetail TagIsNull = new(7001, "Tag cannot be null", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail TagNotFound = new(7002, "Tag not found", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail TagAlreadyExistsInTask = new(7003, "Tag Already Exists In Task", StatusCodes.Status404NotFound);
+
 
         // Task related error codes(8)
         public static readonly ErrorDetail TaskNotFound = new(8001, "Task not found", StatusCodes.Status404NotFound);
