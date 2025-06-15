@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 
@@ -37,6 +38,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             var user = await _userService.UnBanUser(userId);
             return ApiResponse<UserAdminResponse>.Success(user);
+        }
+        [HttpPost("add-file-account")]
+        public async Task<ApiResponse<bool>> AddList([FromForm] ImportUserFileRequest file)
+        {
+            await _userService.ImportEnrollmentsFromExcelAsync(file);
+            return ApiResponse<bool>.Success(true);
         }
     }
 }

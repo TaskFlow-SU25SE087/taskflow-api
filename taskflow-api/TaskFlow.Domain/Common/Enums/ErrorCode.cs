@@ -58,6 +58,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         // Authorization related error codes(9)
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail Unauthorized = new(9002, "Unauthorized access", StatusCodes.Status401Unauthorized);
+        public static readonly ErrorDetail NoFile = new(9003, "No file", StatusCodes.Status404NotFound);
 
     }
 }

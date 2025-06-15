@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System.Net;
 using System.Net.Mail;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
@@ -60,6 +61,42 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Body = $"Wellcome {type} by clicking the following link: " +
                        $"<a href='{verificationUrl}' target='_blank'>{type}</a><br/><br/>" +
                        $"<span style='color: red;'>* This verification link will expire in 3 days.</span>"
+            };
+            try
+            {
+                await SendMailAsync(content);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending verification email: {ex.Message}");
+            }
+        }
+
+        public async Task SendReactivationEmail(string email, string newPass)
+        {
+            var content = new MailContent
+            {
+                To = email,
+                Subject = "🔐 Mo lai account",
+                Body = "mo lai account ne"
+            };
+            try
+            {
+                await SendMailAsync(content);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending verification email: {ex.Message}");
+            }
+        }
+
+        public async Task SendWelcomeEmail(string email, string newPass)
+        {
+            var content = new MailContent
+            {
+                To = email,
+                Subject = "🔐 Wellcom",
+                Body = "account moi"
             };
             try
             {

@@ -17,6 +17,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<UserResponse> UpdateUser(Guid userId, UpdateUserRequest model);
         Task<TokenModel> RenewToken(TokenModel model);
         Task<bool> VerifyAccount(string token);
+        Task ImportEnrollmentsFromExcelAsync(ImportUserFileRequest file);
         Task SendMailAgain();
     }
 }

@@ -14,6 +14,8 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string Name { get; set; }
         [MaxLength(100)]
         public string? Description { get; set; }
+        [Required]
+        public string Color { get; set; } = null!;
         public bool IsActive { get; set; } = true;
         public List<TaskTag> TaskTags { get; set; } = new List<TaskTag>();
     }

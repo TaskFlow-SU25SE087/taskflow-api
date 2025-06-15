@@ -31,6 +31,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Include(t => t.TaskAssignees)
                     .ThenInclude(ta => ta.ProjectMember)
                         .ThenInclude(pm => pm.User)
+                .Include(t => t.TaskComments)
                 .ToListAsync();
             return tasks;
         }

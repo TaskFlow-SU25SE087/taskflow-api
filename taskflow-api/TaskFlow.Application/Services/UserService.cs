@@ -17,6 +17,9 @@ using System.Security.Cryptography;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Infrastructure.Repository;
 using Microsoft.AspNetCore.Http;
+using OfficeOpenXml;
+using CloudinaryDotNet.Core;
+using CloudinaryDotNet;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -315,7 +318,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:ValidIssuer"],
                 audience: _configuration["Jwt:ValidAudience"],
-                expires: DateTime.UtcNow.AddMinutes(15),
+                expires: DateTime.UtcNow.AddDays(2),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha256)
             );
@@ -460,7 +463,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             user.PhoneNumber=model.PhoneNumber;
             if (model.PhoneNumber != null) user.PhoneNumberConfirmed = true;
-            user.Gender = model.Gender;
             user.UserName = model.Username;
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -479,6 +481,105 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await _userManager.UpdateAsync(user);
             }
             return _mapper.Map<UserResponse>(user);
+        }
+        public async Task ImportEnrollmentsFromExcelAsync(ImportUserFileRequest file)
+        {
+            if (file == null || file.File.Length == 0)
+                throw new AppException(ErrorCode.NoFile);
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            var emailsInFile = new HashSet<string>();
+            int addCount = 0;
+            int updateCount = 0;
+
+            using (var stream = new MemoryStream())
+            {
+                await file.File.CopyToAsync(stream);
+                using (var package = new ExcelPackage(stream))
+                {
+                    var worksheet = package.Workbook.Worksheets[0];
+                    int rowCount = worksheet.Dimension.Rows;
+
+                    // Collect all emails from Excel
+                    for (int row = 2; row <= rowCount; row++)
+                    {
+                        var email = worksheet.Cells[row, 3].Text.Trim();
+                        if (!string.IsNullOrEmpty(email))
+                            emailsInFile.Add(email);
+                    }
+
+                    // Load all existing users into dictionary
+                    var existingUsers = _userManager.Users
+                        .Where(u => emailsInFile.Contains(u.Email!) && u.Email != null)
+                        .ToList()
+                        .ToDictionary(u => u.Email!, u => u);
+
+                    for (int row = 2; row <= rowCount; row++)
+                    {
+                        var studentId = worksheet.Cells[row, 1].Text.Trim();
+                        var fullName = worksheet.Cells[row, 2].Text.Trim();
+                        var email = worksheet.Cells[row, 3].Text.Trim();
+                        var term = worksheet.Cells[row, 4].Text.Trim();
+
+                        if (string.IsNullOrEmpty(email)) continue;
+
+                        if (existingUsers.TryGetValue(email, out var existingUser))
+                        {
+                            if (!existingUser.EmailConfirmed)
+                            {
+                                var deleteResult = await _userManager.DeleteAsync(existingUser);
+                                if (!deleteResult.Succeeded)
+                                {
+                                    Console.WriteLine($"Failed to delete {email}: {string.Join(", ", deleteResult.Errors.Select(e => e.Description))}");
+                                    continue;
+                                }
+
+                                existingUsers.Remove(email); // Remove from dict to avoid reuse
+                            }
+                            else
+                            {
+                                // Update existing confirmed user
+                                existingUser.FullName = fullName;
+                                existingUser.StudentId = studentId;
+                                existingUser.Term = term;
+
+                                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
+                                await _userManager.ResetPasswordAsync(existingUser, "12345678", resetToken);
+                                await _mailService.SendReactivationEmail(email, "12345678");
+
+                                updateCount++;
+                                continue;
+                            }
+                        }
+
+                        // Add new user
+                        var newUser = new User
+                        {
+                            StudentId = studentId,
+                            FullName = fullName,
+                            Email = email,
+                            UserName = email,
+                            EmailConfirmed = false,
+                            Term = term,
+                        };
+
+                        var newPass = "12345678";
+                        var createResult = await _userManager.CreateAsync(newUser, newPass);
+                        if (createResult.Succeeded)
+                        {
+                            await _mailService.SendWelcomeEmail(email, newPass);
+                            addCount++;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Failed to create {email}: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                        }
+                    }
+                }
+            }
+            Console.WriteLine($"Added: {addCount}");
+            Console.WriteLine($"Updated: {updateCount}");
         }
     }
 }

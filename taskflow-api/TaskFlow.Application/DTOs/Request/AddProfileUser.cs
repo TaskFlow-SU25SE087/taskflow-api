@@ -11,7 +11,5 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
         public string Username { get; set; } = null!;
         public IFormFile? Avatar { get; set; }
         public string? PhoneNumber { get; set; }
-        [Required(ErrorMessage = "Gender name is required.")]
-        public bool Gender  { get; set; }
     }
 }

@@ -13,6 +13,7 @@ namespace taskflow_api.TaskFlow.Application.Mappings
             CreateMap<TaskProject, TaskProjectResponse>()
                 .ForMember(dest => dest.TaskAssignees, opt => opt.MapFrom(src => src.TaskAssignees))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.TaskTags))
+                .ForMember(dest => dest.commnets, opt => opt.MapFrom(src => src.TaskComments))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Board != null ? src.Board.Name : "Unknown"));
 
             CreateMap<TaskAssignee, TaskAssigneeResponse>()
@@ -25,8 +26,15 @@ namespace taskflow_api.TaskFlow.Application.Mappings
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.ProjectMember.Role));
 
             CreateMap<TaskTag, TaskTagResponse>()
-                .ForMember(dest => dest.name, opt => opt.MapFrom(src => src.Tag.Name))
-                .ForMember(dest => dest.description, opt => opt.MapFrom(src => src.Tag.Description));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Tag.Name))
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Tag.Color))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Tag.Description));
+
+            CreateMap<TaskComment, CommnetResponse>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src =>src.Content))
+                .ForMember(dest => dest.Commenter, opt => opt.MapFrom(src =>src.User.User.FullName))
+                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src =>src.User.User.Avatar))
+                .ForMember(dest => dest.LastUpdate, opt => opt.MapFrom(src =>src.LastUpdatedAt));
         }
     }
 }
