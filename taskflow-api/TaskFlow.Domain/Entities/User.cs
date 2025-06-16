@@ -8,8 +8,8 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     {
         public string? Avatar { get; set; } = "https://res.cloudinary.com/dpw9sgxab/image/upload/v1749247007/avatar/default.jpg";
         public string FullName { get; set; } = null!;
-        public string StudentId { get; set; } = null!;
-        public string Term { get; set; } = null!;
+        public string? StudentId { get; set; }
+        public string? Term { get; set; }
         public bool IsBanned { get; set; } = false;
         public bool IsPermanentlyBanned { get; set; } = false;
         public int ReportCount { get; set; } = 0;
