@@ -2,6 +2,7 @@
 using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System.Net;
 using System.Net.Mail;
+using System.Web;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.Interfaces;
@@ -12,11 +13,13 @@ namespace taskflow_api.TaskFlow.Application.Services
     {
         private readonly MailSettings _mailSettings;
         private readonly AppSetting _appSetting;
+        private readonly string _frontEndBaseUrl;
 
         public MailService(IOptions<MailSettings> mailSettings, IOptions<AppSetting> appSetting)
         {
             _mailSettings = mailSettings.Value;
             _appSetting = appSetting.Value;
+            _frontEndBaseUrl = appSetting.Value.FrontEndBaseUrl!;
         }
 
         public async Task SendMailAsync(MailContent content)
@@ -72,13 +75,61 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
-        public async Task SendReactivationEmail(string email, string newPass)
+        public async Task SendReactivationEmail(string email, string username, string fullname, string token)
         {
             var content = new MailContent
             {
                 To = email,
-                Subject = "🔐 Mo lai account",
-                Body = "mo lai account ne"
+                Subject = "🔐 Reactivate Your TaskFlow Account",
+                Body = $@"
+                        <html>
+                        <head>
+                        <style>
+                            .container {{
+                                font-family: Arial, sans-serif;
+                                padding: 20px;
+                                background-color: #f8f9fa;
+                                border-radius: 8px;
+                                color: #333;
+                                max-width: 600px;
+                                margin: auto;
+                            }}
+                            .btn {{
+                                display: inline-block;
+                                padding: 12px 20px;
+                                margin-top: 20px;
+                                background-color: #4CAF50;
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 6px;
+                                font-weight: bold;
+                            }}
+                            .footer {{
+                                margin-top: 30px;
+                                font-size: 12px;
+                                color: #888;
+                            }}
+                        </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <h2>Hello {fullname},</h2>
+                                <p>
+                                    Your TaskFlow account for the <strong>SWP</strong> course has been reactivated.
+                                </p>
+                                <p>
+                                    Your username is: <strong>{username}</strong>
+                                </p>
+                                <p>
+                                    Please click the button below to set a new password and continue using your account:
+                                </p>
+                                <a href='{_frontEndBaseUrl}/reset-password?firstlogin=false&token={HttpUtility.UrlEncode(token)}&email={email}' class='btn'>Reset Password</a>
+                                    Best regards,<br/>
+                                    TaskFlow Team
+                                </p>
+                            </div>
+                        </body>
+                        </html>"
             };
             try
             {
@@ -90,13 +141,59 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
-        public async Task SendWelcomeEmail(string email, string newPass)
+        public async Task SendWelcomeEmail(string email, string fullname, string token)
         {
             var content = new MailContent
             {
                 To = email,
-                Subject = "🔐 Wellcom",
-                Body = "account moi"
+                Subject = "🔐 Welcome to TaskFlow — Activate Your Account",
+                Body = $@"
+                        <html>
+                        <head>
+                        <style>
+                            .container {{
+                                font-family: Arial, sans-serif;
+                                padding: 20px;
+                                background-color: #f8f9fa;
+                                border-radius: 8px;
+                                color: #333;
+                                max-width: 600px;
+                                margin: auto;
+                            }}
+                            .btn {{
+                                display: inline-block;
+                                padding: 12px 20px;
+                                margin-top: 20px;
+                                background-color: #4CAF50;
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 6px;
+                                font-weight: bold;
+                            }}
+                            .footer {{
+                                margin-top: 30px;
+                                font-size: 12px;
+                                color: #888;
+                            }}
+                        </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <h2>Hello {fullname},</h2>
+                                <p>
+                                    TaskFlow system has created an account for you to use in the <strong>SWP</strong> course.
+                                </p>
+                                <p>
+                                    Please click the button below to set your new password and activate your account:
+                                </p>
+                                <a href='{_frontEndBaseUrl}/reset-password?firstlogin=true&token={HttpUtility.UrlEncode(token)}&email={email}' class='btn'>Reset Password</a>
+                                <p class='footer'>
+                                    Best regards,<br/>
+                                    TaskFlow Team
+                                </p>
+                            </div>
+                        </body>
+                        </html>"
             };
             try
             {

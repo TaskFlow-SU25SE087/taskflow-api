@@ -13,6 +13,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public bool IsBanned { get; set; } = false;
         public bool IsPermanentlyBanned { get; set; } = false;
         public int ReportCount { get; set; } = 0;
+        public bool IsActive { get; set; } = false;
 
         public UserRole Role { get; set; } = UserRole.User;
 

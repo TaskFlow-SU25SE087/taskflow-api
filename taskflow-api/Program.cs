@@ -123,12 +123,12 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
-
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFE", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") //Adress FE
+        policy.WithOrigins(allowedOrigins!)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

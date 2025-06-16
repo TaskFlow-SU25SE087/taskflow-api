@@ -2,6 +2,7 @@
 {
     public class AppSetting
     {
-        public string BaseUrl { get; set; } = null!;
+        public string? BaseUrl { get; set; }
+        public string? FrontEndBaseUrl { get; set; }
     }
 }

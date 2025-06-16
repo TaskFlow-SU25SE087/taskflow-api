@@ -149,6 +149,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
+            if (!user.IsActive) throw new AppException(ErrorCode.Unauthorized);
             if (user.IsPermanentlyBanned) throw new AppException(ErrorCode.AccountBanned);
             if (user.IsBanned) throw new AppException(ErrorCode.AccountBanned);
 
@@ -210,6 +211,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 UserName = model.Email,
                 Role = UserRole.User,
                 Avatar = avatarPath,
+                IsActive = true,
             };
 
             //string avatarPath = string.Empty;
@@ -490,8 +492,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
             var emailsInFile = new HashSet<string>();
-            int addCount = 0;
-            int updateCount = 0;
 
             using (var stream = new MemoryStream())
             {
@@ -526,18 +526,17 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                         if (existingUsers.TryGetValue(email, out var existingUser))
                         {
+                            //User has an account but has never used it => delete account , create again
                             if (!existingUser.EmailConfirmed)
                             {
                                 var deleteResult = await _userManager.DeleteAsync(existingUser);
                                 if (!deleteResult.Succeeded)
                                 {
-                                    Console.WriteLine($"Failed to delete {email}: {string.Join(", ", deleteResult.Errors.Select(e => e.Description))}");
                                     continue;
                                 }
-
-                                existingUsers.Remove(email); // Remove from dict to avoid reuse
+                                existingUsers.Remove(email); 
                             }
-                            else
+                            else // user has an account and used it => reset password and open an account
                             {
                                 // Update existing confirmed user
                                 existingUser.FullName = fullName;
@@ -545,15 +544,14 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 existingUser.Term = term;
 
                                 var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
-                                await _userManager.ResetPasswordAsync(existingUser, "12345678", resetToken);
-                                await _mailService.SendReactivationEmail(email, "12345678");
+                                await _mailService.SendReactivationEmail(
+                                    email, existingUser.UserName!, existingUser.FullName, resetToken);
 
-                                updateCount++;
                                 continue;
                             }
                         }
 
-                        // Add new user
+                        // Add new user 
                         var newUser = new User
                         {
                             StudentId = studentId,
@@ -564,22 +562,19 @@ namespace taskflow_api.TaskFlow.Application.Services
                             Term = term,
                         };
 
-                        var newPass = "12345678";
+                        var newPass = GenerateRandom.GenerateRandomNumber();
                         var createResult = await _userManager.CreateAsync(newUser, newPass);
                         if (createResult.Succeeded)
                         {
-                            await _mailService.SendWelcomeEmail(email, newPass);
-                            addCount++;
+                            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(newUser);
+                            await _mailService.SendWelcomeEmail(email, fullName, resetToken);
                         }
                         else
                         {
-                            Console.WriteLine($"Failed to create {email}: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
                         }
                     }
                 }
             }
-            Console.WriteLine($"Added: {addCount}");
-            Console.WriteLine($"Updated: {updateCount}");
         }
     }
 }
