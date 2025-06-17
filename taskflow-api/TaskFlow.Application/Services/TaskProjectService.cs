@@ -61,12 +61,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _taskTagRepository.AddTaskTagAsync(newTaskTag);
         }
 
-        public async Task<TaskProject> AddTask(AddTaskRequest request)
+        public async Task<TaskProject> AddTask(AddTaskRequest request, Guid ProjectId)
         {
-            var BoardId = _boardRepository.GetIdBoardOrderFirtsAsync(request.ProjectId);
+            var BoardId = _boardRepository.GetIdBoardOrderFirtsAsync(ProjectId);
             var task = new TaskProject
             {
-                ProjectId = request.ProjectId,
+                ProjectId = ProjectId,
                 Title = request.Title,
                 BoardId = BoardId.Result,
                 Description = request.Description,
@@ -115,6 +115,43 @@ namespace taskflow_api.TaskFlow.Application.Services
             var result = _mapper.Map<List<TaskProjectResponse>>(listTask);
             return result;
 
+        }
+
+        public async Task LeaveTask(Guid TaskAssigneeId, string Reason)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeAsync(TaskAssigneeId);
+            if (taskAssignee == null || taskAssignee!.AssignerId != Guid.Parse(UserId!))
+            {
+                throw new AppException(ErrorCode.UserNotAssignedToTask);
+            }
+            //update field
+            taskAssignee.UpdatedAt = DateTime.UtcNow;
+            taskAssignee.IsActive = false;
+            taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(Reason)
+                ? "User voluntarily left the task"
+                : Reason;
+            await _taskAssigneeRepository.UpdateAsync(taskAssignee);
+
+        }
+
+        public async Task RevokeTaskAssignment(Guid TaskAssigneeId, string Reason)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeAsync(TaskAssigneeId);
+            if (taskAssignee == null)
+            {
+                throw new AppException(ErrorCode.UserNotAssignedToTask);
+            }
+            //update field
+            taskAssignee.UpdatedAt = DateTime.UtcNow;
+            taskAssignee.IsActive = false;
+            taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(Reason)
+                ? "Removed from task by project leader"
+                : Reason;
+            await _taskAssigneeRepository.UpdateAsync(taskAssignee);
         }
 
         public async Task<TaskProject> UpdateTask(UpdateTaskRequest request)

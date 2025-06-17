@@ -6,7 +6,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
 {
     public class AddTaskRequest
     {
-        public Guid ProjectId { get; set; }
         [Required(ErrorMessage = "Title cannot be empty")]
         [MaxLength(100, ErrorMessage = "Title cannot exceed 100 characters")]
         public string Title { get; set; } = string.Empty;

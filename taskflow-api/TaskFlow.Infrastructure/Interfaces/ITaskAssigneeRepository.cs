@@ -6,5 +6,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task AcceptTaskAsync(TaskAssignee data);
         Task<bool> IsTaskAssigneeExistsAsync(Guid taskId, Guid assignerId);
+        Task<TaskAssignee?> GetTaskAssigneeAsync(Guid taskAssigneeId);
+        Task UpdateAsync(TaskAssignee taskAssignee);
     }
 }

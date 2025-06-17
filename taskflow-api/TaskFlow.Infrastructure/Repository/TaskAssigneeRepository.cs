@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 
@@ -20,6 +22,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.SaveChanges();
         }
 
+        public async Task<TaskAssignee?> GetTaskAssigneeAsync(Guid taskAssigneeId)
+        {
+            return await _context.TaskAssignees
+                .FirstOrDefaultAsync(x => x.Id == taskAssigneeId
+                    && x.IsActive);
+        }
+
         public async Task<bool> IsTaskAssigneeExistsAsync(Guid taskId, Guid assignerId)
         {
             return await _context.TaskAssignees
@@ -27,6 +36,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 && x.AssignerId == assignerId
                 && x.Type == RefType.Task
                 &&x.IsActive);
+        }
+
+        public async Task UpdateAsync(TaskAssignee taskAssignee)
+        {
+            _context.TaskAssignees.Update(taskAssignee);
+            await _context.SaveChangesAsync();
         }
     }
 }
