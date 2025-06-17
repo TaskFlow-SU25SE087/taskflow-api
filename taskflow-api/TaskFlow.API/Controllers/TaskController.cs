@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
+using taskflow_api.TaskFlow.API.Hubs;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
@@ -20,13 +21,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
         private readonly ITaskProjectService _context;
         private readonly ITaskFlowAuthorizationService _authorization;
         private readonly ITaskCommentService _taskCommentService;
+        
+        private readonly IHubContext<TaskHub> _hubContext;
 
         public TaskController(ITaskProjectService context, ITaskFlowAuthorizationService authorization,
-            ITaskCommentService taskCommentService)
+            ITaskCommentService taskCommentService, IHubContext<TaskHub> hubContext)
         {
             _context = context;
             _authorization = authorization;
             _taskCommentService = taskCommentService;
+            _hubContext = hubContext;
         }
 
         [HttpGet("comment/add")]
@@ -77,6 +81,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
                 return ApiResponse<TaskProject>.Error(9002, "Unauthorized access");
             }
             var result = await _context.UpdateTask(request);
+
+            await _hubContext.Clients.Group(request.ProjectId.ToString())
+                .SendAsync("TaskUpdated", new {
+                    TaskId = result.Id,
+                    Message = "Task has been updated",
+                    Task = result
+                });
+
             return ApiResponse<TaskProject>.Success(result);
         }
 
