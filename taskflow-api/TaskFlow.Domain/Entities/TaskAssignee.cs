@@ -14,6 +14,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         [ForeignKey("Implementer")]
         public ProjectMember ProjectMember { get; set; } = null!;
         public RefType Type { get; set; } = RefType.None;
+        public string? CancellationNote { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; } = false;
