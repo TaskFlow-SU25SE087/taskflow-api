@@ -1,13 +1,10 @@
 ﻿using AutoMapper;
-using Microsoft.Extensions.Configuration;
-using System.Threading.Tasks;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
-using taskflow_api.TaskFlow.Infrastructure.Repository;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.Application.Services
@@ -20,10 +17,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IMapper _mapper;
         private readonly ITaskTagRepository _taskTagRepository;
         private readonly ITagRepository _tagRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ITaskAssigneeRepository _taskAssigneeRepository;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
-            ITagRepository tagRepository)
+            ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
+            ITaskAssigneeRepository taskAssigneeRepository)
         {
             _taskProjectRepository = taskProjectRepository;
             _boardRepository = boardRepository;
@@ -31,6 +31,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             _mapper = mapper;
             _taskTagRepository = taskTagRepository;
             _tagRepository = tagRepository;
+            _httpContextAccessor = httpContextAccessor;
+            _taskAssigneeRepository = taskAssigneeRepository;
         }
 
         public async Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId)
@@ -75,6 +77,25 @@ namespace taskflow_api.TaskFlow.Application.Services
             return task;
         }
 
+        public async Task AssignTaskToUser(Guid TaskId, Guid AssignerId)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, AssignerId);
+            if (checkExits)
+            {
+                throw new AppException(ErrorCode.TaskAlreadyAssigned);
+            }
+            var newTaskAginee = new TaskAssignee
+            {
+                ImplementerId = Guid.Parse(UserId!),
+                AssignerId = AssignerId,
+                RefId = TaskId,
+                Type = RefType.Task
+            };
+            await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
+        }
+
         public async Task<bool> DeleteTask(Guid taskId)
         {
             var deleteTask = await _taskProjectRepository.GetTaskByIdAsync(taskId);
@@ -116,6 +137,26 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
             return taskUpdate;
+        }
+
+        public async Task userAcceptTask(Guid TaskId)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+
+            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, Guid.Parse(UserId!));
+            if (checkExits)
+            {
+                throw new AppException(ErrorCode.TaskAlreadyAssigned);
+            }
+            var newTaskAginee = new TaskAssignee
+            {
+                ImplementerId = Guid.Parse(UserId!),
+                AssignerId = Guid.Parse(UserId!),
+                RefId = TaskId,
+                Type = RefType.Task
+            };
+            await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
         }
     }
 }

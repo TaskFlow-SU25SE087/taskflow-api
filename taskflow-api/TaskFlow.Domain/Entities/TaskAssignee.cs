@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
@@ -6,14 +8,12 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public Guid? Assigner { get; set; }
-        public Guid TaskId { get; set; }
-        public TaskProject Task { get; set; } = null!;
-        public Guid Implementer { get; set; }
+        public Guid RefId { get; set; }
+        public Guid? AssignerId { get; set; }
+        public Guid ImplementerId { get; set; }
+        [ForeignKey("Implementer")]
         public ProjectMember ProjectMember { get; set; } = null!;
-        public Guid? IssueID { get; set; }
-        public Issue? Issue { get; set; } = null!;
-
+        public RefType Type { get; set; } = RefType.None;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; } = false;

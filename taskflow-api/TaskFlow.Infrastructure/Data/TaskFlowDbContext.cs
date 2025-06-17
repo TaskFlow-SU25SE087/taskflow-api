@@ -90,18 +90,18 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(t => t.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //TaskProject <-> TaskAssignee
-            modelBuilder.Entity<TaskAssignee>()
-               .HasOne(tu => tu.Task)
-               .WithMany(tp => tp.TaskAssignees)
-               .HasForeignKey(tu => tu.TaskId)
-               .OnDelete(DeleteBehavior.Restrict);
+            ////TaskProject <-> TaskAssignee
+            //modelBuilder.Entity<TaskAssignee>()
+            //   .HasOne(tu => tu.Task)
+            //   .WithMany(tp => tp.TaskAssignees)
+            //   .HasForeignKey(tu => tu.RefId)
+            //   .OnDelete(DeleteBehavior.Restrict);
 
             //ProjectMember <-> TaskAssignee
             modelBuilder.Entity<TaskAssignee>()
                .HasOne(tu => tu.ProjectMember)
                .WithMany(pm => pm.taskUsers)
-               .HasForeignKey(tu => tu.Implementer)
+               .HasForeignKey(tu => tu.ImplementerId)
                .OnDelete(DeleteBehavior.Restrict);
 
             // TaskUser <-> Issue
@@ -159,12 +159,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(tc => tc.TaskId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //Issue <-> TaskAsignee
-            modelBuilder.Entity<TaskAssignee>()
-                .HasOne(ta => ta.Issue)
-                .WithMany(i => i.TaskAssignees)
-                .HasForeignKey(ta => ta.IssueID)
-                .OnDelete(DeleteBehavior.Restrict);
+            ////Issue <-> TaskAsignee
+            //modelBuilder.Entity<TaskAssignee>()
+            //    .HasOne(ta => ta.Issue)
+            //    .WithMany(i => i.TaskAssignees)
+            //    .HasForeignKey(ta => ta.RefId)
+            //    .OnDelete(DeleteBehavior.Restrict);
         }
     }
 

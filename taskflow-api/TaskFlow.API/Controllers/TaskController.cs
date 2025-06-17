@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
@@ -55,7 +56,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
         [HttpPut("delete")]
         [Authorize]
-        public async Task<ApiResponse<bool>> UpdateTask(Guid ProjectId, Guid TaskID)
+        public async Task<ApiResponse<bool>> DeleteTask(Guid ProjectId, Guid TaskID)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
@@ -93,11 +94,27 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<List<TaskProjectResponse>>.Success(result);
         }
 
-        [HttpPost("addtag")]
+        [HttpPost("{taskId}/tags/{tagId}")]
         [Authorize]
-        public async Task<ApiResponse<bool>> AddTag(Guid taskID, Guid tagId, Guid projectId)
+        public async Task<ApiResponse<bool>> AddTagToTask(Guid taskId, Guid tagId, Guid projectId)
         {
-            await _context.AddTagForTask(projectId, taskID, tagId);
+            await _context.AddTagForTask(projectId, taskId, tagId);
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpPost("accept")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> UserAcceptTask([FromQuery] Guid taskId)
+        {
+            await _context.userAcceptTask(taskId);
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpPost("assign")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> AssignTaskToUser([FromQuery] Guid taskId, [FromQuery] Guid assignerId)
+        {
+            await _context.AssignTaskToUser(taskId, assignerId);
             return ApiResponse<bool>.Success(true);
         }
     }

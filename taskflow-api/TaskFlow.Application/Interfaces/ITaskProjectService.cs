@@ -11,5 +11,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<bool> DeleteTask(Guid taskId);
         Task<List<TaskProjectResponse>> GetAllTask(Guid projectId);
         Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId);
+        Task userAcceptTask(Guid TaskId);
+        Task AssignTaskToUser(Guid TaskId, Guid AssignerId);
     }
 }

@@ -46,6 +46,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
 
         // Project related error codes(6)
         public static readonly ErrorDetail NoProjectsFound = new(6001, "No projects found", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail TaskAlreadyAssigned = new(6002, "Task has already been assigned to this user", StatusCodes.Status409Conflict);
 
         // Tag related error codes(7)
         public static readonly ErrorDetail TagIsNull = new(7001, "Tag cannot be null", StatusCodes.Status400BadRequest);

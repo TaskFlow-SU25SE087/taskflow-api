@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250617012240_fix-table-TaskAssignee")]
+    partial class fixtableTaskAssignee
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -293,16 +296,13 @@ namespace taskflow_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AssignerId")
+                    b.Property<Guid?>("Assigner")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("Implementer")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ImplementerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
@@ -325,7 +325,7 @@ namespace taskflow_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ImplementerId");
+                    b.HasIndex("Implementer");
 
                     b.HasIndex("IssueId");
 
@@ -734,7 +734,7 @@ namespace taskflow_api.Migrations
                 {
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", "ProjectMember")
                         .WithMany("taskUsers")
-                        .HasForeignKey("ImplementerId")
+                        .HasForeignKey("Implementer")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

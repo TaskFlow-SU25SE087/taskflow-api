@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -23,7 +24,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<List<TaskProject>> GetAllTaskProjectAsync(Guid projectId)
         {
             var tasks = await _context.TaskProjects
-                .Where(t => t.ProjectId == projectId && t.IsActive)
+                .Where(t => t.ProjectId == projectId && t.IsActive
+                        && t.TaskAssignees.Any(ta => ta.Type == RefType.Task))
                 .Include(t => t.Issues)
                 .Include(t => t.TaskTags)
                     .ThenInclude(tt => tt.Tag)
