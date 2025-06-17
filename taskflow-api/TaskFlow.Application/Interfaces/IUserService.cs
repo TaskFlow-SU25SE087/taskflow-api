@@ -19,5 +19,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<bool> VerifyAccount(string token);
         Task ImportEnrollmentsFromExcelAsync(ImportUserFileRequest file);
         Task SendMailAgain();
+        Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request);
     }
 }

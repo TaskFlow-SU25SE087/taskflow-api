@@ -576,5 +576,29 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
             }
         }
+
+        public async Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null || user.UserName!.Equals(user.Email))
+            {
+                throw new AppException(ErrorCode.InvalidEmail);
+            }
+            // if have username : change username
+            if (request.Username != null)
+            {
+                user.UserName = request.Username;
+                var result = await _userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                    throw new AppException(ErrorCode.UsernameExists);
+            }
+            //reset password
+            var rsPassword = await _userManager.ResetPasswordAsync(
+                    user, request.TokenResetPassword, request.NewPassword);
+            if (!rsPassword.Succeeded)
+            {
+                throw new AppException(ErrorCode.CannotResetPassword);
+            }
+        }
     }
 }

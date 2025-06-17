@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
@@ -63,6 +64,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             var result = await _userService.AddUserName(model);
             return ApiResponse<UserResponse>.Success(result);
+        }
+
+        [HttpPost("activate")]
+        public async Task<ApiResponse<bool>> ActivateAccount([FromBody] ActivateAccountRequest model)
+        {
+            await _userService.ConfirmEmailAndSetPasswordAsync(model);
+            return ApiResponse<bool>.Success(true);
         }
     }
 }
