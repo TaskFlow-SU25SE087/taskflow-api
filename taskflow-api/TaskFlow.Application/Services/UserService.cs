@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using CloudinaryDotNet.Core;
 using CloudinaryDotNet;
+using Azure.Core;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -596,6 +597,23 @@ namespace taskflow_api.TaskFlow.Application.Services
             var rsPassword = await _userManager.ResetPasswordAsync(
                     user, request.TokenResetPassword, request.NewPassword);
             if (!rsPassword.Succeeded)
+            {
+                throw new AppException(ErrorCode.CannotResetPassword);
+            }
+        }
+
+        public async Task ResetPassword(ResetPasswordRequest request)
+        {
+            //find user by email
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.InvalidEmail);
+            }
+            //reset password
+            var result = await _userManager.ResetPasswordAsync(
+                    user, request.TokenResetPassword, request.NewPassword);
+            if (!result.Succeeded)
             {
                 throw new AppException(ErrorCode.CannotResetPassword);
             }

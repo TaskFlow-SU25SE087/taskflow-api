@@ -20,5 +20,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task ImportEnrollmentsFromExcelAsync(ImportUserFileRequest file);
         Task SendMailAgain();
         Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request);
+        Task ResetPassword(ResetPasswordRequest request);
+
     }
 }

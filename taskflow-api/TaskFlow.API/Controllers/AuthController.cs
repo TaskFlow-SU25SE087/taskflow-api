@@ -67,10 +67,17 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("activate")]
-        public async Task<ApiResponse<bool>> ActivateAccount([FromBody] ActivateAccountRequest model)
+        public async Task<ApiResponse<string>> ActivateAccount([FromBody] ActivateAccountRequest model)
         {
             await _userService.ConfirmEmailAndSetPasswordAsync(model);
-            return ApiResponse<bool>.Success(true);
+            return ApiResponse<string>.Success("comfirm account successfully");
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<ApiResponse<string>> ResetPassword([FromBody] ResetPasswordRequest model)
+        {
+            await _userService.ResetPassword(model);
+            return ApiResponse<string>.Success("Password reset successfully");
         }
     }
 }
