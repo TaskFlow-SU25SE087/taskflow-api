@@ -188,7 +188,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.ProjectNotFound);
             }
             //Update the project
-             project!.Description  = request.Title;
+             project!.Title  = request.Title;
+            project!.Description = request.Description;
             await _projectRepository.UpdateProject(project);
             return _mapper.Map<ProjectResponse>(project);
         }
