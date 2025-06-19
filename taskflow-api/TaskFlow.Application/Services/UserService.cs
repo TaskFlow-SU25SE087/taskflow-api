@@ -284,6 +284,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
+            user.PhoneNumber = model.PhoneNumber;
             user.FullName = model.FullName;
             if (model.Avatar != null)
             {
@@ -292,8 +293,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                     // Delete old avatar image if it exists???
                     //ImageHelper.DeleteImage(user.Avatar, _env.WebRootPath);
                 }
-                var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
-                var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
+                //var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
+                //var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
+                var avatarPath = await _fileService.UploadFileAsync(model.Avatar);
+                if (avatarPath == null)
+                {
+                    avatarPath = user.Avatar; // Fallback to existing avatar if upload fails
+                }
                 user.Avatar = avatarPath;
             }
             var saveImage = await _userManager.UpdateAsync(user);

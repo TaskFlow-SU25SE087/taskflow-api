@@ -7,7 +7,7 @@ using taskflow_api.TaskFlow.Application.Interfaces;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("user")]
     [ApiController]
     public class UserProfileController : ControllerBase
     {
@@ -24,8 +24,8 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserResponse>.Success(user);
         }
 
-        [HttpPut("{userId}")]
-        public async Task<ApiResponse<UserResponse>> UpdateUser(Guid userId, [FromBody] UpdateUserRequest model)
+        [HttpPut("update/{userId}")]
+        public async Task<ApiResponse<UserResponse>> UpdateUser(Guid userId, [FromForm] UpdateUserRequest model)
         {
             var user = await _userService.UpdateUser(userId, model);
             return ApiResponse<UserResponse>.Success(user);
