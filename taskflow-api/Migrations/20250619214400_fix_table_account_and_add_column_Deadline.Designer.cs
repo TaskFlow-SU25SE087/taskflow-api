@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250619214400_fix_table_account_and_add_column_Deadline")]
+    partial class fix_table_account_and_add_column_Deadline
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -10,9 +10,6 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string FullName { get; set; } = null!;
         public string? StudentId { get; set; }
         public string? Term { get; set; }
-        public bool IsBanned { get; set; } = false;
-        public bool IsPermanentlyBanned { get; set; } = false;
-        public int ReportCount { get; set; } = 0;
         public bool IsActive { get; set; } = false;
 
         public UserRole Role { get; set; } = UserRole.User;

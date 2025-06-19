@@ -55,20 +55,21 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
         {
+            //find user by id
             var user = _userManager.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
+
+            //cannot ban admin
             if (user.Role == UserRole.Admin)
             {
                 throw new AppException(ErrorCode.CannotBanAdmin);
             }
-            if (!user.IsPermanentlyBanned)
-            {
-                throw new AppException(ErrorCode.UserAlreadyBanned);
-            }
-            user.IsPermanentlyBanned = false;
+
+            //set IActive to false
+            user.IsActive = false;
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
@@ -85,27 +86,26 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Email = user.Email!,
                 FullName = user.FullName,
                 Avatar = user.Avatar,
-                IsActive = user.IsPermanentlyBanned,
+                IsActive = user.IsActive,
                 Role = user.Role.ToString(),
             };
         }
 
         public async Task<UserAdminResponse> UnBanUser(Guid userId)
         {
+            //find user by id
             var user = _userManager.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
+            //cannot Unban admin
             if (user.Role == UserRole.Admin)
             {
                 throw new AppException(ErrorCode.CannotBanAdmin);
             }
-            if (user.IsPermanentlyBanned)
-            {
-                throw new AppException(ErrorCode.UserNotBanned);
-            }
-            user.IsPermanentlyBanned = true;
+           
+            user.IsActive = true;
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
@@ -122,7 +122,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Email = user.Email!,
                 FullName = user.FullName,
                 Avatar = user.Avatar,
-                IsActive = user.IsPermanentlyBanned,
+                IsActive = user.IsActive,
                 Role = user.Role.ToString(),
             };
         }
@@ -150,9 +150,8 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
+            if (!user.LockoutEnabled) throw new AppException(ErrorCode.Unauthorized);
             if (!user.IsActive) throw new AppException(ErrorCode.Unauthorized);
-            if (user.IsPermanentlyBanned) throw new AppException(ErrorCode.AccountBanned);
-            if (user.IsBanned) throw new AppException(ErrorCode.AccountBanned);
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!passwordValid) throw new AppException(ErrorCode.InvalidPasswordOrUserName);

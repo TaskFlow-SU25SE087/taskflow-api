@@ -23,6 +23,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string? File { get; set; } = string.Empty;
+        public DateTime Deadline { get; set; } = DateTime.UtcNow.AddDays(7);
         public bool IsActive { get; set; } = false;
 
         public List<TaskAssignee> TaskAssignees { get; set; } = new List<TaskAssignee>();
