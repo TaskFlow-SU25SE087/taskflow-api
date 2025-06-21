@@ -8,7 +8,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public Guid OwnerId { get; set; }
         public DateTime LastUpdate { get; set; }
         public ProjectRole? Role { get; set; }
     }

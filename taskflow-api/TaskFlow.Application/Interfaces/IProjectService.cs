@@ -11,7 +11,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
          Task<ProjectResponse> CreateProject(CreateProjectRequest request);
          Task<ProjectResponse> UpdateProject(UpdateProjectRequest request);
         Task<ProjectDetailResponse> GetProject(Guid ProjectId);
-        Task<PagedResult<ProjectsResponse>> ListProjectResponse(int Page);
+        Task<List<ProjectsResponse>> ListProjectResponse();
 
         //public Task<bool> AddMember(AddMemberRequest request);
         //public Task<bool> VerifyJoinProject(string token);

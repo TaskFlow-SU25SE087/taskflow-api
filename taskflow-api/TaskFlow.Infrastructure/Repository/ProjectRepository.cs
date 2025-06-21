@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -29,6 +31,24 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
             return project.Id;
+        }
+
+        public async Task<List<ProjectsResponse>> GetListProjectResponseByUserAsync(Guid userId)
+        {
+            return await _context.Projects
+                .Where(p => p.Members.Any(m => m.UserId == userId && m.IsActive))
+                .Select(p => new ProjectsResponse
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    LastUpdate = p.LastUpdate,
+                    Role = p.Members
+                        .Where(m => m.UserId == userId && m.IsActive)
+                        .Select(m => m.Role)
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
         }
 
         public Task<Project?> GetProjectByIdAsync(Guid id)

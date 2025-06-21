@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpPut("update")]
         [Authorize]
-        public async Task<ApiResponse<ProjectResponse>> UpdateProject([FromBody] UpdateProjectRequest request)
+        public async Task<ApiResponse<ProjectResponse>> UpdateProject([FromForm] UpdateProjectRequest request)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
             if (!isAuthorized)
@@ -49,10 +49,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpGet("list")]
         [Authorize]
-        public async Task<ApiResponse<PagedResult<ProjectsResponse>>> ListProjects(int page = 1)
+        public async Task<ApiResponse<List<ProjectsResponse>>> ListProjects()
         {
-            var projects = await _context.ListProjectResponse(page);
-            return ApiResponse<PagedResult<ProjectsResponse>>.Success(projects);
+            var projects = await _context.ListProjectResponse();
+            return ApiResponse<List<ProjectsResponse>>.Success(projects);
         }
 
         [HttpGet("{projectid}")]

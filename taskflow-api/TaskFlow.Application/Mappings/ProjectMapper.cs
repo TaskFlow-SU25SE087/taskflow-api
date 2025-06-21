@@ -22,10 +22,10 @@ namespace taskflow_api.TaskFlow.Application.Mappings
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
-                .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId))
                 .ForMember(dest => dest.LastUpdate, opt => opt.MapFrom(src => src.LastUpdate));
 
             CreateMap<Project, OneProjectResponse>();
+            CreateMap<Project, ProjectResponse>();
         }
 
     }

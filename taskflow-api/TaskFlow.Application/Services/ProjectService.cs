@@ -147,7 +147,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return result;
         }
 
-        public async Task<PagedResult<ProjectsResponse>> ListProjectResponse(int Page)
+        public async Task<List<ProjectsResponse>> ListProjectResponse()
         {
             var userIdStr = _httpContextAccessor.HttpContext?.User.FindFirst("id")?.Value;
             if (string.IsNullOrEmpty(userIdStr))
@@ -156,37 +156,39 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             var userId = Guid.Parse(userIdStr);
             //get Projects by userId
-            var projectsQuery = _projectRepository.GetProjectsByUserIdAsync(userId);
+            //var projectsQuery = _projectRepository.GetProjectsByUserIdAsync(userId);
+            var projectsQuery = await _projectRepository.GetListProjectResponseByUserAsync(userId);
             if (projectsQuery == null)
             {
                 throw new AppException(ErrorCode.NoProjectsFound);
             }
-            //Page the projects
-            PagingParams pagingParams = new PagingParams
-            {
-                PageNumber = Page,
-                PageSize = 10
-            };
-            var pagedProjects = await projectsQuery.ToPagedListAsync(pagingParams);
-            // map the projects to response DTO
-            var responseList = new List<ProjectsResponse>();
-            foreach (var project in pagedProjects.Items)
-            {
-                var response = _mapper.Map<ProjectsResponse>(project, opt =>
-                {
-                    opt.Items["userId"] = userId;
-                });
-                response.Role = project.Members.FirstOrDefault(m => m.UserId == userId)?.Role;
-                responseList.Add(response);
-            }
-            return new PagedResult<ProjectsResponse>
-            {
-                Items = responseList,
-                TotalItems = pagedProjects.TotalItems,
-                PageNumber = pagedProjects.PageNumber,
-                PageSize = pagedProjects.PageSize,
-                TotalPages = pagedProjects.TotalPages
-            };
+            return projectsQuery;
+            ////Page the projects
+            //PagingParams pagingParams = new PagingParams
+            //{
+            //    PageNumber = Page,
+            //    PageSize = 10
+            //};
+            //var pagedProjects = await projectsQuery.ToPagedListAsync(pagingParams);
+            //// map the projects to response DTO
+            //var responseList = new List<ProjectsResponse>();
+            //foreach (var project in pagedProjects.Items)
+            //{
+            //    var response = _mapper.Map<ProjectsResponse>(project, opt =>
+            //    {
+            //        opt.Items["userId"] = userId;
+            //    });
+            //    response.Role = project.Members.FirstOrDefault(m => m.UserId == userId)?.Role;
+            //    responseList.Add(response);
+            //}
+            //return new PagedResult<ProjectsResponse>
+            //{
+            //    Items = responseList,
+            //    TotalItems = pagedProjects.TotalItems,
+            //    PageNumber = pagedProjects.PageNumber,
+            //    PageSize = pagedProjects.PageSize,
+            //    TotalPages = pagedProjects.TotalPages
+            //};
         }
 
         public async Task<ProjectResponse> UpdateProject(UpdateProjectRequest request)
