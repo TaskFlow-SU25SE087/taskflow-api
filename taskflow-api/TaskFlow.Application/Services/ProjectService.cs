@@ -52,6 +52,14 @@ namespace taskflow_api.TaskFlow.Application.Services
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
             var user = await _userManager.FindByIdAsync(UserId!);
+
+            //Find the number of project users joined
+            int projectCount = await _projectMemberRepository.GetProjectCountByUserIdAsync(Guid.Parse(UserId!));
+            if (projectCount >= 3)
+            {
+                throw new AppException(ErrorCode.MaxProjectLimitReached);
+            }
+
             //create project
             var projectId = await _projectRepository.CreateProjectAsync(request.title, request.description, Guid.Parse(UserId!));
             if (projectId == Guid.Empty)
@@ -120,6 +128,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Name = user!.FullName,
                 ProjectId = projectId,
                 Description = "Tag of "+ user!.FullName,
+                Color = "#FF5733", // Default color
             };
             await _TagRepository.AddTagAsync(Tag);
             return new ProjectResponse

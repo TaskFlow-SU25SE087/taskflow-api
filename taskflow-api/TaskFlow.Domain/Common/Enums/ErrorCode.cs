@@ -32,6 +32,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail CannotCreateProject = new(3001, "Cannot create project", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotLeaveProjectAsPM = new(3002, "Cannot leave project as project manager", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail ProjectNotFound = new(3003, "Project not found", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail MaxProjectLimitReached = new(3004, "You have reached the maximum number of projects allowed", StatusCodes.Status403Forbidden);
 
         //Token related error codes(4)
         public static readonly ErrorDetail InvalidToken = new(4001, "Invalid token", StatusCodes.Status401Unauthorized);

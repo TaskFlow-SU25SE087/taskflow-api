@@ -26,7 +26,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _authorization = authorization;
         }
 
-        [HttpPost]
+        [HttpPost("create")]
         [Authorize]
         public async Task<ApiResponse<ProjectResponse>> CreateProject([FromBody] CreateProjectRequest request)
         {
