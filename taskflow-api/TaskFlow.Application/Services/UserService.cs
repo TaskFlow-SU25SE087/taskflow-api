@@ -21,6 +21,8 @@ using OfficeOpenXml;
 using CloudinaryDotNet.Core;
 using CloudinaryDotNet;
 using Azure.Core;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -35,12 +37,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IMailService _mailService;
         private readonly IVerifyTokenRopository _verifyTokenRopository;
         private readonly IFileService _fileService;
+        private readonly IMemoryCache _cache;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration configuration, IFileService fileService, 
             IHttpContextAccessor httpContextAccessor, IMapper mapper,
             IRefreshTokenRepository refeshTokenRepository, IMailService mailService,
-            IVerifyTokenRopository verifyTokenRopository)
+            IVerifyTokenRopository verifyTokenRopository, IMemoryCache cache)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -51,6 +54,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _mailService = mailService;
             _verifyTokenRopository = verifyTokenRopository;
             _fileService = fileService;
+            _cache = cache;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -129,29 +133,65 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<PagedResult<UserAdminResponse>> GetAllUser(int Page)
         {
+            string cacheKey = $"all_user_page_{Page}";
+            if (_cache.TryGetValue(cacheKey, out PagedResult<UserAdminResponse> cachedResult))
+            {
+                return cachedResult;
+            }
             var users = _userManager.Users
+                .AsNoTracking()
                 .Where(u => u.Role != UserRole.Admin);
 
-            var usersResponse = _mapper.ProjectTo<UserAdminResponse>(users);
-            PagingParams pagingParams = new PagingParams
+            var pagingParams = new PagingParams
             {
                 PageNumber = Page,
                 PageSize = 5
             };
-            var pageUser = await usersResponse.ToPagedListAsync(pagingParams);
-            if (!pageUser.Items.Any())
+            var totalItems = await users.CountAsync();
+            var items = await _mapper.ProjectTo<UserAdminResponse>(users)
+                .OrderBy(u => u.Id)
+                .Skip(pagingParams.Skip)
+                .Take(pagingParams.PageSize)
+                .ToListAsync();
+
+            if (!items.Any())
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
-            return pageUser;
+            //var usersResponse = _mapper.ProjectTo<UserAdminResponse>(users);
+            //PagingParams pagingParams = new PagingParams
+            //{
+            //    PageNumber = Page,
+            //    PageSize = 5
+            //};
+            //var pageUser = await usersResponse.ToPagedListAsync(pagingParams);
+            //if (!pageUser.Items.Any())
+            //{
+            //    throw new AppException(ErrorCode.NoUserFound);
+            //}
+            var result = new PagedResult<UserAdminResponse>
+            {
+                Items = items,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pagingParams.PageSize),
+                PageNumber = pagingParams.PageNumber,
+                PageSize = pagingParams.PageSize
+            };
+            //set cache for 5 minutes
+            _cache.Set(cacheKey, result, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15), // cache for 15 minutes
+                SlidingExpiration = TimeSpan.FromMinutes(5) //if accessed within 5 minutes, reset the cache timer
+            });
+            return result;
         }
 
         public async Task<TokenModel> Login(LoginRequest model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
-            if (!user.LockoutEnabled) throw new AppException(ErrorCode.Unauthorized);
-            if (!user.IsActive) throw new AppException(ErrorCode.Unauthorized);
+            if (user.LockoutEnabled) throw new AppException(ErrorCode.Unauthorized);
+            if (!user.IsActive) throw new AppException(ErrorCode.AccountBanned);
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!passwordValid) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
