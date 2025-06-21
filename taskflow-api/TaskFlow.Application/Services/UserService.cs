@@ -156,7 +156,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .ThenByDescending(u =>
                                     u.TermSeason == "Fall" ? 3 :
                                     u.TermSeason == "Summer" ? 2 :
-                                    u.TermSeason == "Spring" ? 1 : 0)
+                                    u.TermSeason == "Spring" ? 1 : 4)
                 .ThenBy(u => u.FullName)
                 .Skip(pagingParams.Skip)
                 .Take(pagingParams.PageSize)
