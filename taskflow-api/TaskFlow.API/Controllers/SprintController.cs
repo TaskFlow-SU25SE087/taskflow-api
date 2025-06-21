@@ -11,7 +11,7 @@ using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
-    [Route("project/sprint")]
+    [Route("projects/{projectId}/sprints")]
     [ApiController]
     public class SprintController : ControllerBase
     {
@@ -23,7 +23,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _authorization = authorization;
         }
 
-        [HttpPost("create")]
+        [HttpPost]
         [Authorize]
         public async Task<ApiResponse<bool>> CreateSprint([FromBody] CreateSprintRequest request)
         {
@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpPut("update")]
+        [HttpPut("{sprintId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateSprint([FromBody] UpdateSprintRequest request)
         {
@@ -49,7 +49,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpGet("list")]
+        [HttpGet]
         [Authorize]
         public async Task<ApiResponse<List<Sprint>>> GetListSprint(Guid ProjectId)
         {

@@ -48,7 +48,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
-        [HttpPost("create")]
+        [HttpPost]
         [Authorize]
         public async Task<ApiResponse<TaskProject>> CreateTask(
             [FromBody] AddTaskRequest request, [FromRoute] Guid projectId)
@@ -100,7 +100,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<TaskProject>.Success(result);
         }
 
-        [HttpGet("alltask")]
+        [HttpGet]
         [Authorize]
         public async Task<ApiResponse<List<TaskProjectResponse>>> GetAllTask([FromRoute] Guid projectId)
         {

@@ -26,7 +26,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _authorization = authorization;
         }
 
-        [HttpPost("create")]
+        [HttpPost]
         [Authorize]
         public async Task<ApiResponse<ProjectResponse>> CreateProject([FromBody] CreateProjectRequest request)
         {
@@ -34,7 +34,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<ProjectResponse>.Success(project);
         }
 
-        [HttpPut("update")]
+        [HttpPut("{projectId}")]
         [Authorize]
         public async Task<ApiResponse<ProjectResponse>> UpdateProject([FromForm] UpdateProjectRequest request)
         {
@@ -47,7 +47,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<ProjectResponse>.Success(project);
         }
 
-        [HttpGet("list")]
+        [HttpGet]
         [Authorize]
         public async Task<ApiResponse<List<ProjectsResponse>>> ListProjects()
         {

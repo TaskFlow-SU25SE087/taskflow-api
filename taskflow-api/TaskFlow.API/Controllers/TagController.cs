@@ -10,7 +10,7 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
-    [Route("project/Tag")]
+    [Route("projects/{projectId}/tags")]
     [ApiController]
     public class TagController : ControllerBase
     {
@@ -49,7 +49,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
-        [HttpPut]
+        [HttpPut("{tagId}")]
         public async Task<ApiResponse<bool>> UpdateTag([FromBody] UpdateTagRequest request)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId,
@@ -63,7 +63,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         }
 
-        [HttpGet("getall")]
+        [HttpGet]
         public async Task<ApiResponse<List<TagResporn>>> getAllTag(Guid projectID)
         {
             var result = await _context.GetListTag(projectID);

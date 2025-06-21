@@ -20,26 +20,26 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ApiResponse<PagedResult<UserAdminResponse>>> GetAllUser(int page)
+        public async Task<ApiResponse<PagedResult<UserAdminResponse>>> GetAllUser([FromQuery] int page)
         {
             var users = await _userService.GetAllUser(page);
             return ApiResponse<PagedResult<UserAdminResponse>>.Success(users);
         }
 
-        [HttpPatch("ban/{userId}")]
+        [HttpPatch("{userId}/ban")]
         public async Task<ApiResponse<UserAdminResponse>> BanUser(Guid userId)
         {
             var user = await _userService.BanUser(userId);
             return ApiResponse<UserAdminResponse>.Success(user);
         }
 
-        [HttpPatch("unban/{userId}")]
+        [HttpPatch("{userId}/unban")]
         public async Task<ApiResponse<UserAdminResponse>> UnBanUser(Guid userId)
         {
             var user = await _userService.UnBanUser(userId);
             return ApiResponse<UserAdminResponse>.Success(user);
         }
-        [HttpPost("add-file-account")]
+        [HttpPost("import")]
         public async Task<ApiResponse<bool>> AddList([FromForm] ImportUserFileRequest file)
         {
             await _userService.ImportEnrollmentsFromExcelAsync(file);

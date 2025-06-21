@@ -35,14 +35,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<TokenModel>.Success(result);
         }
 
-        [HttpPost("refresh-token")]
+        [HttpPost("token/refresh")]
         public async Task<ApiResponse<TokenModel>> RenewToken(TokenModel model)
         {
             var newToken = await _userService.RenewToken(model);
             return ApiResponse<TokenModel>.Success(newToken);
         }
 
-        [HttpPost("verify-email")]
+        [HttpPost("email/verify")]
         [Authorize]
         public async Task<ApiResponse<bool>> VerifyAccount([FromQuery] string token)
         {
@@ -50,7 +50,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpPost("send-mail-again")]
+        [HttpPost("email/resend")]
         [Authorize]
         public async Task<ApiResponse<bool>> SendMailAgain()
         {
@@ -58,7 +58,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
-        [HttpPost("add-username")]
+        [HttpPost("username")]
         [Authorize]
         public async Task<ApiResponse<UserResponse>> AddUserName([FromForm] AddProfileUser model)
         {
@@ -66,14 +66,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<UserResponse>.Success(result);
         }
 
-        [HttpPost("activate")]
+        [HttpPost("account/activate")]
         public async Task<ApiResponse<string>> ActivateAccount([FromBody] ActivateAccountRequest model)
         {
             await _userService.ConfirmEmailAndSetPasswordAsync(model);
             return ApiResponse<string>.Success("comfirm account successfully");
         }
 
-        [HttpPost("reset-password")]
+        [HttpPost("account/reset-password")]
         public async Task<ApiResponse<string>> ResetPassword([FromBody] ResetPasswordRequest model)
         {
             await _userService.ResetPassword(model);

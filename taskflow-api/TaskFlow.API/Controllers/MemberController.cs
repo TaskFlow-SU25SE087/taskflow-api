@@ -8,7 +8,7 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
-    [Route("project/member")]
+    [Route("project/{projectId}/members")]
     [ApiController]
     public class MemberController : ControllerBase
     {

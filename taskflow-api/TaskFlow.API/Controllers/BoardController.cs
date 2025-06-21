@@ -11,7 +11,7 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
-    [Route("project/board")]
+    [Route("projects/{projectId}/boards")]
     [ApiController]
     public class BoardController : ControllerBase
     {
@@ -23,7 +23,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _authorization = authorization;
         }
 
-        [HttpPost("create")]
+        [HttpPost]
         [Authorize]
         public async Task<ApiResponse<bool>> CreateBoard([FromBody] CreateBoardRequest request)
         {
@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpDelete("delete")]
+        [HttpDelete("{boardId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> DeleteBoard([FromQuery] Guid boardId)
         {
@@ -49,7 +49,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpPut("board/order")]
+        [HttpPut("order")]
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateBoardOrder([FromBody] List<UpdateBoardRequest> request)
         {
@@ -62,7 +62,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpPut("board/update")]
+        [HttpPut("{boardId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateBoard([FromBody] UpdateBoardRequest request)
         {
@@ -75,7 +75,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpGet("board/List")]
+        [HttpGet]
         [Authorize]
         public async Task<ApiResponse<List<BoardResponse>>> ListBoard(Guid ProjectId)
         {
