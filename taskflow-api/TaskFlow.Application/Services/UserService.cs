@@ -138,18 +138,26 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 return cachedResult;
             }
-            var users = _userManager.Users
-                .AsNoTracking()
-                .Where(u => u.Role != UserRole.Admin);
 
             var pagingParams = new PagingParams
             {
                 PageNumber = Page,
                 PageSize = 5
             };
-            var totalItems = await users.CountAsync();
-            var items = await _mapper.ProjectTo<UserAdminResponse>(users)
-                .OrderBy(u => u.Id)
+
+            var usersQuery = _userManager.Users
+                .AsNoTracking()
+                .Where(u => u.Role != UserRole.Admin);
+
+            var totalItems = await usersQuery.CountAsync();
+            var items = await _mapper.ProjectTo<UserAdminResponse>(usersQuery)
+                .OrderByDescending(u => u.IsActive)
+                .ThenByDescending(u => u.TermYear)
+                .ThenByDescending(u =>
+                                    u.TermSeason == "Fall" ? 3 :
+                                    u.TermSeason == "Summer" ? 2 :
+                                    u.TermSeason == "Spring" ? 1 : 0)
+                .ThenBy(u => u.FullName)
                 .Skip(pagingParams.Skip)
                 .Take(pagingParams.PageSize)
                 .ToListAsync();
@@ -566,10 +574,12 @@ namespace taskflow_api.TaskFlow.Application.Services
                         var studentId = worksheet.Cells[row, 1].Text.Trim();
                         var fullName = worksheet.Cells[row, 2].Text.Trim();
                         var email = worksheet.Cells[row, 3].Text.Trim();
-                        var term = worksheet.Cells[row, 4].Text.Trim();
+                        var termSeason = worksheet.Cells[row, 4].Text.Trim();
+                        var termYearStr = worksheet.Cells[row, 5].Text.Trim();
 
                         if (string.IsNullOrEmpty(email)) continue;
 
+                        int.TryParse(termYearStr, out int termYear);
                         if (existingUsers.TryGetValue(email, out var existingUser))
                         {
                             //User has an account but has never used it => delete account , create again
@@ -587,7 +597,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 // Update existing confirmed user
                                 existingUser.FullName = fullName;
                                 existingUser.StudentId = studentId;
-                                existingUser.Term = term;
+                                existingUser.TermSeason = termSeason;
+                                existingUser.TermYear = termYear;
 
                                 var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
                                 await _mailService.SendReactivationEmail(
@@ -605,7 +616,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                             Email = email,
                             UserName = email,
                             EmailConfirmed = false,
-                            Term = term,
+                            TermSeason = termSeason,
+                            TermYear = termYear
                         };
 
                         var newPass = GenerateRandom.GenerateRandomNumber();
