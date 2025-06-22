@@ -26,7 +26,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ApiResponse<bool>> CreateSprint([FromRoute] Guid projectId, [FromQuery] CreateSprintRequest request)
+        public async Task<ApiResponse<bool>> CreateSprint([FromRoute] Guid projectId, CreateSprintRequest request)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
@@ -40,7 +40,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpPut("{sprintId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateSprint(
-            [FromRoute] Guid projectId, [FromRoute] Guid sprintId, [FromBody] UpdateSprintRequest request)
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId,  UpdateSprintRequest request)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)

@@ -8,6 +8,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
@@ -25,22 +26,22 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ApiResponse<bool>> CreateBoard([FromBody] CreateBoardRequest request)
+        public async Task<ApiResponse<bool>> CreateBoard([FromRoute] Guid projectId, [FromBody] CreateBoardRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.CreateBoard(request);
+            var result = await _context.CreateBoard(projectId, request);
             return ApiResponse<bool>.Success(result);
         }
 
         [HttpDelete("{boardId}")]
         [Authorize]
-        public async Task<ApiResponse<bool>> DeleteBoard([FromQuery] Guid boardId)
+        public async Task<ApiResponse<bool>> DeleteBoard([FromRoute] Guid projectId, [FromRoute] Guid boardId)
         {
-            var IsAuthorized = await _authorization.AuthorizeAsync(boardId, ProjectRole.Leader);
+            var IsAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!IsAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -49,11 +50,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
+        //change order of board
         [HttpPut("order")]
         [Authorize]
-        public async Task<ApiResponse<bool>> UpdateBoardOrder([FromBody] List<UpdateBoardRequest> request)
+        public async Task<ApiResponse<bool>> UpdateBoardOrder(
+            [FromRoute] Guid projectId, [FromBody] List<UpdateOrderBoardRequest> request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request[0].ProjectId, ProjectRole.Leader);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
@@ -62,29 +65,31 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
+        //update 1 board
         [HttpPut("{boardId}")]
         [Authorize]
-        public async Task<ApiResponse<bool>> UpdateBoard([FromBody] UpdateBoardRequest request)
+        public async Task<ApiResponse<bool>> UpdateBoard(
+            [FromRoute] Guid projectId, [FromRoute] Guid boardId, [FromBody] UpdateBoardRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.UpdateBoard(request);
+            var result = await _context.UpdateBoard(projectId, boardId, request);
             return ApiResponse<bool>.Success(result);
         }
 
         [HttpGet]
         [Authorize]
-        public async Task<ApiResponse<List<BoardResponse>>> ListBoard(Guid ProjectId)
+        public async Task<ApiResponse<List<BoardResponse>>> ListBoard([FromRoute] Guid projectId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.Leader);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<List<BoardResponse>>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.ListBoardAsync(ProjectId);
+            var result = await _context.ListBoardAsync(projectId);
             return ApiResponse<List<BoardResponse>>.Success(result);
         }
     }

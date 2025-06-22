@@ -20,17 +20,17 @@ namespace taskflow_api.TaskFlow.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<bool> CreateBoard(CreateBoardRequest request)
+        public async Task<bool> CreateBoard(Guid ProjectID, CreateBoardRequest request)
         {
             if (request == null)
             {
                 throw new AppException(ErrorCode.CannotCreateBoard);
             }
-            int Order = await _boardRepository.GetMaxOrder(request.ProjectId) + 1;
+            int Order = await _boardRepository.GetMaxOrder(ProjectID) + 1;
             var board = new Board
             {
                 Id = Guid.NewGuid(),
-                ProjectId = request.ProjectId,
+                ProjectId = ProjectID,
                 Name = request.Name,
                 Description = request.Description,
                 Order = Order,
@@ -74,13 +74,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<List<BoardResponse>> ListBoardAsync(Guid ProjectId)
         {
             var boards = await _boardRepository.GetListBoardAsync(ProjectId);
-            var result = _mapper.Map<List<BoardResponse>>(boards);
-            return result;
+            //var result = _mapper.Map<List<BoardResponse>>(boards);
+            return boards;
         }
 
-        public async Task<bool> UpdateBoard(UpdateBoardRequest request)
+        public async Task<bool> UpdateBoard(Guid ProjectId, Guid BoardId, UpdateBoardRequest request)
         {
-            var board = await _boardRepository.GetBoardByIdAsync(request.BoardId);
+            var board = await _boardRepository.GetBoardByIdAsync(BoardId);
             if (board == null)
             {
                 throw new AppException(ErrorCode.BoardNotFound);
@@ -88,24 +88,42 @@ namespace taskflow_api.TaskFlow.Application.Services
             //Update the board
             board!.Name = request.Name;
             board.Description = request.Description;
-            board.Order = request.Order;
-            board.IsActive = request.IsActive;
-            board.ProjectId = request.ProjectId;
 
             await _boardRepository.UpdateBoard(board);
             return true;
         }
 
-        public async Task<bool> UpdateBoardOrder(List<UpdateBoardRequest> request)
+        public async Task<bool> UpdateBoardOrder(List<UpdateOrderBoardRequest> request)
         {
-            var listBoards = _mapper.Map<List<Board>>(request);
-            if (listBoards == null || listBoards.Count == 0)
+            if (request == null || request.Count == 0)
             {
                 throw new AppException(ErrorCode.CannotUpdateBoard);
             }
+            //get all board id from request
+            var boardIds = request.Select(x => x.Id).ToList();
+            //get all boards by ids from database
+            var boards = await _boardRepository.GetBoardsByIdsAsync(boardIds);
+            if (boards.Count != boardIds.Count)
+            {
+                throw new AppException(ErrorCode.BoardNotFound);
+            }
             //Update the order of the boards
-            await _boardRepository.UpdateListBoardsAsync(listBoards);
+            foreach (var board in boards)
+            {
+                var newOrder = request.First(x => x.Id == board.Id).Order;
+                board.Order = newOrder;
+            }
+            await _boardRepository.UpdateListBoardsAsync(boards);
             return true;
+
+            //var listBoards = _mapper.Map<List<Board>>(request);
+            //if (listBoards == null || listBoards.Count == 0)
+            //{
+            //    throw new AppException(ErrorCode.CannotUpdateBoard);
+            //}
+            ////Update the order of the boards
+            //await _boardRepository.UpdateListBoardsAsync(listBoards);
+            //return true;
         }
 
     }

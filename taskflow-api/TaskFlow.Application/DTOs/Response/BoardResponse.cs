@@ -7,7 +7,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
     {
         public Guid Id { get; set; }
         public Guid ProjectId { get; set; }
-        public string Name { get; set; } 
+        public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public int Order { get; set; }
     }

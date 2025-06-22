@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -44,6 +45,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             return listBoard;
         }
 
+        public Task<List<Board>> GetBoardsByIdsAsync(List<Guid> boardIds)
+        {
+            return _context.Boards
+                .Where(b => boardIds.Contains(b.Id) && b.IsActive)
+                .ToListAsync();
+        }
+
         public async Task<Guid> GetIdBoardOrderFirtsAsync(Guid ProjectId)
         {
             var BoardId = await _context.Boards
@@ -54,13 +62,21 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             return BoardId;
         }
 
-        public async Task<List<Board>> GetListBoardAsync(Guid ProjectID)
+        public async Task<List<BoardResponse>> GetListBoardAsync(Guid ProjectID)
         {
-            var listBoard = await _context.Boards
+            var boards = await _context.Boards
                 .Where(b => b.ProjectId == ProjectID && b.IsActive)
                 .OrderBy(b => b.Order)
+                .Select(b => new BoardResponse
+                {
+                    Id = b.Id,
+                    ProjectId = b.ProjectId,
+                    Name = b.Name,
+                    Description = b.Description,
+                    Order = b.Order
+                })
                 .ToListAsync();
-            return listBoard;
+            return boards;
         }
 
         public async Task<int> GetMaxOrder(Guid projectId)

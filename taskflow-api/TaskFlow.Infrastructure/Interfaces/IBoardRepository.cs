@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
@@ -12,6 +13,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<List<Board>?> GetBoardsAfterOrderAsync(int order);
         Task UpdateListBoardsAsync(List<Board> data);
         Task<Guid> GetIdBoardOrderFirtsAsync(Guid ProjectId);
-        Task<List<Board>> GetListBoardAsync(Guid ProjectID);
+        Task<List<BoardResponse>> GetListBoardAsync(Guid ProjectID);
+        Task<List<Board>> GetBoardsByIdsAsync(List<Guid> boardIds);
     }
 }
