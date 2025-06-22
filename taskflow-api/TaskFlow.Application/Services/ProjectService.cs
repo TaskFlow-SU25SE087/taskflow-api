@@ -53,7 +53,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var UserId = httpContext?.User.FindFirst("id")?.Value;
             var user = await _userManager.FindByIdAsync(UserId!);
 
-            //Find the number of project users joined
+            //Find the number of projects participated
             int projectCount = await _projectMemberRepository.GetProjectCountByUserIdAsync(Guid.Parse(UserId!));
             if (projectCount >= 3)
             {

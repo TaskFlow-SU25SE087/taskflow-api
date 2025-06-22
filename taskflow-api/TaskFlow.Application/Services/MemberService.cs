@@ -32,24 +32,31 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _TagRepository = TagRepository;
         }
-        public async Task<bool> AddMember(AddMemberRequest request)
+        public async Task<bool> AddMember(Guid ProjectId, AddMemberRequest request)
         {
             var user = _userManager.FindByEmailAsync(request.Email);
             if (user.Result == null)
                 throw new AppException(ErrorCode.NoUserFound);
+
+            //Find the number of projects participated
+            int projectCount = await _projectMemberRepository.GetProjectCountByUserIdAsync(user.Result.Id);
+            if (projectCount >= 3)
+            {
+                throw new AppException(ErrorCode.MaxProjectLimitReached);
+            }
             //save token to the database
             var token = GenerateRandom.GenerateRandomToken();
             await _verifyTokenRopository.AddVerifyTokenAsync(new VerifyToken
             {
                 UserId = user.Result.Id,
-                ProjectId = request.ProjectId,
+                ProjectId = ProjectId,
                 Token = token,
                 Type = VerifyTokenEnum.JoinProject,
                 IsUsed = false,
                 ExpiresAt = DateTime.UtcNow.AddDays(3),
             });
             //check member has been in the project
-            var member = _projectMemberRepository.FindMemberInProject(request.ProjectId, user.Result.Id);
+            var member = _projectMemberRepository.FindMemberInProject(ProjectId, user.Result.Id);
             if (member.Result != null)
             {
                 //member back to the project
@@ -62,7 +69,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Result.Id,
-                ProjectId = request.ProjectId,
+                ProjectId = ProjectId,
                 Role = ProjectRole.Member,
                 IsActive = false
             };
@@ -70,6 +77,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _mailService.SendMailJoinProject(request.Email, token, "join the project");
             return true;
         }
+
         public async Task<bool> LeaveTheProject(Guid projectId)
         {
             var httpContext = _httpContextAccessor.HttpContext;
@@ -83,8 +91,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
-            //Check if the user is PM
-            if (member.Role == ProjectRole.Leader)
+
+            //If you are the leader, only one member of the project can leave
+            var countMembers = await _projectMemberRepository.GetActiveMembersCount(projectId);
+            if (member.Role == ProjectRole.Leader && countMembers > 1)
             {
                 throw new AppException(ErrorCode.CannotLeaveProjectAsPM);
             }
@@ -131,6 +141,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Name = user!.FullName,
                 ProjectId = verifyToken.ProjectId!.Value,
                 Description = "Tag of "+user!.FullName,
+                Color = "#FF5733", // Default color
             };
             await _TagRepository.AddTagAsync(Tag);
             return true;

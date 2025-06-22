@@ -31,6 +31,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
         }
 
+        public Task<int> GetActiveMembersCount(Guid ProjectId)
+        {
+            return _context.ProjectMembers
+                .CountAsync(pm => pm.ProjectId == ProjectId && pm.IsActive);
+        }
+
         public Task<int> GetProjectCountByUserIdAsync(Guid userId)
         {
             return _context.ProjectMembers

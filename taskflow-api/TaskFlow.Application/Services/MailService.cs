@@ -63,7 +63,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Subject = "Verification Join Project",
                 Body = $"Wellcome {type} by clicking the following link: " +
                        $"<a href='{verificationUrl}' target='_blank'>{type}</a><br/><br/>" +
-                       $"<span style='color: red;'>* This verification link will expire in 3 days.</span>"
+                       $"<span style='color: red;'>* This verification link will expire in 3 days.</span>" +
+                       $"<span style='color: red;'>* Token = {token}.</span>"
             };
             try
             {

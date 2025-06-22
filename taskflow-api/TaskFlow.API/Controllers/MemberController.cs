@@ -22,20 +22,20 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpPost("add")]
         [Authorize]
-        public async Task<ApiResponse<bool>> AddMember([FromBody] AddMemberRequest request)
+        public async Task<ApiResponse<bool>> AddMember([FromRoute] Guid projectId, [FromBody] AddMemberRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            var project = await _context.AddMember(request);
+            var project = await _context.AddMember(projectId, request);
             return ApiResponse<bool>.Success(project);
         }
 
         [HttpPost("leave")]
         [Authorize]
-        public async Task<ApiResponse<bool>> LeaveProject([FromQuery] Guid projectId)
+        public async Task<ApiResponse<bool>> LeaveProject([FromRoute] Guid projectId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
@@ -46,9 +46,9 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpDelete("remove")]
+        [HttpDelete("remove/{userId}")]
         [Authorize]
-        public async Task<ApiResponse<bool>> RemoveMember([FromQuery] Guid projectId, [FromQuery] Guid userId)
+        public async Task<ApiResponse<bool>> RemoveMember([FromRoute] Guid projectId, [FromRoute] Guid userId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
