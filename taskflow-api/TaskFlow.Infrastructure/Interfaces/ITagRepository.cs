@@ -9,7 +9,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<Tag?> GetTagByIdAsync(Guid TagId);
         Task UpdateTagAsync(Tag Tag);
         Task<List<Tag>> GetListTagsync(Guid ProjectId);
-
+        Task<bool> CheckNameTagAsync(Guid ProjectId, string Name);
 
     }
 }

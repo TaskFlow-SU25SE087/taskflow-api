@@ -20,6 +20,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public Task<bool> CheckNameTagAsync(Guid ProjectId, string Name)
+        {
+            return _context.Tags
+                .AnyAsync(t => t.ProjectId == ProjectId && t.Name == Name && t.IsActive);
+        }
+
         public async Task DeleteTagAsync(Guid TagId)
         {
             var TagDelete = await _context.Tags.FindAsync(TagId);

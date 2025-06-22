@@ -56,6 +56,8 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail TagIsNull = new(7001, "Tag cannot be null", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail TagNotFound = new(7002, "Tag not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail TagAlreadyExistsInTask = new(7003, "Tag Already Exists In Task", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail CannotUpdateTag = new(7004, "Cannot update tag", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail TagNameAlreadyExists = new(7005, "Tag name already exists", StatusCodes.Status400BadRequest);
 
 
         // Task related error codes(8)

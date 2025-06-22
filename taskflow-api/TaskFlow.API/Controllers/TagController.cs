@@ -24,22 +24,22 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ApiResponse<bool>> AddTag([FromBody] AddTagRequest request)
+        public async Task<ApiResponse<bool>> AddTag([FromRoute] Guid projectId, [FromBody] AddTagRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId,
-                ProjectRole.Leader, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            await _context.AddTag(request);
+            await _context.AddTag(projectId, request);
             return ApiResponse<bool>.Success(true);
         }
 
         [HttpDelete("{TagId}")]
-        public async Task<ApiResponse<bool>> DeleteTag(Guid TagId)
+        public async Task<ApiResponse<bool>> DeleteTag([FromRoute] Guid projectId, [FromRoute] Guid TagId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(TagId,
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId,
                 ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
@@ -50,23 +50,24 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPut("{tagId}")]
-        public async Task<ApiResponse<bool>> UpdateTag([FromBody] UpdateTagRequest request)
+        public async Task<ApiResponse<bool>> UpdateTag(
+            [FromRoute] Guid projectId, [FromRoute] Guid tagId, [FromBody] UpdateTagRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId,
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId,
                 ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            await _context.UpdateTag(request);
+            await _context.UpdateTag(projectId, tagId, request);
             return ApiResponse<bool>.Success(true);
 
         }
 
         [HttpGet]
-        public async Task<ApiResponse<List<TagResporn>>> getAllTag(Guid projectID)
+        public async Task<ApiResponse<List<TagResporn>>> getAllTag([FromRoute]Guid projectId)
         {
-            var result = await _context.GetListTag(projectID);
+            var result = await _context.GetListTag(projectId);
             return ApiResponse<List<TagResporn>>.Success(result);
         }
     }

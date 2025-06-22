@@ -6,9 +6,9 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface ITagService
     {
-        Task AddTag(AddTagRequest request);
+        Task AddTag(Guid ProjectID, AddTagRequest request);
         Task DeleteTag(Guid TagId);
-        Task UpdateTag(UpdateTagRequest request);
+        Task UpdateTag(Guid ProjectId, Guid TagId, UpdateTagRequest request);
         Task<List<TagResporn>> GetListTag(Guid ProjectId);
 
     }

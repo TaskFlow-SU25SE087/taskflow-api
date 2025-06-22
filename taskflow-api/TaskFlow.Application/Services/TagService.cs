@@ -22,13 +22,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             _mapper = mapper;
         }
 
-        public async Task AddTag(AddTagRequest request)
+        public async Task AddTag(Guid ProjectID, AddTagRequest request)
         {
+            bool checknametag = await _TagRepository.CheckNameTagAsync(ProjectID, request.Name);
+            if (checknametag)
+            {
+                throw new AppException(ErrorCode.TagNameAlreadyExists);
+            }
             var newTag = new Tag
             {
                 Name = request.Name,
-                ProjectId = request.ProjectId,
-                Description = request.Description
+                ProjectId = ProjectID,
+                Description = request.Description,
+                Color = request.Color
             };
             await _TagRepository.AddTagAsync(newTag);
         }
@@ -49,7 +55,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.TagNotFound);
             }
             // Delete Tag
-            TagDelete.IsActive = false; // Soft delete
+            TagDelete.IsActive = false;
             await _TagRepository.UpdateTagAsync(TagDelete);
         }
 
@@ -60,18 +66,26 @@ namespace taskflow_api.TaskFlow.Application.Services
             return result;
         }
 
-        public async Task UpdateTag(UpdateTagRequest request)
+        public async Task UpdateTag(Guid ProjectId, Guid TagId, UpdateTagRequest request)
         {
-            if (request.Id == Guid.Empty)
+            if (request == null)
             {
                 throw new AppException(ErrorCode.TagIsNull);
             }
             // Check if Tag exists
-            var TagUpdate = await _TagRepository.GetTagByIdAsync(request.Id);
+            var TagUpdate = await _TagRepository.GetTagByIdAsync(TagId);
             if (TagUpdate == null)
             {
                 throw new AppException(ErrorCode.TagNotFound);
             }
+            if (TagUpdate.ProjectId != ProjectId)
+            {
+                throw new AppException(ErrorCode.CannotUpdateTag);
+            }
+            // Update Tag properties
+            TagUpdate.Name = request.Name;
+            TagUpdate.Description = request.Description;
+            TagUpdate.Color = request.Color;
             await _TagRepository.UpdateTagAsync(TagUpdate);
         }
     }
