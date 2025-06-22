@@ -6,7 +6,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     public class Sprint
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = new Guid();
         [Required]
         public Guid ProjectId { get; set; }
         public Project Project { get; set; } = null!;

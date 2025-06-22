@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -25,41 +26,42 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ApiResponse<bool>> CreateSprint([FromBody] CreateSprintRequest request)
+        public async Task<ApiResponse<bool>> CreateSprint([FromRoute] Guid projectId, [FromQuery] CreateSprintRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.CreateSprint(request);
+            var result = await _context.CreateSprint(projectId, request);
             return ApiResponse<bool>.Success(result);
         }
 
         [HttpPut("{sprintId}")]
         [Authorize]
-        public async Task<ApiResponse<bool>> UpdateSprint([FromBody] UpdateSprintRequest request)
+        public async Task<ApiResponse<bool>> UpdateSprint(
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId, [FromBody] UpdateSprintRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(request.ProjectId, ProjectRole.Leader);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.UpdateSprint(request);
+            var result = await _context.UpdateSprint(projectId, sprintId, request);
             return ApiResponse<bool>.Success(result);
         }
 
         [HttpGet]
         [Authorize]
-        public async Task<ApiResponse<List<Sprint>>> GetListSprint(Guid ProjectId)
+        public async Task<ApiResponse<List<SprintResponse>>> GetListSprint([FromRoute] Guid projectId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(ProjectId, ProjectRole.Leader, ProjectRole.Member);
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
-                return ApiResponse<List<Sprint>>.Error(9002, "Unauthorized access");
+                return ApiResponse<List<SprintResponse>>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.ListPrints(ProjectId);
-            return ApiResponse<List<Sprint>>.Success(result);
+            var result = await _context.ListPrints(projectId);
+            return ApiResponse<List<SprintResponse>>.Success(result);
         } 
     }
 }

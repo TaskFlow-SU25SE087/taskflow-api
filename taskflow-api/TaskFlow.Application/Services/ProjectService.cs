@@ -81,7 +81,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Description = "First sprint of the project",
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(14),
-                Status = SprintStatus.NotStarted
+                Status = SprintStatus.NotStarted,
+                IsActive = true
             };
             await _sprintRepository.CreateSprintAsync(newSprint);
 

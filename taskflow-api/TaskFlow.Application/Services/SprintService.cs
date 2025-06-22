@@ -1,8 +1,10 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
+using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -13,12 +15,11 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             _sprintRepository = repository;
         }
-        public async Task<bool> CreateSprint(CreateSprintRequest request)
+        public async Task<bool> CreateSprint(Guid ProjectId, CreateSprintRequest request)
         {
             var newSprint = new Sprint
             {
-                Id = Guid.NewGuid(),
-                ProjectId = request.ProjectId,
+                ProjectId = ProjectId,
                 Name = request.Name,
                 Description = request.Description,
                 StartDate = request.StartDate,
@@ -30,24 +31,28 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
-        public async Task<List<Sprint>> ListPrints(Guid ProjectId)
+        public async Task<List<SprintResponse>> ListPrints(Guid ProjectId)
         {
             var result = await _sprintRepository.GetListPrintAsync(ProjectId);
             return result;
         }
 
-        public async Task<bool> UpdateSprint(UpdateSprintRequest request)
+        public async Task<bool> UpdateSprint(Guid ProjectId, Guid SprintId, UpdateSprintRequest request)
         {
-            var UpdateSprint = new Sprint
+            var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
+            if (sprint == null || sprint.ProjectId != ProjectId)
             {
-                Id = request.SprintId,
-                Name = request.Name,
-                Description = request.Description,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
-                Status = request.Status,
-            };
-            await _sprintRepository.UpdateSprintAsync(UpdateSprint);
+                // Sprint not found or Project mismatch
+                throw new AppException(ErrorCode.CannotUpdateSprint);
+            }
+
+            //update sprint
+            sprint.Name = request.Name;
+            sprint.Description = request.Description;
+            sprint.StartDate = request.StartDate;
+            sprint.EndDate = request.EndDate;
+            sprint.Status = request.Status;
+            await _sprintRepository.UpdateSprintAsync(sprint);
             return true;
         }
 
