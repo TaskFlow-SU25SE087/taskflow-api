@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpPost]
         [Authorize]
         public async Task<ApiResponse<TaskProject>> CreateTask(
-            [FromBody] AddTaskRequest request, [FromRoute] Guid projectId)
+            [FromForm] AddTaskRequest request, [FromRoute] Guid projectId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(
                 projectId, ProjectRole.Leader, ProjectRole.Member);

@@ -73,6 +73,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Priority = request.Priority,
                 IsActive = true,
             };
+            if (request.File != null)
+            {
+                var filePath = await _fileService.UploadAutoAsync(request.File);
+                task.AttachmentUrls = filePath;
+            }
             await _taskProjectRepository.AddTaskAsync(task);
             return task;
         }

@@ -44,6 +44,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     UpdatedAt = ts.Task.UpdatedAt,
                     Status = ts.Task.Board!.Name,
                     Deadline = ts.Task.Deadline,
+                    AttachmentUrls = ts.Task.AttachmentUrls,
+                    AttachmentUrlsList = ts.Task.AttachmentUrlsList,
                     SprintName = ts.Task.Sprint != null ? ts.Task.Sprint.Name : "No Sprint",
                     commnets = ts.Task.TaskComments
                         .Select(c => new CommnetResponse

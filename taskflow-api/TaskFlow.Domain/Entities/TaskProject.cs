@@ -10,10 +10,10 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Guid? SprintId { get; set; }
         public Sprint? Sprint { get; set; } = null!;
         public Guid? BoardId { get; set; }
-        public Board? Board { get; set; } = null!;
+        public Board? Board { get; set; } 
         [Required]
         public Guid ProjectId { get; set; }
-        public Project Project { get; set; } = null!;
+        public Project Project { get; set; }
 
         [Required]
         public string Title { get; set; } = string.Empty;
@@ -22,7 +22,12 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public TaskPriority Priority { get; set; } = TaskPriority.High;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public string? File { get; set; } = string.Empty;
+        public string? AttachmentUrls { get; set; } = string.Empty;
+        public List<string> AttachmentUrlsList
+        {
+            get => string.IsNullOrEmpty(AttachmentUrls) ? new List<string>() : AttachmentUrls.Split('|').ToList();
+            set => AttachmentUrls = string.Join('|', value);
+        }
         public DateTime Deadline { get; set; } = DateTime.UtcNow.AddDays(7);
         public bool IsActive { get; set; } = false;
 

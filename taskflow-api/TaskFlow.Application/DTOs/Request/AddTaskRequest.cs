@@ -15,5 +15,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
         public TaskPriority Priority { get; set; } = TaskPriority.High;
         [Required(ErrorMessage = "Deadline cannot null")]
         public DateTime Deadline { get; set; }
+        public IFormFile? File { get; set; }
     }
 }

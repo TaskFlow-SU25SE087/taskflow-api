@@ -14,6 +14,12 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public DateTime UpdatedAt { get; set; }
         public DateTime Deadline { get; set; }
         public string SprintName { get; set; } = string.Empty;
+        public string? AttachmentUrls { get; set; } = string.Empty;
+        public List<string> AttachmentUrlsList
+        {
+            get => string.IsNullOrEmpty(AttachmentUrls) ? new List<string>() : AttachmentUrls.Split('|').ToList();
+            set => AttachmentUrls = string.Join('|', value);
+        }
         public string Status { get; set; } = null!;
         public List<TaskAssigneeResponse> TaskAssignees { get; set; } = new List<TaskAssigneeResponse>();
         public List<TaskTagResponse> Tags { get; set; } = new List<TaskTagResponse>();

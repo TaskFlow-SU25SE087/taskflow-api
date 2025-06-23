@@ -18,7 +18,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpPost("image")]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
-            var result = await _photoService.UploadFileAsync(file);
+            var result = await _photoService.UploadPictureAsync(file);
             if (result != null)
                 return Ok(result);
 

@@ -4,6 +4,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface IFileService
     {
-        Task<string> UploadFileAsync(IFormFile file);
+        Task<string> UploadPictureAsync(IFormFile file);
+        Task<string> UploadAutoAsync(IFormFile file);
     }
 }

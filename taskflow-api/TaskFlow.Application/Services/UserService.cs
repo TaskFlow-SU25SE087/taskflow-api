@@ -343,7 +343,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
                 //var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
                 //var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
-                var avatarPath = await _fileService.UploadFileAsync(model.Avatar);
+                var avatarPath = await _fileService.UploadPictureAsync(model.Avatar);
                 if (avatarPath == null)
                 {
                     avatarPath = user.Avatar; // Fallback to existing avatar if upload fails
@@ -532,7 +532,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             if (model.Avatar != null)
             {
-                var baseAvatarUrl = _fileService.UploadFileAsync(model.Avatar);
+                var baseAvatarUrl = _fileService.UploadPictureAsync(model.Avatar);
                 user.Avatar = baseAvatarUrl.Result;
                 await _userManager.UpdateAsync(user);
             }

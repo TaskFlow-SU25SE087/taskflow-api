@@ -13,7 +13,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _cloudinary = cloudinary;
         }
 
-        public async Task<string> UploadFileAsync(IFormFile file)
+        public async Task<string> UploadPictureAsync(IFormFile file)
         {
             if (file.Length > 0)
             {
@@ -36,6 +36,57 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
 
             return null;
+        }
+
+        public async Task<string> UploadAutoAsync(IFormFile file)
+        {
+            await using var stream = file.OpenReadStream();
+            var extension = Path.GetExtension(file.FileName).ToLower();
+
+            if (extension == ".jpg" || extension == ".png" || extension == ".jpeg")
+            {
+                var imageParams = new ImageUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    Folder = "project/image"
+                };
+                return await UploadAsync(imageParams);
+            }
+            else if (extension == ".mp4")
+            {
+                var videoParams = new VideoUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    Folder = "project/videos"
+                };
+                return await UploadAsync(videoParams);
+            }
+            else
+            {
+                var rawParams = new RawUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    Folder = "project/files"
+                };
+                return await UploadAsync(rawParams);
+            }
+        }
+
+        private async Task<string> UploadAsync(ImageUploadParams uploadParams)
+        {
+            var result = await _cloudinary.UploadAsync(uploadParams);
+            return result.SecureUrl.ToString();
+        }
+
+        private async Task<string> UploadAsync(VideoUploadParams uploadParams)
+        {
+            var result = await _cloudinary.UploadAsync(uploadParams);
+            return result.SecureUrl.ToString();
+        }
+        private async Task<string> UploadAsync(RawUploadParams uploadParams)
+        {
+            var result = await _cloudinary.UploadAsync(uploadParams);
+            return result.SecureUrl.ToString();
         }
     }
 }
