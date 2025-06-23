@@ -32,8 +32,8 @@ namespace taskflow_api.TaskFlow.Application.Mappings
 
             CreateMap<TaskComment, CommnetResponse>()
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src =>src.Content))
-                .ForMember(dest => dest.Commenter, opt => opt.MapFrom(src =>src.User.User.FullName))
-                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src =>src.User.User.Avatar))
+                .ForMember(dest => dest.Commenter, opt => opt.MapFrom(src =>src.UserComment.User.FullName))
+                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src =>src.UserComment.User.Avatar))
                 .ForMember(dest => dest.LastUpdate, opt => opt.MapFrom(src =>src.LastUpdatedAt));
         }
     }

@@ -112,8 +112,8 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<List<TaskProjectResponse>> GetAllTask(Guid projectId)
         {
             var listTask = await _taskProjectRepository.GetAllTaskProjectAsync(projectId);
-            var result = _mapper.Map<List<TaskProjectResponse>>(listTask);
-            return result;
+            //var result = _mapper.Map<List<TaskProjectResponse>>(listTask);
+            return listTask;
 
         }
 
@@ -154,9 +154,9 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _taskAssigneeRepository.UpdateAsync(taskAssignee);
         }
 
-        public async Task<TaskProject> UpdateTask(UpdateTaskRequest request)
+        public async Task<TaskProject> UpdateTask(UpdateTaskRequest request, Guid TaskId)
         {
-            var taskUpdate = await _taskProjectRepository.GetTaskByIdAsync(request.Id);
+            var taskUpdate = await _taskProjectRepository.GetTaskByIdAsync(TaskId);
             if (taskUpdate == null)
             {
                 throw new AppException(ErrorCode.TaskNotFound);
@@ -164,14 +164,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.Title = request.Title;
             taskUpdate.Description = request.Description;
             taskUpdate.Priority = request.Priority;
-            taskUpdate.BoardId = request.BoardID;
-            taskUpdate.SprintId = request.SprintId;
             taskUpdate.UpdatedAt = DateTime.UtcNow;
-            if (request.File != null)
-            {
-                var filePath = await _fileService.UploadFileAsync(request.File);
-                taskUpdate.File = filePath;
-            }
+            //if (request.File != null)
+            //{
+            //    var filePath = await _fileService.UploadFileAsync(request.File);
+            //    taskUpdate.File = filePath;
+            //}
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
             return taskUpdate;
         }

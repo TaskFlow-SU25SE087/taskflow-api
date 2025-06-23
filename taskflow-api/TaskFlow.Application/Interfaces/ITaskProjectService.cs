@@ -7,7 +7,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     public interface ITaskProjectService
     {
         Task<TaskProject> AddTask(AddTaskRequest request, Guid ProjectId);
-        Task<TaskProject> UpdateTask(UpdateTaskRequest request);
+        Task<TaskProject> UpdateTask(UpdateTaskRequest request, Guid TaskId);
         Task<bool> DeleteTask(Guid taskId);
         Task<List<TaskProjectResponse>> GetAllTask(Guid projectId);
         Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId);

@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
@@ -7,6 +8,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task AddTaskAsync(TaskProject task);
         Task<TaskProject?> GetTaskByIdAsync(Guid id);
         Task UpdateTaskAsync(TaskProject task);
-        Task<List<TaskProject>> GetAllTaskProjectAsync(Guid projectId);
+        Task<List<TaskProjectResponse>> GetAllTaskProjectAsync(Guid projectId);
     }
 }

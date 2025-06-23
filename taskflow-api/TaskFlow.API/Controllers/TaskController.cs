@@ -33,21 +33,6 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _hubContext = hubContext;
         }
 
-        [HttpGet("comment/add")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> CreateComment(
-            [FromBody]AddTaskCommentRequest request, [FromRoute] Guid projectId)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(
-                projectId, ProjectRole.Leader, ProjectRole.Member);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            await _taskCommentService.AddComentTask(request);
-            return ApiResponse<bool>.Success(true);
-        }
-
         [HttpPost]
         [Authorize]
         public async Task<ApiResponse<TaskProject>> CreateTask(
@@ -62,7 +47,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.AddTask(request, projectId);
             return ApiResponse<TaskProject>.Success(result);
         }
-        [HttpPut("delete/{taskId}")]
+        [HttpDelete("delete/{taskId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> DeleteTask(
             [FromRoute] Guid projectId,[FromRoute] Guid taskId)
@@ -77,10 +62,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpPut("update")]
+        [HttpPut("update/{taskId}")]
         [Authorize]
         public async Task<ApiResponse<TaskProject>> UpdateTask(
-            [FromBody] UpdateTaskRequest request, [FromRoute] Guid projectId)
+            [FromBody] UpdateTaskRequest request, [FromRoute] Guid projectId, [FromRoute] Guid taskId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(
                 projectId, ProjectRole.Leader, ProjectRole.Member);
@@ -88,7 +73,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             {
                 return ApiResponse<TaskProject>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.UpdateTask(request);
+            var result = await _context.UpdateTask(request, taskId);
 
             await _hubContext.Clients.Group(projectId.ToString())
                 .SendAsync("TaskUpdated", new {
@@ -113,73 +98,6 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
             var result = await _context.GetAllTask(projectId);
             return ApiResponse<List<TaskProjectResponse>>.Success(result);
-        }
-
-        [HttpPost("tags")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> AddTagToTask(
-            [FromRoute] Guid projectId, [FromQuery] Guid taskId, [FromQuery] Guid tagId)
-        {
-            await _context.AddTagForTask(projectId, taskId, tagId);
-            return ApiResponse<bool>.Success(true);
-        }
-
-        [HttpPost("accept")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> UserAcceptTask([FromQuery] Guid taskId, [FromRoute] Guid projectId)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            await _context.userAcceptTask(taskId);
-            return ApiResponse<bool>.Success(true);
-        }
-
-        [HttpPost("assign")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> AssignTaskToUser(
-            [FromQuery] Guid taskId, [FromQuery] Guid assignerId, [FromRoute] Guid projectId)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(
-                projectId, ProjectRole.Leader, ProjectRole.Member);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            await _context.AssignTaskToUser(taskId, assignerId);
-            return ApiResponse<bool>.Success(true);
-        }
-
-        [HttpDelete("leave/{taskAssigneeId}")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> LeaveTask(
-            [FromRoute] Guid projectId, [FromRoute] Guid taskAssigneeId, [FromQuery] string reason)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(
-                projectId, ProjectRole.Leader, ProjectRole.Member);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            await _context.LeaveTask(taskAssigneeId, reason);
-            return ApiResponse<bool>.Success(true);
-        }
-
-        [HttpDelete("remove/{taskAssigneeId}")]
-        [Authorize]
-        public async Task<ApiResponse<bool>> RevokeTaskAssignment(
-            [FromRoute] Guid projectId, [FromRoute] Guid taskAssigneeId, [FromQuery] string reason)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(
-                projectId, ProjectRole.Leader);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            await _context.RevokeTaskAssignment(taskAssigneeId, reason);
-            return ApiResponse<bool>.Success(true);
         }
     }
 }
