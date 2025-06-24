@@ -24,9 +24,10 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail EmailNotConfirmed = new(1013, "Email not confirmed", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotResetPassword = new(1014, "cannot reset password", StatusCodes.Status400BadRequest);
 
-        //Image related error codes(2)
+        //File related error codes(2)
         public static readonly ErrorDetail ImageExists = new(2001, "Image Exists", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail ImageNotCanSave = new(2002, "Image cannot be saved", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail MaxFileLimitReached = new(2003, "You have reached the maximum file limit", StatusCodes.Status403Forbidden);
 
         // Project related error codes(3)
         public static readonly ErrorDetail CannotCreateProject = new(3001, "Cannot create project", StatusCodes.Status400BadRequest);

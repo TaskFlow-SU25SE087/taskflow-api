@@ -4,6 +4,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface ITaskCommentService
     {
-        Task AddComentTask(AddTaskCommentRequest request);
+        Task AddComentTask(Guid ProjectId, Guid TaskId, AddTaskCommentRequest request);
     }
 }

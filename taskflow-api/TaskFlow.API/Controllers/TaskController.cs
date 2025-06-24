@@ -14,7 +14,7 @@ using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
-    [Route("project/{projectId}/task")]
+    [Route("projects/{projectId}/tasks")]
     [ApiController]
     public class TaskController : ControllerBase
     {
@@ -47,7 +47,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.AddTask(request, projectId);
             return ApiResponse<TaskProject>.Success(result);
         }
-        [HttpDelete("delete/{taskId}")]
+        [HttpDelete("{taskId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> DeleteTask(
             [FromRoute] Guid projectId,[FromRoute] Guid taskId)
@@ -98,6 +98,15 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
             var result = await _context.GetAllTask(projectId);
             return ApiResponse<List<TaskProjectResponse>>.Success(result);
+        }
+
+        [HttpPost("{taskId}/tags/{tagId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> AddTagToTask(
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromRoute] Guid tagId)
+        {
+            await _context.AddTagForTask(taskId, tagId);
+            return ApiResponse<bool>.Success(true);
         }
     }
 }

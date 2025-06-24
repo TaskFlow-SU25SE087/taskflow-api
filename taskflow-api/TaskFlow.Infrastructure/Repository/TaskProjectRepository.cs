@@ -44,6 +44,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                             Commenter = c.UserComment.User.FullName,
                             Avatar = c.UserComment.User.Avatar!,
                             Content = c.Content,
+                            AttachmentUrls = c.AttachmentUrlsList,
                             LastUpdate = c.LastUpdatedAt
                         }).ToList(),
                     TaskAssignees = (

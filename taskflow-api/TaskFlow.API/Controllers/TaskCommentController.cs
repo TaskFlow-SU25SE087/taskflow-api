@@ -25,10 +25,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _taskCommentService = taskCommentService;
         }
 
-        [HttpGet("comment/add")]
+        [HttpPost("comment/add")]
         [Authorize]
         public async Task<ApiResponse<bool>> CreateComment(
-            [FromBody] AddTaskCommentRequest request, [FromRoute] Guid projectId)
+            [FromForm] AddTaskCommentRequest request, [FromRoute] Guid projectId,[FromRoute] Guid taskId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(
                 projectId, ProjectRole.Leader, ProjectRole.Member);
@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            await _taskCommentService.AddComentTask(request);
+            await _taskCommentService.AddComentTask(projectId, taskId, request);
             return ApiResponse<bool>.Success(true);
         }
     }

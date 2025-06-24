@@ -145,6 +145,10 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(tl => tl.TagId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Task <-> TaskTag
+            modelBuilder.Entity<TaskTag>()
+                .HasKey(t => new { t.TaskId, t.TagId });
+
             //Tag <-> Project
             modelBuilder.Entity<Tag>()
                 .HasOne(l => l.Project)
@@ -157,6 +161,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasOne(tc => tc.Task)
                 .WithMany(t => t.TaskComments)
                 .HasForeignKey(tc => tc.TaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ProjectMember <-> TaskComment
+            modelBuilder.Entity<TaskComment>()
+                .HasOne(tc => tc.UserComment)
+                .WithMany(pm => pm.TaskComments)
+                .HasForeignKey(tc => tc.CommenterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             ////Issue <-> TaskAsignee

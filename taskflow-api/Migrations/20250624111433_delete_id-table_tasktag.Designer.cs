@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250624111433_delete_id-table_tasktag")]
+    partial class delete_idtable_tasktag
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,10 +343,7 @@ namespace taskflow_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AttachmentUrls")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("CommenterId")
+                    b.Property<Guid>("Commenter")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
@@ -359,11 +359,14 @@ namespace taskflow_api.Migrations
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("UserCommentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CommenterId");
-
                     b.HasIndex("TaskId");
+
+                    b.HasIndex("UserCommentId");
 
                     b.ToTable("TaskComments");
                 });
@@ -745,16 +748,16 @@ namespace taskflow_api.Migrations
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.TaskComment", b =>
                 {
-                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", "UserComment")
-                        .WithMany("TaskComments")
-                        .HasForeignKey("CommenterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.TaskProject", "Task")
                         .WithMany("TaskComments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", "UserComment")
+                        .WithMany()
+                        .HasForeignKey("UserCommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Task");
@@ -868,8 +871,6 @@ namespace taskflow_api.Migrations
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", b =>
                 {
-                    b.Navigation("TaskComments");
-
                     b.Navigation("taskUsers");
                 });
 

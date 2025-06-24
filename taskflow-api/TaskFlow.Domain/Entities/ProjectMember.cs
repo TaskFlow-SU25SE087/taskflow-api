@@ -14,5 +14,6 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public bool IsActive { get; set; } = false;
 
         public List<TaskAssignee> taskUsers { get; set; } = new List<TaskAssignee>();
+        public List<TaskComment> TaskComments { get; set; } = new();
     }
 }

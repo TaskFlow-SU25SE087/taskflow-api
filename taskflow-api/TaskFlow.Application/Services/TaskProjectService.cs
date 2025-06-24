@@ -37,7 +37,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _projectMemberRepository = projectMemberRepository;
         }
 
-        public async Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId)
+        public async Task AddTagForTask(Guid TaskId, Guid TagId)
         {
             var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId)
               ?? throw new AppException(ErrorCode.TaskNotFound);
@@ -45,7 +45,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var tag = await _tagRepository.GetTagByIdAsync(TagId)
                ?? throw new AppException(ErrorCode.TagNotFound);
 
-            if (!task.ProjectId.Equals(tag.ProjectId))
+            if (task.ProjectId != tag.ProjectId)
             {
                 throw new AppException(ErrorCode.NoPermission);
             }

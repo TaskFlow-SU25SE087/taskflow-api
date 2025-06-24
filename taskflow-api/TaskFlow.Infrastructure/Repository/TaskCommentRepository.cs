@@ -17,7 +17,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task AddTaskCommentAysc(TaskComment data)
         {
             await _context.AddAsync(data);
-             _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

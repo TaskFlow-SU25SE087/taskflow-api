@@ -46,6 +46,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
             public string Commenter { get; set; } = null!;
             public string? Content { get; set; } = string.Empty;
             public string Avatar { get; set; } = null!;
-            public DateTime LastUpdate { get; set; }
+            public List<string> AttachmentUrls { get; set; } = new List<string>();
+        public DateTime LastUpdate { get; set; }
         }
 }
