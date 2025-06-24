@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Domain.Entities
@@ -22,11 +23,15 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public TaskPriority Priority { get; set; } = TaskPriority.High;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public string? AttachmentUrls { get; set; } = string.Empty;
-        public List<string> AttachmentUrlsList
+        public string? AttachmentUrl { get; set; } = string.Empty;
+        public string? CompletionAttachmentUrls { get; set; } = string.Empty;
+        [NotMapped]
+        public List<string> CompletionAttachmentUrlsList
         {
-            get => string.IsNullOrEmpty(AttachmentUrls) ? new List<string>() : AttachmentUrls.Split('|').ToList();
-            set => AttachmentUrls = string.Join('|', value);
+            get => string.IsNullOrEmpty(CompletionAttachmentUrls)
+                ? new List<string>()
+                : CompletionAttachmentUrls.Split('|').ToList();
+            set => CompletionAttachmentUrls = string.Join('|', value);
         }
         public DateTime Deadline { get; set; } = DateTime.UtcNow.AddDays(7);
         public bool IsActive { get; set; } = false;

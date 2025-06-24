@@ -21,55 +21,50 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
              _context.TaskProjects.Add(task);
             await _context.SaveChangesAsync();
         }
-
         public async Task<List<TaskProjectResponse>> GetAllTaskProjectAsync(Guid projectId)
         {
             return await _context.TaskProjects
                 .Where(t => t.ProjectId == projectId && t.IsActive)
-                .Select(t => new
+                .Select(t => new TaskProjectResponse
                 {
-                    Task = t,
-                    BoardOrder = t.Board.Order
-                })
-                .OrderBy(x => x.BoardOrder)
-                .ThenBy(x => x.Task.Deadline)
-                .ThenBy(x => x.Task.Priority)
-                .Select(ts => new TaskProjectResponse
-                {
-                    Id = ts.Task.Id,
-                    Title = ts.Task.Title,
-                    Description = ts.Task.Description,
-                    Priority = ts.Task.Priority,
-                    CreatedAt = ts.Task.CreatedAt,
-                    UpdatedAt = ts.Task.UpdatedAt,
-                    Status = ts.Task.Board!.Name,
-                    Deadline = ts.Task.Deadline,
-                    AttachmentUrls = ts.Task.AttachmentUrls,
-                    AttachmentUrlsList = ts.Task.AttachmentUrlsList,
-                    SprintName = ts.Task.Sprint != null ? ts.Task.Sprint.Name : "No Sprint",
-                    commnets = ts.Task.TaskComments
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Priority = t.Priority,
+                    CreatedAt = t.CreatedAt,
+                    UpdatedAt = t.UpdatedAt,
+                    Status = t.Board!.Name,
+                    Deadline = t.Deadline,
+                    AttachmentUrls = t.AttachmentUrl,
+                    AttachmentUrlsList = t.CompletionAttachmentUrlsList,
+                    SprintName = t.Sprint != null ? t.Sprint.Name : "No Sprint",
+                    commnets = t.TaskComments
                         .Select(c => new CommnetResponse
                         {
                             Commenter = c.UserComment.User.FullName,
                             Avatar = c.UserComment.User.Avatar!,
                             Content = c.Content,
                             LastUpdate = c.LastUpdatedAt
-
                         }).ToList(),
-                    TaskAssignees = ts.Task.TaskAssignees
-                        .Where(ta => ta.Type == RefType.Task)
-                        .Select(ta => new TaskAssigneeResponse
+                    TaskAssignees = (
+                        from ta in _context.TaskAssignees
+                        join pm in _context.ProjectMembers on ta.AssignerId equals pm.Id
+                        join u in _context.Users on pm.UserId equals u.Id
+                        where ta.RefId == t.Id && ta.Type == RefType.Task && ta.IsActive
+                        select new TaskAssigneeResponse
                         {
-                            Executor = ta.ProjectMember.User.FullName,
-                            Avatar = ta.ProjectMember.User.Avatar,
-                            Role = ta.ProjectMember.Role
-                        }).ToList(),
-                    Tags = ts.Task.TaskTags.Select(tt => new TaskTagResponse
-                    {
-                        Name = tt.Tag.Name,
-                        Description = tt.Tag.Description,
-                        Color = tt.Tag.Color
-                    }).ToList(),
+                            Executor = u.FullName,
+                            Avatar = u.Avatar,
+                            Role = pm.Role
+                        }
+                    ).ToList(),
+                    Tags = t.TaskTags
+                        .Select(tt => new TaskTagResponse
+                        {
+                            Name = tt.Tag.Name,
+                            Description = tt.Tag.Description,
+                            Color = tt.Tag.Color
+                        }).ToList()
                 })
                 .ToListAsync();
         }

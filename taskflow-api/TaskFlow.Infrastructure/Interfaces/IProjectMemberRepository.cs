@@ -9,5 +9,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task UpdateMember(ProjectMember data);
         Task<int> GetProjectCountByUserIdAsync(Guid userId);
         Task<int> GetActiveMembersCount(Guid ProjectId);
+        Task<bool> IsUserInProjectAsync(Guid projectId, Guid userId);
+
     }
 }

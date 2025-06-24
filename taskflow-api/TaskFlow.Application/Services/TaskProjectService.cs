@@ -19,11 +19,12 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITagRepository _tagRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITaskAssigneeRepository _taskAssigneeRepository;
+        private readonly IProjectMemberRepository _projectMemberRepository;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
             ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
-            ITaskAssigneeRepository taskAssigneeRepository)
+            ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository)
         {
             _taskProjectRepository = taskProjectRepository;
             _boardRepository = boardRepository;
@@ -33,6 +34,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _tagRepository = tagRepository;
             _httpContextAccessor = httpContextAccessor;
             _taskAssigneeRepository = taskAssigneeRepository;
+            _projectMemberRepository = projectMemberRepository;
         }
 
         public async Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId)
@@ -76,27 +78,36 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (request.File != null)
             {
                 var filePath = await _fileService.UploadAutoAsync(request.File);
-                task.AttachmentUrls = filePath;
+                task.AttachmentUrl = filePath;
             }
             await _taskProjectRepository.AddTaskAsync(task);
             return task;
         }
 
-        public async Task AssignTaskToUser(Guid TaskId, Guid AssignerId)
+        public async Task AssignTaskToUser(Guid TaskId, Guid ProjectId, AssignTaskRequest request)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
-            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, AssignerId);
+            //check user is in project
+            var UserAssign = await _projectMemberRepository.FindMemberInProject(ProjectId, Guid.Parse(UserId!));
+            if (UserAssign == null || request.AssignerId == null)
+            {
+                throw new AppException(ErrorCode.UserNotInProject);
+            }
+            //check user already assigned to task
+            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, request.AssignerId);
             if (checkExits)
             {
                 throw new AppException(ErrorCode.TaskAlreadyAssigned);
             }
+
             var newTaskAginee = new TaskAssignee
             {
-                ImplementerId = Guid.Parse(UserId!),
-                AssignerId = AssignerId,
+                ImplementerId = UserAssign.Id,
+                AssignerId = request.AssignerId,
                 RefId = TaskId,
-                Type = RefType.Task
+                Type = RefType.Task,
+                IsActive = true,
             };
             await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
         }
@@ -122,7 +133,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         }
 
-        public async Task LeaveTask(Guid TaskAssigneeId, string Reason)
+        public async Task LeaveTask(Guid TaskAssigneeId, AssignmentReasonRequest request)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
@@ -131,32 +142,13 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.UserNotAssignedToTask);
             }
-            //update field
-            taskAssignee.UpdatedAt = DateTime.UtcNow;
-            taskAssignee.IsActive = false;
-            taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(Reason)
-                ? "User voluntarily left the task"
-                : Reason;
-            await _taskAssigneeRepository.UpdateAsync(taskAssignee);
+            await UpdateTaskAssignmentStatus(TaskAssigneeId, request.Reason, "Removed from task by project leader");
 
         }
 
-        public async Task RevokeTaskAssignment(Guid TaskAssigneeId, string Reason)
+        public async Task RevokeTaskAssignment(Guid TaskAssigneeId, AssignmentReasonRequest request)
         {
-            var httpContext = _httpContextAccessor.HttpContext;
-            var UserId = httpContext?.User.FindFirst("id")?.Value;
-            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeAsync(TaskAssigneeId);
-            if (taskAssignee == null)
-            {
-                throw new AppException(ErrorCode.UserNotAssignedToTask);
-            }
-            //update field
-            taskAssignee.UpdatedAt = DateTime.UtcNow;
-            taskAssignee.IsActive = false;
-            taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(Reason)
-                ? "Removed from task by project leader"
-                : Reason;
-            await _taskAssigneeRepository.UpdateAsync(taskAssignee);
+            await UpdateTaskAssignmentStatus(TaskAssigneeId, request.Reason, "Removed from task by project leader");
         }
 
         public async Task<TaskProject> UpdateTask(UpdateTaskRequest request, Guid TaskId)
@@ -179,24 +171,47 @@ namespace taskflow_api.TaskFlow.Application.Services
             return taskUpdate;
         }
 
-        public async Task userAcceptTask(Guid TaskId)
+        public async Task userAcceptTask(Guid ProjectId, Guid TaskId)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
-
-            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, Guid.Parse(UserId!));
+            //get ID member in project
+            var member = await _projectMemberRepository.FindMemberInProject(ProjectId, Guid.Parse(UserId!));
+            if (member == null)
+            {
+                throw new AppException(ErrorCode.UserNotInProject);
+            }
+            //check user accept task
+            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, member.Id);
             if (checkExits)
             {
                 throw new AppException(ErrorCode.TaskAlreadyAssigned);
             }
+
             var newTaskAginee = new TaskAssignee
             {
-                ImplementerId = Guid.Parse(UserId!),
-                AssignerId = Guid.Parse(UserId!),
+                ImplementerId = member.Id,
+                AssignerId = member.Id,
                 RefId = TaskId,
-                Type = RefType.Task
+                Type = RefType.Task,
+                IsActive = true
             };
             await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
+        }
+
+        private async Task UpdateTaskAssignmentStatus(Guid taskAssigneeId, string reason, string defaultNote)
+        {
+            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeAsync(taskAssigneeId);
+            if (taskAssignee == null)
+            {
+                throw new AppException(ErrorCode.UserNotAssignedToTask);
+            }
+            taskAssignee.UpdatedAt = DateTime.UtcNow;
+            taskAssignee.IsActive = false;
+            taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(reason)
+                                            ? defaultNote
+                                            : reason;
+            await _taskAssigneeRepository.UpdateAsync(taskAssignee);
         }
     }
 }

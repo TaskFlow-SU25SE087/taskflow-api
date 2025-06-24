@@ -16,7 +16,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
-        public async Task AcceptTaskAsync(Domain.Entities.TaskAssignee data)
+        public async Task AcceptTaskAsync(TaskAssignee data)
         {
             await _context.TaskAssignees.AddAsync(data);
             _context.SaveChanges();

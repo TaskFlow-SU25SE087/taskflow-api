@@ -34,6 +34,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail ProjectNotFound = new(3003, "Project not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail MaxProjectLimitReached = new(3004, "You have reached the maximum number of projects allowed", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail CannotUpdateSprint = new(3005, "Cannot update sprint", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail UserNotInProject = new(3006, "User is not in the project", StatusCodes.Status403Forbidden);
         //Token related error codes(4)
         public static readonly ErrorDetail InvalidToken = new(4001, "Invalid token", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail RefreshTokenExpired = new(4002, "Refresh token expired", StatusCodes.Status401Unauthorized);
