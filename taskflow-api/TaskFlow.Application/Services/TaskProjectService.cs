@@ -133,22 +133,28 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         }
 
-        public async Task LeaveTask(Guid TaskAssigneeId, AssignmentReasonRequest request)
+        public async Task LeaveTask(Guid ProjectID, Guid TaskId, AssignmentReasonRequest request)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
-            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeAsync(TaskAssigneeId);
-            if (taskAssignee == null || taskAssignee!.AssignerId != Guid.Parse(UserId!))
+            var projectmember = await _projectMemberRepository.FindMemberInProject(ProjectID, Guid.Parse(UserId!));
+            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeByTaskIdAndUserIDAsync(TaskId, projectmember!.Id);
+            if (taskAssignee == null)
             {
                 throw new AppException(ErrorCode.UserNotAssignedToTask);
             }
-            await UpdateTaskAssignmentStatus(TaskAssigneeId, request.Reason, "Removed from task by project leader");
+            await UpdateTaskAssignmentStatus(taskAssignee.Id, request.Reason, "User voluntarily left the task");
 
         }
 
-        public async Task RevokeTaskAssignment(Guid TaskAssigneeId, AssignmentReasonRequest request)
+        public async Task RevokeTaskAssignment(Guid ProjectId, Guid TaskId, RemoveAssignmentReasonRequest request)
         {
-            await UpdateTaskAssignmentStatus(TaskAssigneeId, request.Reason, "Removed from task by project leader");
+            var TaskAssignee = await _taskAssigneeRepository.GetTaskAssigneeByTaskIdAndUserIDAsync(TaskId, request.AssigneeId);
+            if (TaskAssignee == null)
+            {
+                throw new AppException(ErrorCode.UserNotAssignedToTask);
+            }
+            await UpdateTaskAssignmentStatus(TaskAssignee.Id, request.Reason, "Removed from task by project leader");
         }
 
         public async Task<TaskProject> UpdateTask(UpdateTaskRequest request, Guid TaskId)
@@ -209,8 +215,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskAssignee.UpdatedAt = DateTime.UtcNow;
             taskAssignee.IsActive = false;
             taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(reason)
-                                            ? defaultNote
-                                            : reason;
+                                            ? reason
+                                            : defaultNote + ": " + reason;
             await _taskAssigneeRepository.UpdateAsync(taskAssignee);
         }
     }

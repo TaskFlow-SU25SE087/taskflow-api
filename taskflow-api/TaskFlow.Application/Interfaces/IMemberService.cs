@@ -1,4 +1,5 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
 {
@@ -8,5 +9,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<bool> VerifyJoinProject(string token);
         public Task<bool> RemoveMember(Guid projectId, Guid userId);
         public Task<bool> LeaveTheProject(Guid projectId);
+        public Task<List<MemberResponse>> GetAllMemberInProject(Guid projectId);
     }
 }

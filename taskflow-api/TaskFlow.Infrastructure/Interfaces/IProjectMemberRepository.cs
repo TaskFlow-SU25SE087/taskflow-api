@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
@@ -10,6 +11,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<int> GetProjectCountByUserIdAsync(Guid userId);
         Task<int> GetActiveMembersCount(Guid ProjectId);
         Task<bool> IsUserInProjectAsync(Guid projectId, Guid userId);
+        Task<List<MemberResponse>> GetAllMembersInProjectAsync(Guid projectId);
 
     }
 }

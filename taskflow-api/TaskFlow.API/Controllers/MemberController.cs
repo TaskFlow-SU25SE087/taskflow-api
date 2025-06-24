@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 
@@ -64,6 +65,19 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             bool result = await _context.VerifyJoinProject(token);
             return ApiResponse<bool>.Success(result);
+        }
+
+        [HttpGet("list")]
+        [Authorize]
+        public async Task<ApiResponse<List<MemberResponse>>> GetAllMemberInProject([FromRoute] Guid projectId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<List<MemberResponse>>.Error(9002, "Unauthorized access");
+            }
+            var members = await _context.GetAllMemberInProject(projectId);
+            return ApiResponse<List<MemberResponse>>.Success(members);
         }
     }
 }

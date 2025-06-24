@@ -13,7 +13,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task AddTagForTask(Guid ProjectId, Guid TaskId, Guid TagId);
         Task userAcceptTask(Guid ProjectId, Guid TaskId);
         Task AssignTaskToUser(Guid TaskId, Guid ProjectId, AssignTaskRequest request);
-        Task LeaveTask(Guid TaskAssigneeId, AssignmentReasonRequest Reason);
-        Task RevokeTaskAssignment(Guid TaskAssigneeId, AssignmentReasonRequest request);
+        Task LeaveTask(Guid ProjectID, Guid TaskId, AssignmentReasonRequest Reason);
+        Task RevokeTaskAssignment(Guid ProjectId, Guid TaskId, RemoveAssignmentReasonRequest request);
     }
 }

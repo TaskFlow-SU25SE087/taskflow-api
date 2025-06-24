@@ -51,10 +51,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
-        [HttpDelete("remove/{taskAssigneeId}")]
+        [HttpDelete("remove")]
         [Authorize]
         public async Task<ApiResponse<bool>> RevokeTaskAssignment(
-            [FromRoute] Guid projectId, [FromRoute] Guid taskAssigneeId, [FromForm] AssignmentReasonRequest reason)
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromBody] RemoveAssignmentReasonRequest reason)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(
                 projectId, ProjectRole.Leader);
@@ -62,14 +62,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            await _context.RevokeTaskAssignment(taskAssigneeId, reason);
+            await _context.RevokeTaskAssignment(projectId, taskId, reason);
             return ApiResponse<bool>.Success(true);
         }
 
-        [HttpDelete("leave/{taskAssigneeId}")]
+        [HttpDelete("leave")]
         [Authorize]
         public async Task<ApiResponse<bool>> LeaveTask(
-            [FromRoute] Guid projectId, [FromRoute] Guid taskAssigneeId, [FromQuery] AssignmentReasonRequest reason)
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromBody] AssignmentReasonRequest reason)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(
                 projectId, ProjectRole.Leader, ProjectRole.Member);
@@ -77,7 +77,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            await _context.LeaveTask(taskAssigneeId, reason);
+            await _context.LeaveTask(projectId, taskId, reason);
             return ApiResponse<bool>.Success(true);
         }
     }

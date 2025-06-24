@@ -29,6 +29,15 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     && x.IsActive);
         }
 
+        public Task<TaskAssignee?> GetTaskAssigneeByTaskIdAndUserIDAsync(Guid taskId, Guid projectmemberId)
+        {
+            return _context.TaskAssignees
+                .FirstOrDefaultAsync(x => x.RefId == taskId
+                && x.AssignerId == projectmemberId
+                && x.Type == RefType.Task
+                && x.IsActive);
+        }
+
         public async Task<bool> IsTaskAssigneeExistsAsync(Guid taskId, Guid assignerId)
         {
             return await _context.TaskAssignees

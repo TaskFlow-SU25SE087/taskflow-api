@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -76,6 +77,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
             await _mailService.SendMailJoinProject(request.Email, token, "join the project");
             return true;
+        }
+
+        public async Task<List<MemberResponse>> GetAllMemberInProject(Guid projectId)
+        {
+            return await _projectMemberRepository.GetAllMembersInProjectAsync(projectId);
         }
 
         public async Task<bool> LeaveTheProject(Guid projectId)

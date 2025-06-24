@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
@@ -35,6 +36,21 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return _context.ProjectMembers
                 .CountAsync(pm => pm.ProjectId == ProjectId && pm.IsActive);
+        }
+
+        public Task<List<MemberResponse>> GetAllMembersInProjectAsync(Guid projectId)
+        {
+            return _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId && pm.IsActive)
+                .Select(pm => new MemberResponse
+                {
+                    Id = pm.Id,
+                    FullName = pm.User.FullName,
+                    Avatar = pm.User.Avatar!,
+                    Email = pm.User.Email!,
+                    Role = pm.Role,
+                })
+                .ToListAsync();
         }
 
         public Task<int> GetProjectCountByUserIdAsync(Guid userId)
