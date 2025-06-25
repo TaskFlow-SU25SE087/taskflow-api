@@ -142,6 +142,63 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
+        public Task SendResetPasswordEmail(string email, string token)
+        {
+            var content = new MailContent
+            {
+                To = email,
+                Subject = "🔐 Reset Your TaskFlow Password",
+                Body = $@"
+                        <html>
+                        <head>
+                        <style>
+                            .container {{
+                                font-family: Arial, sans-serif;
+                                padding: 20px;
+                                background-color: #f8f9fa;
+                                border-radius: 8px;
+                                color: #333;
+                                max-width: 600px;
+                                margin: auto;
+                            }}
+                            .btn {{
+                                display: inline-block;
+                                padding: 12px 20px;
+                                margin-top: 20px;
+                                background-color: #4CAF50;
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 6px;
+                                font-weight: bold;
+                            }}
+                            .footer {{
+                                margin-top: 30px;
+                                font-size: 12px;
+                                color: #888;
+                            }}
+                        </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <h2>Hello,</h2>
+                                <p>
+                                    You have requested to reset your password for your TaskFlow account.
+                                </p>
+                                <p>
+                                    Please click the button below to reset your password:
+                                </p>
+                                <a href='{_frontEndBaseUrl}/reset-password?token={HttpUtility.UrlEncode(token)}&email={email}' class='btn'>Reset Password</a>
+                                    Best regards,<br/>
+                                        Token = {token}            <br/>
+                                    TaskFlow Team
+                                </p>
+                            </div>
+                        </body>
+                        </html>"
+            };
+            return SendMailAsync(content);
+        }
+
         public async Task SendWelcomeEmail(string email, string fullname, string token)
         {
             var content = new MailContent

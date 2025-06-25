@@ -21,6 +21,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task SendMailAgain();
         Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request);
         Task ResetPassword(ResetPasswordRequest request);
+        Task SendMailResetPassword(string EmailOrUsername);
 
     }
 }

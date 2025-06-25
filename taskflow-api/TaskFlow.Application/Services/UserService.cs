@@ -675,5 +675,17 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.CannotResetPassword);
             }
         }
+
+        public Task SendMailResetPassword(string EmailOrUsername)
+        {
+            var user = _userManager.Users
+                .FirstOrDefault(u => u.Email == EmailOrUsername || u.UserName == EmailOrUsername);
+            if (user == null)
+            {
+                throw new AppException(ErrorCode.InvalidEmailOrUsername);
+            }
+            var resetToken = _userManager.GeneratePasswordResetTokenAsync(user).Result;
+            return _mailService.SendResetPasswordEmail(user.Email!, resetToken);
+        }
     }
 }

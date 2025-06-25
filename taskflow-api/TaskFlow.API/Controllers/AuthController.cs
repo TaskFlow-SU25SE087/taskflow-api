@@ -79,5 +79,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _userService.ResetPassword(model);
             return ApiResponse<string>.Success("Password reset successfully");
         }
+
+        [HttpPost("account/reset-password/send-mail")]
+        public async Task<ApiResponse<string>> SendMailResetPassword([FromBody] string EmailOrUsername)
+        {
+            await _userService.SendMailResetPassword(EmailOrUsername);
+            return ApiResponse<string>.Success("Reset password email sent successfully");
+        }
     }
 }

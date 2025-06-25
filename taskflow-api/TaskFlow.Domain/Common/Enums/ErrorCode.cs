@@ -23,6 +23,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail UsernameAlreadyAdded = new(1012, "Username has already been added for this account", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail EmailNotConfirmed = new(1013, "Email not confirmed", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotResetPassword = new(1014, "cannot reset password", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail InvalidEmailOrUsername = new(1015, "Invalid email or username", StatusCodes.Status400BadRequest);
 
         //File related error codes(2)
         public static readonly ErrorDetail ImageExists = new(2001, "Image Exists", StatusCodes.Status404NotFound);
