@@ -157,6 +157,42 @@ namespace taskflow_api.TaskFlow.Application.Services
             await UpdateTaskAssignmentStatus(TaskAssignee.Id, request.Reason, "Removed from task by project leader");
         }
 
+        public async Task SubmitTaskCompletion(Guid Project, Guid taskId, CompleteTaskRequest request)
+        {
+            var userID = _httpContextAccessor.HttpContext?.User.FindFirst("id")?.Value;
+            var memberproject = await _projectMemberRepository.FindMemberInProject(Project, Guid.Parse(userID!));
+            if (memberproject == null)
+            {
+                throw new AppException(ErrorCode.UserNotInProject);
+            }
+            //check task exists
+            var task = await _taskProjectRepository.GetTaskByIdAsync(taskId);
+            if (task == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+            //check user is in task
+            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeByTaskIdAndUserIDAsync(taskId, memberproject!.Id);
+            if (taskAssignee == null)
+            {
+                throw new AppException(ErrorCode.UserNotAssignedToTask);
+            }
+
+            //have files
+            if (request.Files != null && request.Files.Any())
+            {
+                var urls = new List<string>();
+                foreach (var file in request.Files)
+                {
+                    var fileUrl = await _fileService.UploadAutoAsync(file);
+                    urls.Add(fileUrl);
+                }
+                // save file urls to the task
+                task!.CompletionAttachmentUrlsList = urls;
+                await _taskProjectRepository.UpdateTaskAsync(task);
+            }
+        }
+
         public async Task<TaskProject> UpdateTask(UpdateTaskRequest request, Guid TaskId)
         {
             var taskUpdate = await _taskProjectRepository.GetTaskByIdAsync(TaskId);

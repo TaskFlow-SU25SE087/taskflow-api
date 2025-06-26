@@ -15,5 +15,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task AssignTaskToUser(Guid TaskId, Guid ProjectId, AssignTaskRequest request);
         Task LeaveTask(Guid ProjectID, Guid TaskId, AssignmentReasonRequest Reason);
         Task RevokeTaskAssignment(Guid ProjectId, Guid TaskId, RemoveAssignmentReasonRequest request);
+        Task SubmitTaskCompletion(Guid Project, Guid taskId, CompleteTaskRequest request);
     }
 }

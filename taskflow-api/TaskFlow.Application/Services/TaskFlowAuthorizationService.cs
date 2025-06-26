@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
 namespace taskflow_api.TaskFlow.Application.Services
@@ -18,6 +19,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _context = context;
         }
+
+        public Task<ProjectMember> AuthorizeAndGetMemberAsync(Guid projectId, params ProjectRole[] allowedRoles)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<bool> AuthorizeAsync(Guid projectId, params ProjectRole[] allowedRoles)
         {
             var httpContext = _httpContextAccessor.HttpContext;

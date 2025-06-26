@@ -108,5 +108,20 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _context.AddTagForTask(taskId, tagId);
             return ApiResponse<bool>.Success(true);
         }
+
+        [HttpPost("{taskId}/complete")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> AcceptTask(
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromForm] CompleteTaskRequest data)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            await _context.SubmitTaskCompletion(projectId, taskId, data);
+            return ApiResponse<bool>.Success(true);
+        }
     }
 }
