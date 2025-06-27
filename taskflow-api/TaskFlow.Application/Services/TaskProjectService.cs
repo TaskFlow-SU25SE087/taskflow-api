@@ -90,12 +90,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             var UserId = httpContext?.User.FindFirst("id")?.Value;
             //check user is in project
             var UserAssign = await _projectMemberRepository.FindMemberInProject(ProjectId, Guid.Parse(UserId!));
-            if (UserAssign == null || request.AssignerId == null)
+            if (UserAssign == null || request.ImplementerId == null)
             {
                 throw new AppException(ErrorCode.UserNotInProject);
             }
             //check user already assigned to task
-            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, request.AssignerId);
+            bool checkExits = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, request.ImplementerId);
             if (checkExits)
             {
                 throw new AppException(ErrorCode.TaskAlreadyAssigned);
@@ -103,8 +103,8 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var newTaskAginee = new TaskAssignee
             {
-                ImplementerId = UserAssign.Id,
-                AssignerId = request.AssignerId,
+                AssignerId = UserAssign.Id,
+                ImplementerId = request.ImplementerId,
                 RefId = TaskId,
                 Type = RefType.Task,
                 IsActive = true,
@@ -149,7 +149,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task RevokeTaskAssignment(Guid ProjectId, Guid TaskId, RemoveAssignmentReasonRequest request)
         {
-            var TaskAssignee = await _taskAssigneeRepository.GetTaskAssigneeByTaskIdAndUserIDAsync(TaskId, request.AssigneeId);
+            var TaskAssignee = await _taskAssigneeRepository.GetTaskAssigneeByTaskIdAndUserIDAsync(TaskId, request.ImplementId);
             if (TaskAssignee == null)
             {
                 throw new AppException(ErrorCode.UserNotAssignedToTask);

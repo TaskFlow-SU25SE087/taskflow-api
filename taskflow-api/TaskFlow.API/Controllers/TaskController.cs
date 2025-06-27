@@ -123,5 +123,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _context.SubmitTaskCompletion(projectId, taskId, data);
             return ApiResponse<bool>.Success(true);
         }
+
+        //[HttpPost("{taskId}/complete")]
+        //[Authorize]
+        //public async Task<ApiResponse<bool>> AcceptTask(
+        //    [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromForm] CompleteTaskRequest data)
+        //{
+        //    var projectmemberId = await _authorization.AuthorizeAndGetMemberAsync(
+        //        projectId, ProjectRole.Leader, ProjectRole.Member);
+        //    await _context.SubmitTaskCompletion(projectId, taskId, data);
+        //    return ApiResponse<bool>.Success(true);
+        //}
     }
 }

@@ -39,7 +39,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpPost("assign")]
         [Authorize]
         public async Task<ApiResponse<bool>> AssignTaskToUser(
-           [FromRoute] Guid taskId, [FromForm] AssignTaskRequest assigner, [FromRoute] Guid projectId)
+           [FromRoute] Guid taskId, [FromForm] AssignTaskRequest implement, [FromRoute] Guid projectId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(
                 projectId, ProjectRole.Leader, ProjectRole.Member);
@@ -47,7 +47,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            await _context.AssignTaskToUser(taskId, projectId, assigner);
+            await _context.AssignTaskToUser(taskId, projectId, implement);
             return ApiResponse<bool>.Success(true);
         }
 

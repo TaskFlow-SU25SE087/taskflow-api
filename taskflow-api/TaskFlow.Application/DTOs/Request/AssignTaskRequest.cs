@@ -2,6 +2,6 @@
 {
     public class AssignTaskRequest
     {
-        public Guid AssignerId { get; set; }
+        public Guid ImplementerId { get; set; }
     }
 }

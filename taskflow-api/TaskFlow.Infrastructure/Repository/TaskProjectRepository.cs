@@ -38,7 +38,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     AttachmentUrls = t.AttachmentUrl,
                     AttachmentUrlsList = t.CompletionAttachmentUrlsList,
                     SprintName = t.Sprint != null ? t.Sprint.Name : "No Sprint",
-                    commnets = t.TaskComments
+                    Commnets = t.TaskComments
                         .Select(c => new CommnetResponse
                         {
                             Commenter = c.UserComment.User.FullName,
@@ -49,7 +49,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                         }).ToList(),
                     TaskAssignees = (
                         from ta in _context.TaskAssignees
-                        join pm in _context.ProjectMembers on ta.AssignerId equals pm.Id
+                        join pm in _context.ProjectMembers on ta.ImplementerId equals pm.Id
                         join u in _context.Users on pm.UserId equals u.Id
                         where ta.RefId == t.Id && ta.Type == RefType.Task && ta.IsActive
                         select new TaskAssigneeResponse
@@ -65,6 +65,21 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                             Name = tt.Tag.Name,
                             Description = tt.Tag.Description,
                             Color = tt.Tag.Color
+                        }).ToList(),
+                    Issues = t.Issues
+                        .Select(i => new IssueTaskResponse
+                        {
+                            Id = i.Id,
+                            Title = i.Title,
+                            Description = i.Description,
+                            Priority = i.Priority,
+                            Type = i.Type,
+                            Status = i.Status,
+                            CreatedAt = i.CreatedAt,
+                            UpdatedAt = i.UpdatedAt,
+                            IssueAttachmentUrls = i.IssueAttachmentUrlsList,
+                            Explanation = i.Explanation,
+                            Example = i.Example
                         }).ToList()
                 })
                 .ToListAsync();

@@ -22,6 +22,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.SaveChanges();
         }
 
+        public Task CreateListTaskAssignee(List<TaskAssignee> taskAssignees)
+        {
+            _context.TaskAssignees.AddRange(taskAssignees);
+            return _context.SaveChangesAsync();
+        }
+
         public async Task<TaskAssignee?> GetTaskAssigneeAsync(Guid taskAssigneeId)
         {
             return await _context.TaskAssignees
@@ -33,7 +39,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return _context.TaskAssignees
                 .FirstOrDefaultAsync(x => x.RefId == taskId
-                && x.AssignerId == projectmemberId
+                && x.ImplementerId == projectmemberId
                 && x.Type == RefType.Task
                 && x.IsActive);
         }
@@ -42,9 +48,23 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return await _context.TaskAssignees
                 .AnyAsync(x => x.RefId == taskId 
-                && x.AssignerId == assignerId
+                && x.ImplementerId == assignerId
                 && x.Type == RefType.Task
                 &&x.IsActive);
+        }
+
+        public Task ListAcceptTask(List<TaskAssignee> data)
+        {
+            _context.TaskAssignees.AddRange(data);
+            return _context.SaveChangesAsync();
+        }
+
+        public async Task<List<TaskAssignee>> taskAssigneesAsync(Guid taskId)
+        {
+            var taskAssignees = await _context.TaskAssignees
+                .Where(x => x.RefId == taskId && x.Type == RefType.Task && x.IsActive)
+                .ToListAsync();
+            return taskAssignees;
         }
 
         public async Task UpdateAsync(TaskAssignee taskAssignee)

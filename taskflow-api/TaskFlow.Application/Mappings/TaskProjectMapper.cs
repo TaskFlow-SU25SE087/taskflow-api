@@ -13,7 +13,7 @@ namespace taskflow_api.TaskFlow.Application.Mappings
             CreateMap<TaskProject, TaskProjectResponse>()
                 .ForMember(dest => dest.TaskAssignees, opt => opt.MapFrom(src => src.TaskAssignees))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.TaskTags))
-                .ForMember(dest => dest.commnets, opt => opt.MapFrom(src => src.TaskComments))
+                .ForMember(dest => dest.Commnets, opt => opt.MapFrom(src => src.TaskComments))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Board != null ? src.Board.Name : "Unknown"));
 
             CreateMap<TaskAssignee, TaskAssigneeResponse>()

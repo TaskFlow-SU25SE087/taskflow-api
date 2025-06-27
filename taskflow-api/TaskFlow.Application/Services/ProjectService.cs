@@ -61,7 +61,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
 
             //create project
-            var projectId = await _projectRepository.CreateProjectAsync(request.title, request.description, Guid.Parse(UserId!));
+            var projectId = await _projectRepository.CreateProjectAsync(request.Title, request.Description, Guid.Parse(UserId!));
             if (projectId == Guid.Empty)
                 throw new AppException(ErrorCode.CannotCreateProject);
             //create Pm for the project
@@ -135,8 +135,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             return new ProjectResponse
             {
                 Id = projectId,
-                Title = request.title,
-                Description = request.description,
+                Title = request.Title,
+                Description = request.Description,
             };
         }
 
