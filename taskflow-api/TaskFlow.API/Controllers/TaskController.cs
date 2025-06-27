@@ -35,17 +35,17 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ApiResponse<TaskProject>> CreateTask(
+        public async Task<ApiResponse<bool>> CreateTask(
             [FromForm] AddTaskRequest request, [FromRoute] Guid projectId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(
                 projectId, ProjectRole.Leader, ProjectRole.Member);
             if (!isAuthorized)
             {
-                return ApiResponse<TaskProject>.Error(9002, "Unauthorized access");
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.AddTask(request, projectId);
-            return ApiResponse<TaskProject>.Success(result);
+            await _context.AddTask(request, projectId);
+            return ApiResponse < bool>.Success(true);
         }
         [HttpDelete("{taskId}")]
         [Authorize]

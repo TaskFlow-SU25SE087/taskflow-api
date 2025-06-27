@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 
@@ -14,11 +15,13 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public DateTime UpdatedAt { get; set; }
         public DateTime Deadline { get; set; }
         public string SprintName { get; set; } = string.Empty;
-        public string? AttachmentUrls { get; set; } = string.Empty;
-        public List<string> AttachmentUrlsList
+        public string? AttachmentUrl { get; set; } = string.Empty;
+        [JsonIgnore]
+        public string? CompletionAttachmentUrl { get; set; } = string.Empty;
+        public List<string> CompletionAttachmentUrls
         {
-            get => string.IsNullOrEmpty(AttachmentUrls) ? new List<string>() : AttachmentUrls.Split('|').ToList();
-            set => AttachmentUrls = string.Join('|', value);
+            get => string.IsNullOrEmpty(CompletionAttachmentUrl) ? new List<string>() : CompletionAttachmentUrl.Split('|').ToList();
+            set => CompletionAttachmentUrl = string.Join('|', value);
         }
         public string Status { get; set; } = null!;
         public List<TaskAssigneeResponse> TaskAssignees { get; set; } = new List<TaskAssigneeResponse>();

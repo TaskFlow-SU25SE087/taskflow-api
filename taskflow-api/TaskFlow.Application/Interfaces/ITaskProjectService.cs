@@ -6,7 +6,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface ITaskProjectService
     {
-        Task<TaskProject> AddTask(AddTaskRequest request, Guid ProjectId);
+        Task AddTask(AddTaskRequest request, Guid ProjectId);
         Task<TaskProject> UpdateTask(UpdateTaskRequest request, Guid TaskId);
         Task<bool> DeleteTask(Guid taskId);
         Task<List<TaskProjectResponse>> GetAllTask(Guid projectId);
@@ -16,5 +16,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task LeaveTask(Guid ProjectID, Guid TaskId, AssignmentReasonRequest Reason);
         Task RevokeTaskAssignment(Guid ProjectId, Guid TaskId, RemoveAssignmentReasonRequest request);
         Task SubmitTaskCompletion(Guid Project, Guid taskId, CompleteTaskRequest request);
+        Task<List<TaskProjectResponse>> GettAllTaskNotSprint(Guid ProjectId);
     }
 }

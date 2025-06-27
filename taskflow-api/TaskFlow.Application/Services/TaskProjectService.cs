@@ -63,7 +63,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _taskTagRepository.AddTaskTagAsync(newTaskTag);
         }
 
-        public async Task<TaskProject> AddTask(AddTaskRequest request, Guid ProjectId)
+        public async Task AddTask(AddTaskRequest request, Guid ProjectId)
         {
             var BoardId = _boardRepository.GetIdBoardOrderFirtsAsync(ProjectId);
             var task = new TaskProject
@@ -81,7 +81,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 task.AttachmentUrl = filePath;
             }
             await _taskProjectRepository.AddTaskAsync(task);
-            return task;
         }
 
         public async Task AssignTaskToUser(Guid TaskId, Guid ProjectId, AssignTaskRequest request)
@@ -131,6 +130,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             //var result = _mapper.Map<List<TaskProjectResponse>>(listTask);
             return listTask;
 
+        }
+
+        public Task<List<TaskProjectResponse>> GettAllTaskNotSprint(Guid ProjectId)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task LeaveTask(Guid ProjectID, Guid TaskId, AssignmentReasonRequest request)
