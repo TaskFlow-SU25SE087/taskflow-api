@@ -134,6 +134,17 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.GettAllTaskNotSprint(projectId);
             return ApiResponse<List<ListTaskProjectNotSprint>>.Success(result);
         }
+
+        [HttpPost("{taskId}/status/board/{boardId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> ChangeBoard(
+            [FromRoute] Guid boardId, [FromRoute] Guid taskId, [FromRoute] Guid projectId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAndGetMemberAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            await _context.ChangeBoard(boardId, taskId);
+            return ApiResponse<bool>.Success(true);
+        }
         //[HttpPost("{taskId}/complete")]
         //[Authorize]
         //public async Task<ApiResponse<bool>> AcceptTask(

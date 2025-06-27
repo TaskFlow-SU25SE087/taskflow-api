@@ -65,6 +65,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
 
         // Task related error codes(8)
         public static readonly ErrorDetail TaskNotFound = new(8001, "Task not found", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail  CannotUpdateStatus = new(8002, "Cannot update task status", StatusCodes.Status400BadRequest);
         // Authorization related error codes(9)
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail Unauthorized = new(9002, "Unauthorized access", StatusCodes.Status401Unauthorized);

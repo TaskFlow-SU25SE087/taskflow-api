@@ -20,11 +20,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITaskAssigneeRepository _taskAssigneeRepository;
         private readonly IProjectMemberRepository _projectMemberRepository;
+        private readonly ISprintRepository _sprintRepository;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
             ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
-            ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository)
+            ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository,
+            ISprintRepository sprintRepository)
         {
             _taskProjectRepository = taskProjectRepository;
             _boardRepository = boardRepository;
@@ -35,6 +37,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _taskAssigneeRepository = taskAssigneeRepository;
             _projectMemberRepository = projectMemberRepository;
+            _sprintRepository = sprintRepository;
         }
 
         public async Task AddTagForTask(Guid TaskId, Guid TagId)
@@ -109,6 +112,18 @@ namespace taskflow_api.TaskFlow.Application.Services
                 IsActive = true,
             };
             await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
+        }
+
+        public async Task ChangeBoard(Guid BoardId, Guid Task)
+        {
+            var taskProject = await _taskProjectRepository.GetTaskByIdAsync(Task);
+            var sprint =  _sprintRepository.GetSprintByIdAsync(taskProject?.SprintId ?? Guid.Empty);
+            if (sprint.Status.Equals(SprintStatus.InProgress))
+            {
+                taskProject!.BoardId = BoardId;
+                await _taskProjectRepository.UpdateTaskAsync(taskProject);
+            }
+            throw new AppException(ErrorCode.CannotUpdateStatus);
         }
 
         public async Task<bool> DeleteTask(Guid taskId)
