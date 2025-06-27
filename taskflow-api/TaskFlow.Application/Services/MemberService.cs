@@ -58,11 +58,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             });
             //check member has been in the project
             var member = _projectMemberRepository.FindMemberInProject(ProjectId, user.Result.Id);
-            if (member.Result != null)
+            if (member.Result != null && member.Result.HasJoinedBefore)
             {
                 //member back to the project
                 //send email to the user
-                await _mailService.SendMailJoinProject(request.Email, token, "come back to the project");
+                await _mailService.SendMailJoinProject(request.Email, ProjectId, token, "come back to the project");
                 return true;
             }
             //create new member
@@ -75,7 +75,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 IsActive = false
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
-            await _mailService.SendMailJoinProject(request.Email, token, "join the project");
+            await _mailService.SendMailJoinProject(request.Email, ProjectId, token, "join the project");
             return true;
         }
 
@@ -118,6 +118,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             //Remove the member from the project
             member!.IsActive = false;
+            member.HasJoinedBefore = true; // Mark as has joined before
             await _projectMemberRepository.UpdateMember(member);
             return true;
         }

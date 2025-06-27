@@ -54,17 +54,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
-        public async Task SendMailJoinProject(string email, string token, string type)
+        public async Task SendMailJoinProject(string email, Guid ProjectId, string token, string type)
         {
-            var verificationUrl = $"{_appSetting.BaseUrl}/project/member/verify-join?token={token}";
+            var verificationUrl = $"{_appSetting.FrontEndBaseUrl}/project/{ProjectId}/member/verify-join?token={token}";
             var content = new MailContent
             {
                 To = email,
                 Subject = "Verification Join Project",
                 Body = $"Wellcome {type} by clicking the following link: " +
                        $"<a href='{verificationUrl}' target='_blank'>{type}</a><br/><br/>" +
-                       $"<span style='color: red;'>* This verification link will expire in 3 days.</span>" +
-                       $"<span style='color: red;'>* Token = {token}.</span>"
+                       $"<span style='color: red;'>* This verification link will expire in 3 days.</span>"
             };
             try
             {

@@ -12,6 +12,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Guid UserId { get; set; }
         public User User { get; set; } = null!;
         public bool IsActive { get; set; } = false;
+        public bool HasJoinedBefore { get; set; } = false;
 
         public List<TaskAssignee> taskUsers { get; set; } = new List<TaskAssignee>();
         public List<TaskComment> TaskComments { get; set; } = new();
