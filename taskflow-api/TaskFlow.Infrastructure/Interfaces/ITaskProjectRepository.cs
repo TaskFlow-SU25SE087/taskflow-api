@@ -8,7 +8,10 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task AddTaskAsync(TaskProject task);
         Task<TaskProject?> GetTaskByIdAsync(Guid id);
         Task UpdateTaskAsync(TaskProject task);
+        Task UpdateListTaskAsync(List<TaskProject> task);
         Task<List<TaskProjectResponse>> GetAllTaskProjectAsync(Guid projectId);
         Task<List<ListTaskProjectNotSprint>> GetAllTaskNotSprint(Guid projectId);
+        Task<List<TaskProject>> GetListTasksByIdsAsync (List<Guid> taskIds);
+        Task<List<TaskProject>> GetListTasksBySprintsIdsAsync (Guid SprintID);
     }
 }

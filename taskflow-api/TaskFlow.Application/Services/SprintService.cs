@@ -11,10 +11,42 @@ namespace taskflow_api.TaskFlow.Application.Services
     public class SprintService : ISprintService
     {
         private readonly ISprintRepository _sprintRepository;
-        public SprintService(ISprintRepository repository)
+        private readonly ITaskProjectRepository _taskProjectRepository;
+
+        public SprintService(ISprintRepository repository, ITaskProjectRepository taskProjectRepository)
         {
             _sprintRepository = repository;
+            _taskProjectRepository = taskProjectRepository;
         }
+
+        public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID)
+        {
+            List<TaskProject> tasks = await _taskProjectRepository.GetListTasksByIdsAsync(TaskID);
+            foreach (var task in tasks)
+            {
+                task.SprintId = SprintId;
+            }
+            await _taskProjectRepository.UpdateListTaskAsync(tasks);
+        }
+
+        public async Task ChangeStatusSprint(Guid SpringId, SprintStatus status)
+        {
+            var sprint = await _sprintRepository.GetSprintByIdAsync(SpringId);
+            sprint!.Status = status;
+            await _sprintRepository.UpdateSprintAsync(sprint);
+
+            if (status.Equals(SprintStatus.Completed))
+            {
+                var lisktaskproject = await _taskProjectRepository.GetListTasksBySprintsIdsAsync(SpringId);
+                foreach (var task in lisktaskproject)
+                {
+                    task.Sprint = null;
+                    task.Note = task.Note + " " + DateTime.UtcNow + " End sprint: " + sprint.Name; 
+                }
+                await _taskProjectRepository.UpdateListTaskAsync(lisktaskproject);
+            }
+        }
+
         public async Task<bool> CreateSprint(Guid ProjectId, CreateSprintRequest request)
         {
             var newSprint = new Sprint

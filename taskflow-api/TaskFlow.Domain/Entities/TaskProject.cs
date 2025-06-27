@@ -23,6 +23,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public TaskPriority Priority { get; set; } = TaskPriority.High;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string? Note { get; set; }
         public string? AttachmentUrl { get; set; } = string.Empty;
         public string? CompletionAttachmentUrls { get; set; } = string.Empty;
         [NotMapped]

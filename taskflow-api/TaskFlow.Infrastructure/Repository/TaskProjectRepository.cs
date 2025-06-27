@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -105,11 +106,31 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
+        public Task<List<TaskProject>> GetListTasksByIdsAsync(List<Guid> taskIds)
+        {
+            return _context.TaskProjects
+                .Where(t => taskIds.Contains(t.Id) && t.IsActive)
+                .ToListAsync();
+        }
+
+        public Task<List<TaskProject>> GetListTasksBySprintsIdsAsync(Guid SprintID)
+        {
+            return _context.TaskProjects
+                .Where(t => t.SprintId == SprintID && t.IsActive)
+                .ToListAsync();
+        }
+
         public async Task<TaskProject?> GetTaskByIdAsync(Guid id)
         {
             var task = await _context.TaskProjects
                 .FirstOrDefaultAsync(t => t.Id == id && t.IsActive);
             return task;
+        }
+
+        public async Task UpdateListTaskAsync(List<TaskProject> task)
+        {
+            _context.TaskProjects.UpdateRange(task);
+            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateTaskAsync(TaskProject task)

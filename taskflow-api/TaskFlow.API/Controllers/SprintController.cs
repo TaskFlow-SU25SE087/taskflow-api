@@ -40,7 +40,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpPut("{sprintId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> UpdateSprint(
-            [FromRoute] Guid projectId, [FromRoute] Guid sprintId,  UpdateSprintRequest request)
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId, UpdateSprintRequest request)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
@@ -62,6 +62,27 @@ namespace taskflow_api.TaskFlow.API.Controllers
             }
             var result = await _context.ListPrints(projectId);
             return ApiResponse<List<SprintResponse>>.Success(result);
-        } 
+        }
+
+        [HttpPost("{sprintId}/tasks/assign")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> AddTasksToSprint(
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId, [FromBody] List<Guid> taskIds)
+        {
+            var isAuthorized = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+
+            await _context.AddTasksToSprint(projectId, sprintId, taskIds);
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpPost("{sprintId}/status")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> ChangeStatusSprint(
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId, [FromQuery] SprintStatus status)
+        {
+            var isAuthorized = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+            await _context.ChangeStatusSprint(sprintId, status);
+            return ApiResponse<bool>.Success(true);
+        }
     }
 }
