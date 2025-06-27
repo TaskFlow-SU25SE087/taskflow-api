@@ -132,9 +132,9 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         }
 
-        public Task<List<TaskProjectResponse>> GettAllTaskNotSprint(Guid ProjectId)
+        public Task<List<ListTaskProjectNotSprint>> GettAllTaskNotSprint(Guid ProjectId)
         {
-            throw new NotImplementedException();
+            return _taskProjectRepository.GetAllTaskNotSprint(ProjectId);
         }
 
         public async Task LeaveTask(Guid ProjectID, Guid TaskId, AssignmentReasonRequest request)

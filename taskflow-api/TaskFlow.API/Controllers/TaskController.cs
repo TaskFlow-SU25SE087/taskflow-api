@@ -124,6 +124,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
+        [HttpGet("nounassigned-sprint")]
+        [Authorize]
+        public async Task<ApiResponse<List<ListTaskProjectNotSprint>>> GetAllTaskNotInSprint([FromRoute] Guid projectId)
+        {
+            await _authorization.AuthorizeAndGetMemberAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+
+            var result = await _context.GettAllTaskNotSprint(projectId);
+            return ApiResponse<List<ListTaskProjectNotSprint>>.Success(result);
+        }
         //[HttpPost("{taskId}/complete")]
         //[Authorize]
         //public async Task<ApiResponse<bool>> AcceptTask(

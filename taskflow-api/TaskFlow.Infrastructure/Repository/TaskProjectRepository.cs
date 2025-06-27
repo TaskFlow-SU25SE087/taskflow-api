@@ -21,6 +21,26 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
              _context.TaskProjects.Add(task);
             await _context.SaveChangesAsync();
         }
+
+        public Task<List<ListTaskProjectNotSprint>> GetAllTaskNotSprint(Guid projectId)
+        {
+            return _context.TaskProjects
+                .Where(t => t.ProjectId == projectId && t.SprintId == null
+                && t.SprintId == null && t.IsActive)
+                .Select(t => new ListTaskProjectNotSprint
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Priority = t.Priority,
+                    CreatedAt = t.CreatedAt,
+                    UpdatedAt = t.UpdatedAt,
+                    Deadline = t.Deadline,
+                    AttachmentUrl = t.AttachmentUrl
+                })
+                .ToListAsync();
+        }
+
         public async Task<List<TaskProjectResponse>> GetAllTaskProjectAsync(Guid projectId)
         {
             return await _context.TaskProjects
