@@ -9,5 +9,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task UpdateSprintAsync(Sprint sprint);
         Task<List<SprintResponse>> GetListPrintAsync(Guid projectId);
         Task<Sprint?> GetSprintByIdAsync(Guid sprintId);
+        Task<bool> CheckSprintName(Guid projectId, string name);
+        Task <Sprint?> GetLastSprint(Guid projectId);
     }
 }

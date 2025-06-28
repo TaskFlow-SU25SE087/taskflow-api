@@ -23,6 +23,7 @@ using CloudinaryDotNet;
 using Azure.Core;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Microsoft.Extensions.Caching.Memory;
+using System.Linq;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -133,11 +134,11 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<PagedResult<UserAdminResponse>> GetAllUser(int Page)
         {
-            string cacheKey = $"all_user_page_{Page}";
-            if (_cache.TryGetValue(cacheKey, out PagedResult<UserAdminResponse> cachedResult))
-            {
-                return cachedResult;
-            }
+            //string cacheKey = $"all_user_page_{Page}";
+            //if (_cache.TryGetValue(cacheKey, out PagedResult<UserAdminResponse> cachedResult))
+            //{
+            //    return cachedResult;
+            //}
 
             var pagingParams = new PagingParams
             {
@@ -186,11 +187,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                 PageSize = pagingParams.PageSize
             };
             //set cache for 5 minutes
-            _cache.Set(cacheKey, result, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15), // cache for 15 minutes
-                SlidingExpiration = TimeSpan.FromMinutes(5) //if accessed within 5 minutes, reset the cache timer
-            });
+            //_cache.Set(cacheKey, result, new MemoryCacheEntryOptions
+            //{
+            //    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15), // cache for 15 minutes
+            //    SlidingExpiration = TimeSpan.FromMinutes(5) //if accessed within 5 minutes, reset the cache timer
+            //});
             return result;
         }
 
@@ -599,6 +600,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 existingUser.StudentId = studentId;
                                 existingUser.TermSeason = termSeason;
                                 existingUser.TermYear = termYear;
+                                existingUser.PastTerms = existingUser.PastTerms == null
+                                    ? $"{termSeason} {termYear}"
+                                    : $"{existingUser.PastTerms}, {termSeason} {termYear}";
 
                                 var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
                                 await _mailService.SendReactivationEmail(
@@ -617,7 +621,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                             UserName = email,
                             EmailConfirmed = false,
                             TermSeason = termSeason,
-                            TermYear = termYear
+                            TermYear = termYear,
+                            PastTerms = $"{termSeason} {termYear}",
                         };
 
                         var newPass = GenerateRandom.GenerateRandomNumber();

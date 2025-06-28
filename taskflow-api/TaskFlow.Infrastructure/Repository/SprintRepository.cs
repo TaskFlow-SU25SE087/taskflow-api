@@ -15,10 +15,25 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
+        public Task<bool> CheckSprintName(Guid projectId, string name)
+        {
+            return _context.Sprints
+                .Where(s => s.ProjectId == projectId && s.Name == name && s.IsActive)
+                .AnyAsync();
+        }
+
         public async Task CreateSprintAsync(Sprint sprint)
         {
             _context.Sprints.Add(sprint);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Sprint?> GetLastSprint(Guid projectId)
+        {
+            return await _context.Sprints
+                .Where(s => s.ProjectId == projectId && s.IsActive)
+                .OrderByDescending(s => s.EndDate)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<List<SprintResponse>> GetListPrintAsync(Guid projectId)

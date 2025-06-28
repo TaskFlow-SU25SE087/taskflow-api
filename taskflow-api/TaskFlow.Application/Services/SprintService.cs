@@ -37,10 +37,23 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             if (status.Equals(SprintStatus.Completed))
             {
+                // new next sprint
+                var lastSprint = await _sprintRepository.GetLastSprint(sprint.ProjectId);
+                var newSprint = new Sprint
+                {
+                    Id = Guid.NewGuid(),
+                    ProjectId = sprint.ProjectId,
+                    Name = "Sprint " + (lastSprint == null ? 1 : lastSprint.Name.Split(' ').LastOrDefault() + 1),
+                    Description = "Next sprint after " + sprint.Name,
+                    StartDate = lastSprint!.EndDate,
+                    EndDate = DateTime.UtcNow.AddDays(14), // Example: 2 weeks duration
+                    IsActive = true,
+                    Status = SprintStatus.NotStarted
+                };
                 var lisktaskproject = await _taskProjectRepository.GetListTasksBySprintsIdsAsync(SpringId);
                 foreach (var task in lisktaskproject)
                 {
-                    task.Sprint = null;
+                    task.SprintId = newSprint.Id;
                     task.Note = task.Note + " " + DateTime.UtcNow + " End sprint: " + sprint.Name; 
                 }
                 await _taskProjectRepository.UpdateListTaskAsync(lisktaskproject);
@@ -49,6 +62,18 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<bool> CreateSprint(Guid ProjectId, CreateSprintRequest request)
         {
+            var existingSprint = await _sprintRepository.CheckSprintName(ProjectId, request.Name);
+            if (existingSprint)
+            {
+                throw new AppException(ErrorCode.SprintNameAlreadyExists);
+            }
+            var LastSprint = await _sprintRepository.GetLastSprint(ProjectId);
+            if (LastSprint != null && LastSprint.Status == SprintStatus.Completed 
+                && request.StartDate < LastSprint.EndDate)
+            {
+                throw new AppException(ErrorCode.CannotCreateSprint);
+            }
+
             var newSprint = new Sprint
             {
                 ProjectId = ProjectId,

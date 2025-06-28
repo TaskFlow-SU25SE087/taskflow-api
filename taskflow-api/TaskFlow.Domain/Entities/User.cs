@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Domain.Entities
@@ -11,6 +12,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string? StudentId { get; set; }
         public string? TermSeason { get; set; }
         public int TermYear { get; set; } = 0;
+        public string? PastTerms { get; set; }
         public bool IsActive { get; set; } = false;
 
         public UserRole Role { get; set; } = UserRole.User;
