@@ -11,6 +11,7 @@
         public string? StudentId { get; set; }
         public string? TermSeason { get; set; }
         public int? TermYear { get; set; }
+        public string? PastTerms { get; set; }
         public bool IsActive { get; set; } = false;
     }
 }
