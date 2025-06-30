@@ -69,7 +69,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public Task<bool> IsUserInProjectAsync(Guid projectId, Guid userId)
         {
             return _context.ProjectMembers
-                .AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == userId && pm.IsActive);
+                .AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == userId && pm.IsActive
+                && pm.Project.Term.EndDate > DateTime.UtcNow && !pm.Project.Term.IsActive);
         }
 
         public async Task UpdateMember(ProjectMember data)

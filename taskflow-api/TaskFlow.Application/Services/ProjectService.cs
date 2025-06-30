@@ -65,7 +65,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 Title = request.Title,
                 Description = request.Description,
-                Semester = user!.TermSeason + user.TermYear,
+                TermId = user!.Term.Id,
+                Semester = user!.Term.Season + user.Term.Year,
                 IsActive = true
             };
             var projectId = await _projectRepository.CreateProjectAsync(project);

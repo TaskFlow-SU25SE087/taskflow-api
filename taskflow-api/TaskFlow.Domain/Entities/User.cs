@@ -10,8 +10,8 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string? Avatar { get; set; } = "https://res.cloudinary.com/dpw9sgxab/image/upload/v1749247007/avatar/default.jpg";
         public string FullName { get; set; } = null!;
         public string? StudentId { get; set; }
-        public string? TermSeason { get; set; }
-        public int TermYear { get; set; } = 0;
+        public Guid TermId { get; set; }
+        public Term Term { get; set; } = null!;
         public string? PastTerms { get; set; }
         public bool IsActive { get; set; } = false;
 

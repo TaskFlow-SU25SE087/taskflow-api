@@ -31,6 +31,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<Tag> Tags { get; set; } = null!;
         public DbSet<TaskTag> TaskTags { get; set; } = null!;
         public DbSet<TaskComment> TaskComments { get; set; } = null!;
+        public DbSet<Term> Terms { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -5,7 +5,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     public class Tag
     {
         [Key]
-        public Guid Id { get; set; } = new Guid();
+        public Guid Id { get; set; } = Guid.NewGuid();
         [Required]
         public Guid ProjectId { get; set; }
         public Project Project { get; set; } = null!;

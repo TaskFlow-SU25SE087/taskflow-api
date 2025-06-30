@@ -7,7 +7,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     public class TaskAssignee
     {
         [Key]
-        public Guid Id { get; set; } = new Guid();
+        public Guid Id { get; set; } = Guid.NewGuid();
         public Guid RefId { get; set; }
         public Guid? AssignerId { get; set; }
         public Guid? ImplementerId { get; set; }

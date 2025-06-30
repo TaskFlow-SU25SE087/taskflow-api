@@ -5,10 +5,8 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
 {
     public static class ErrorCode
     {
-        // General error codes uncategorized
         public static readonly ErrorDetail UncategorizedException = new(9999, "Uncategorized error", StatusCodes.Status500InternalServerError);
 
-        // User related error codes(1)
         public static readonly ErrorDetail InvalidEmail = new(1001, "Invalid email address", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail EmailExists = new(1002, "Email already exists", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail AccountBanned = new(1003, "Account is banned", StatusCodes.Status403Forbidden);
@@ -24,13 +22,13 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail EmailNotConfirmed = new(1013, "Email not confirmed", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotResetPassword = new(1014, "cannot reset password", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail InvalidEmailOrUsername = new(1015, "Invalid email or username", StatusCodes.Status400BadRequest);
-
-        //File related error codes(2)
+        public static readonly ErrorDetail AccountExpired = new(1016, "Account has expired", StatusCodes.Status403Forbidden);
+        public static readonly ErrorDetail TermExpired = new(1017, "Term has expired", StatusCodes.Status403Forbidden);
+        
         public static readonly ErrorDetail ImageExists = new(2001, "Image Exists", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail ImageNotCanSave = new(2002, "Image cannot be saved", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail MaxFileLimitReached = new(2003, "You have reached the maximum file limit", StatusCodes.Status403Forbidden);
 
-        // Project related error codes(3)
         public static readonly ErrorDetail CannotCreateProject = new(3001, "Cannot create project", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotLeaveProjectAsPM = new(3002, "Cannot leave project as project manager", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail ProjectNotFound = new(3003, "Project not found", StatusCodes.Status404NotFound);
@@ -39,25 +37,22 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail UserNotInProject = new(3006, "User is not in the project", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail SprintNameAlreadyExists = new(3007, "Sprint name already exists", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotCreateSprint = new(3008, "Cannot create sprint", StatusCodes.Status400BadRequest);
-        //Token related error codes(4)
+        
         public static readonly ErrorDetail InvalidToken = new(4001, "Invalid token", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail RefreshTokenExpired = new(4002, "Refresh token expired", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail InvalidRefreshToken = new(4003, "Invalid refresh token", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail TooManyAttempts = new(4004, "Too many attempts, please try again later", StatusCodes.Status429TooManyRequests);
 
-        // Board related error codes(5)
         public static readonly ErrorDetail CannotCreateBoard = new(5001, "Cannot create board", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail BoardNotFound = new(5002, "Board not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail CannotUpdateBoard = new(5003, "Cannot update board", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotDeleteBoard = new(5004, "Cannot delete board", StatusCodes.Status400BadRequest);
 
-        // Project related error codes(6)
         public static readonly ErrorDetail NoProjectsFound = new(6001, "No projects found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail TaskAlreadyAssigned = new(6002, "Task has already been assigned to this user", StatusCodes.Status409Conflict);
         public static readonly ErrorDetail UserNotAssignedToTask = new(6003, "You are not assigned to this task", StatusCodes.Status403Forbidden);
 
 
-        // Tag related error codes(7)
         public static readonly ErrorDetail TagIsNull = new(7001, "Tag cannot be null", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail TagNotFound = new(7002, "Tag not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail TagAlreadyExistsInTask = new(7003, "Tag Already Exists In Task", StatusCodes.Status404NotFound);
@@ -65,13 +60,15 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail TagNameAlreadyExists = new(7005, "Tag name already exists", StatusCodes.Status400BadRequest);
 
 
-        // Task related error codes(8)
         public static readonly ErrorDetail TaskNotFound = new(8001, "Task not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail  CannotUpdateStatus = new(8002, "Cannot update task status", StatusCodes.Status400BadRequest);
-        // Authorization related error codes(9)
+
+        
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail Unauthorized = new(9002, "Unauthorized access", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail NoFile = new(9003, "No file", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail InvalidTermDates = new(9004, "Invalid term dates", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail TermNotFound = new(9005, "Term not found", StatusCodes.Status404NotFound);
 
     }
 }

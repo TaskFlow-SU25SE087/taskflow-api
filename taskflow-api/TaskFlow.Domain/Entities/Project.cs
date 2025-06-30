@@ -7,13 +7,15 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     public class Project
     {
         [Key]
-        public Guid Id { get; set; } = new Guid();
+        public Guid Id { get; set; } = Guid.NewGuid();
         [Required]
         public string Title { get; set; } = string.Empty;
         [Required]
         public string Description  { get; set; } = string.Empty;
         [Required]
         public string Semester { get; set; } = null!;
+        public Guid TermId { get; set; }
+        public Term Term { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime LastUpdate { get; set; } = DateTime.UtcNow;
         [Required]

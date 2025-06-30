@@ -39,12 +39,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IVerifyTokenRopository _verifyTokenRopository;
         private readonly IFileService _fileService;
         private readonly IMemoryCache _cache;
+        private readonly ITermRepository _termRepository;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration configuration, IFileService fileService, 
             IHttpContextAccessor httpContextAccessor, IMapper mapper,
             IRefreshTokenRepository refeshTokenRepository, IMailService mailService,
-            IVerifyTokenRopository verifyTokenRopository, IMemoryCache cache)
+            IVerifyTokenRopository verifyTokenRopository, IMemoryCache cache, ITermRepository termRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -56,6 +57,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _verifyTokenRopository = verifyTokenRopository;
             _fileService = fileService;
             _cache = cache;
+            _termRepository = termRepository;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -201,29 +203,14 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (user == null) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
             if (user.LockoutEnabled) throw new AppException(ErrorCode.Unauthorized);
             if (!user.IsActive) throw new AppException(ErrorCode.AccountBanned);
+            if (!user.Role.Equals(UserRole.User) && user.Term.EndDate < DateTime.UtcNow && !user.Term.IsActive)
+            {
+                throw new AppException(ErrorCode.AccountExpired);
+            }
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!passwordValid) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
             var token = await GenerateToken(user);
-            //var authClaims = new List<Claim>
-            //{
-            //    new Claim("ID", user.Id.ToString()),
-            //    new Claim("Email", user.Email!),
-            //    new Claim(ClaimTypes.Role, user.Role.ToString()),
-            //    new Claim("Fullname", user.FullName!),
-            //    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            //};
-
-            //var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-            //var token = new JwtSecurityToken(
-            //    issuer: _configuration["Jwt:ValidIssuer"],
-            //    audience: _configuration["Jwt:ValidAudience"],
-            //    expires: DateTime.UtcNow.AddHours(1),
-            //    claims: authClaims,
-            //    signingCredentials: new SigningCredentials(authenKey, SecurityAlgorithms.HmacSha256)
-
-            //);
-            //var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
             return token!;
         }
 
@@ -263,14 +250,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 IsActive = true,
             };
 
-            //string avatarPath = string.Empty;
-            //if (model.Avatar != null)
-            //{
-            //     avatarPath = await ImageHelper.UploadImage(model.Avatar, _env.WebRootPath,
-            //         "Image/Avatars", Guid.NewGuid().ToString());
-            //    user.Avatar = avatarPath;
-            //}
-
             var saveUser = await _userManager.CreateAsync(user, model.Password);
             
             if (saveUser.Succeeded)
@@ -290,10 +269,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             //error UserManager.CreateAsync
             if (!saveUser.Succeeded)
             {
-                //if (!string.IsNullOrEmpty(avatarPath))
-                //{
-                //    ImageHelper.DeleteImage(avatarPath, _env.WebRootPath);
-                //}
                 var errorMessages = string.Join("; ", saveUser.Errors.Select(e => e.Description));
                 throw new AppException(new ErrorDetail(
                     1000,
@@ -460,6 +435,14 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
+            if (!user.IsActive)
+            {
+                throw new AppException(ErrorCode.AccountBanned);
+            }
+            if (!user.Role.Equals(UserRole.User) && user.Term.EndDate < DateTime.UtcNow && !user.Term.IsActive)
+            {
+                throw new AppException(ErrorCode.AccountExpired);
+            }
             var token = await GenerateToken(user);
 
             return token;
@@ -578,6 +561,23 @@ namespace taskflow_api.TaskFlow.Application.Services
                         var termSeason = worksheet.Cells[row, 4].Text.Trim();
                         var termYearStr = worksheet.Cells[row, 5].Text.Trim();
 
+                        //find and set termId 
+                        var termID = await _termRepository.GetTermIdAsync(termSeason, int.Parse(termYearStr));
+                        if (termID == Guid.Empty)
+                        {
+                            var starDate = await _termRepository.GetLatestTermEndDateAsync();
+                            //create new term
+                            var newTerm = new Term
+                            {
+                                Season = termSeason,
+                                Year = int.Parse(termYearStr),
+                                StartDate = starDate,
+                                EndDate = starDate.AddMonths(4),
+                                IsActive = true
+                            };
+                            termID = newTerm.Id;
+                        }
+
                         if (string.IsNullOrEmpty(email)) continue;
 
                         int.TryParse(termYearStr, out int termYear);
@@ -598,8 +598,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 // Update existing confirmed user
                                 existingUser.FullName = fullName;
                                 existingUser.StudentId = studentId;
-                                existingUser.TermSeason = termSeason;
-                                existingUser.TermYear = termYear;
+                                existingUser.TermId = termID;
                                 existingUser.PastTerms = existingUser.PastTerms == null
                                     ? $"{termSeason} {termYear}"
                                     : $"{existingUser.PastTerms}, {termSeason} {termYear}";
@@ -620,8 +619,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                             Email = email,
                             UserName = email,
                             EmailConfirmed = false,
-                            TermSeason = termSeason,
-                            TermYear = termYear,
+                            TermId = termID,
                             PastTerms = $"{termSeason} {termYear}",
                         };
 

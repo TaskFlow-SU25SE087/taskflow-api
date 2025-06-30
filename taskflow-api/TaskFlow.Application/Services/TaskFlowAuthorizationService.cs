@@ -32,9 +32,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             var userId = Guid.Parse(userIdClaim.Value);
 
             var projectMember = await _context.ProjectMembers
+                .Include(pm => pm.Project)
+                .ThenInclude(p => p.Term)
+                .Include(pm => pm.User)
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.User.Id == userId);
 
             if (projectMember == null || !projectMember.IsActive) throw new AppException(ErrorCode.Unauthorized);
+
+            if (projectMember.User.Role == UserRole.User)
+            {
+                var term = projectMember.Project.Term;
+                if (term == null || !term.IsActive || term.EndDate < DateTime.UtcNow)
+                    throw new AppException(ErrorCode.TermExpired);
+            }
 
             bool check = allowedRoles.Contains(projectMember.Role);
             if (!check)
@@ -55,9 +65,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             var userId = Guid.Parse(userIdClaim.Value);
 
             var projectMember = await _context.ProjectMembers
+                .Include(pm => pm.Project)
+                .ThenInclude(p => p.Term)
+                .Include(pm => pm.User)
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.User.Id == userId);
 
             if (projectMember == null || !projectMember.IsActive) return false;
+
+            if (projectMember.User.Role == UserRole.User)
+            {
+                var term = projectMember.Project.Term;
+                if (term == null || !term.IsActive || term.EndDate < DateTime.UtcNow)
+                    throw new AppException(ErrorCode.TermExpired);
+            }
 
             return allowedRoles.Contains(projectMember.Role);
         }
