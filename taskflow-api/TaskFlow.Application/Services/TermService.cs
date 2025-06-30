@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _termRepository.CreateTermAsync(term);
         }
 
-        public async Task DeleteTerm(Guid id)
+        public async Task LockTerm(Guid id)
         {
             var term = await _termRepository.GetTermByIdAsync(id);
             if (term == null)
@@ -87,6 +87,23 @@ namespace taskflow_api.TaskFlow.Application.Services
             term.StartDate = request.StartDate;
             term.EndDate = request.EndDate;
             await _termRepository.UpdateTermAsync(term);
+        }
+
+        public async Task Delete(Guid id)
+        {
+            var term = _termRepository.GetTermByIdAsync(id);
+
+            //check project or user in term
+            if (term == null || term.Result == null)
+            {
+                throw new AppException(ErrorCode.TermNotFound);
+            }
+
+            if (term.Result.Projects.Any() || term.Result.Users.Any())
+            {
+                throw new AppException(ErrorCode.TermHasProjectsOrUsers);
+            }
+           await _termRepository.DeleteTermAsync(id);
         }
     }
 }

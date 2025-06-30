@@ -9,6 +9,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task CreateTerm(CreateTerm request);
         Task<Term?> GetTermById(Guid id);
         Task UpdateTerm(Guid termId, UpdateTerm request);
-        Task DeleteTerm(Guid id);
+        Task LockTerm(Guid id);
+        Task Delete(Guid id);
     }
 }

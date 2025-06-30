@@ -20,6 +20,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task DeleteTermAsync(Guid termId)
+        {
+            await _context.Terms
+                .Where(t => t.Id == termId)
+                .ExecuteDeleteAsync();
+        }
+
         public Task<List<Term>> GetAllTermsAsync(int page, int pageSize)
         {
             return _context.Terms
