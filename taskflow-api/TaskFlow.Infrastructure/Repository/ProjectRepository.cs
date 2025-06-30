@@ -27,7 +27,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<List<ProjectsResponse>> GetListProjectResponseByUserAsync(Guid userId)
         {
             return await _context.Projects
-                .Where(p => p.Members.Any(m => m.UserId == userId && m.IsActive))
+                .Where(p => p.Members.Any(m => m.UserId == userId && m.IsActive && m.Project.IsActive))
                 .Select(p => new ProjectsResponse
                 {
                     Id = p.Id,
@@ -66,7 +66,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Include(p => p.Boards)
                 .Include(p => p.Sprints)
                 .Include(p => p.TaskProject)
-                .Where(p => p.Members.Any(m => m.UserId == userId && m.IsActive))
+                .Where(p => p.Members.Any(m => m.UserId == userId && m.IsActive && m.Project.IsActive))
                 .OrderByDescending(p => p.LastUpdate);
         }
 
