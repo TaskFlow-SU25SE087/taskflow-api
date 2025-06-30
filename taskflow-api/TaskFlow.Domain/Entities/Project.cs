@@ -1,18 +1,31 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
+
 
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
     public class Project
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = new Guid();
         [Required]
         public string Title { get; set; } = string.Empty;
         [Required]
         public string Description  { get; set; } = string.Empty;
-        public Guid OwnerId { get; set; }
+        [Required]
+        public string Semester { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime LastUpdate { get; set; }
+        public DateTime LastUpdate { get; set; } = DateTime.UtcNow;
+        [Required]
+        public ProgrammingLanguage ProgrammingLanguage { get; set; }
+        [Required]
+        public Framework Framework { get; set; }
+        public RepoProvider? RepoProvider { get; set; }
+        public string? RepoUrl { get; set; } = string.Empty;
+        public string? AccessToken { get; set; }
+        public string? Branch { get; set; } = "main";
+        public string? WebhookUrl { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = false;
         public List<ProjectMember> Members { get; set; } = new();
         public List<Board> Boards { get; set; } = new List<Board>();
         public List<Sprint> Sprints { get; set; } = new List<Sprint>();

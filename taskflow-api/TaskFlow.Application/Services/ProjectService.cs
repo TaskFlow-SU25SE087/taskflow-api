@@ -54,14 +54,21 @@ namespace taskflow_api.TaskFlow.Application.Services
             var user = await _userManager.FindByIdAsync(UserId!);
 
             //Find the number of projects participated
-            int projectCount = await _projectMemberRepository.GetProjectCountByUserIdAsync(Guid.Parse(UserId!));
-            if (projectCount >= 3)
+            bool projectCount = await _projectMemberRepository.GetUserIsActiveInProjectAsync(Guid.Parse(UserId!));
+            if (projectCount)
             {
                 throw new AppException(ErrorCode.MaxProjectLimitReached);
             }
 
             //create project
-            var projectId = await _projectRepository.CreateProjectAsync(request.Title, request.Description, Guid.Parse(UserId!));
+            var project = new Project
+            {
+                Title = request.Title,
+                Description = request.Description,
+                Semester = user!.TermSeason + user.TermYear,
+                IsActive = true
+            };
+            var projectId = await _projectRepository.CreateProjectAsync(project);
             if (projectId == Guid.Empty)
                 throw new AppException(ErrorCode.CannotCreateProject);
             //create Pm for the project

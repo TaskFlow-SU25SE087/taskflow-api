@@ -17,20 +17,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
-        public async Task<Guid> CreateProjectAsync(string title, string description, Guid OwnerId)
+        public async Task<Guid> CreateProjectAsync(Project data)
         {
-            var project = new Project
-            {
-                Id = Guid.NewGuid(),
-                Title  = title,
-                Description = description,
-                OwnerId = OwnerId,
-                CreatedAt = DateTime.UtcNow,
-                LastUpdate = DateTime.UtcNow,
-            };
-            _context.Projects.Add(project);
+            await _context.Projects.AddAsync(data);
             await _context.SaveChangesAsync();
-            return project.Id;
+            return data.Id;
         }
 
         public async Task<List<ProjectsResponse>> GetListProjectResponseByUserAsync(Guid userId)

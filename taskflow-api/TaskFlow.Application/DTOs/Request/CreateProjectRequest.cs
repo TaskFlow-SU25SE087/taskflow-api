@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Application.DTOs.Request
 {

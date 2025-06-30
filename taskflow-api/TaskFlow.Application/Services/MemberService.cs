@@ -40,8 +40,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.NoUserFound);
 
             //Find the number of projects participated
-            int projectCount = await _projectMemberRepository.GetProjectCountByUserIdAsync(user.Result.Id);
-            if (projectCount >= 3)
+            bool projectCount = await _projectMemberRepository.GetUserIsActiveInProjectAsync(user.Result.Id);
+            if (projectCount)
             {
                 throw new AppException(ErrorCode.MaxProjectLimitReached);
             }

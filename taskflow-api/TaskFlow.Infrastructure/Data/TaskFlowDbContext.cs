@@ -170,12 +170,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(tc => tc.CommenterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            ////Issue <-> TaskAsignee
-            //modelBuilder.Entity<TaskAssignee>()
-            //    .HasOne(ta => ta.Issue)
-            //    .WithMany(i => i.TaskAssignees)
-            //    .HasForeignKey(ta => ta.RefId)
-            //    .OnDelete(DeleteBehavior.Restrict);
+            // ProjectMember <-> Project
+            modelBuilder.Entity<ProjectMember>()
+                .HasOne(pm => pm.Project)
+                .WithMany(p => p.Members)
+                .HasForeignKey(pm => pm.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 
