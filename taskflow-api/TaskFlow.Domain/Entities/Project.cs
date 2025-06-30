@@ -18,11 +18,9 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Term Term { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime LastUpdate { get; set; } = DateTime.UtcNow;
-        [Required]
-        public ProgrammingLanguage ProgrammingLanguage { get; set; }
-        [Required]
-        public Framework Framework { get; set; }
-        public RepoProvider? RepoProvider { get; set; }
+        public ProgrammingLanguage ProgrammingLanguage { get; set; } = ProgrammingLanguage.None;
+        public Framework Framework { get; set; } = Framework.None;
+        public RepoProvider? RepoProvider { get; set; } 
         public string? RepoUrl { get; set; } = string.Empty;
         public string? AccessToken { get; set; }
         public string? Branch { get; set; } = "main";

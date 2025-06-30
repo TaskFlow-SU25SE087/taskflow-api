@@ -177,6 +177,20 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .WithMany(p => p.Members)
                 .HasForeignKey(pm => pm.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Term <-> User
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Term)
+                .WithMany(t => t.Users)
+                .HasForeignKey(u => u.TermId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Term <-> Project
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.Term)
+                .WithMany(t => t.Projects)
+                .HasForeignKey(p => p.TermId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 

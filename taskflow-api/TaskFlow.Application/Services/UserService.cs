@@ -169,17 +169,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
-            //var usersResponse = _mapper.ProjectTo<UserAdminResponse>(users);
-            //PagingParams pagingParams = new PagingParams
-            //{
-            //    PageNumber = Page,
-            //    PageSize = 5
-            //};
-            //var pageUser = await usersResponse.ToPagedListAsync(pagingParams);
-            //if (!pageUser.Items.Any())
-            //{
-            //    throw new AppException(ErrorCode.NoUserFound);
-            //}
+
             var result = new PagedResult<UserAdminResponse>
             {
                 Items = items,
@@ -199,12 +189,15 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<TokenModel> Login(LoginRequest model)
         {
-            var user = await _userManager.FindByNameAsync(model.Username);
+            var user = await _userManager.Users
+                .Include(u => u.Term)
+                .FirstOrDefaultAsync(u => u.UserName == model.Username);
             if (user == null) throw new AppException(ErrorCode.InvalidPasswordOrUserName);
             if (user.LockoutEnabled) throw new AppException(ErrorCode.Unauthorized);
             if (!user.IsActive) throw new AppException(ErrorCode.AccountBanned);
-            if (!user.Role.Equals(UserRole.User) && user.Term.EndDate < DateTime.UtcNow && !user.Term.IsActive)
+            if (user.Role.Equals(UserRole.User))
             {
+                if (user.Term.EndDate < DateTime.UtcNow && !user.Term.IsActive)
                 throw new AppException(ErrorCode.AccountExpired);
             }
 
@@ -344,6 +337,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 new Claim("Email", user.Email!),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim("Fullname", user.FullName!),
+                new Claim("Avatar", user.Avatar ?? string.Empty),
+                new Claim("TermId", user.TermId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
             var authKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));

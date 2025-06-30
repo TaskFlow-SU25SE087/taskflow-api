@@ -2,6 +2,7 @@
 {
     public enum ProgrammingLanguage
     {
+        None,
         Csharp,
         Java,
         JavaScript,

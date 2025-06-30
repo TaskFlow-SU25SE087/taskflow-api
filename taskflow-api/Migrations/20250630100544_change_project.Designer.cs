@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250630100544_change_project")]
+    partial class change_project
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -575,7 +578,7 @@ namespace taskflow_api.Migrations
                     b.Property<string>("StudentId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("TermId")
+                    b.Property<Guid>("TermId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserName")
@@ -765,7 +768,7 @@ namespace taskflow_api.Migrations
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Term", "Term")
                         .WithMany("Projects")
                         .HasForeignKey("TermId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Term");
@@ -909,7 +912,8 @@ namespace taskflow_api.Migrations
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Term", "Term")
                         .WithMany("Users")
                         .HasForeignKey("TermId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Term");
                 });

@@ -2,6 +2,7 @@
 {
     public enum Framework
     {
+        None,
         // C#
         ASPNETCore,
         DotNetCore,

@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using taskflow_api.Migrations;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
@@ -51,7 +53,9 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var UserId = httpContext?.User.FindFirst("id")?.Value;
-            var user = await _userManager.FindByIdAsync(UserId!);
+            var user = await _userManager.Users.
+                Include(u => u.Term)
+                .FirstOrDefaultAsync(u => u.Id == Guid.Parse(UserId!));
 
             //Find the number of projects participated
             bool projectCount = await _projectMemberRepository.GetUserIsActiveInProjectAsync(Guid.Parse(UserId!));
@@ -65,8 +69,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 Title = request.Title,
                 Description = request.Description,
-                TermId = user!.Term.Id,
-                Semester = user!.Term.Season + user.Term.Year,
+                TermId = user.Term.Id,
+                Semester = user.Term.Season + user.Term.Year,
                 IsActive = true
             };
             var projectId = await _projectRepository.CreateProjectAsync(project);
@@ -78,7 +82,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 UserId = Guid.Parse(UserId!),
                 ProjectId = projectId,
                 Role = ProjectRole.Leader,
-                IsActive = true
+                IsActive = true,
+                HasJoinedBefore = true,
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
             //create SPring for the project
@@ -144,7 +149,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 Id = projectId,
                 Title = request.Title,
+                Semester = project.Semester,
                 Description = request.Description,
+                ProgrammingLanguage = project.ProgrammingLanguage,
+                Framework = project.Framework,
             };
         }
 
