@@ -38,6 +38,7 @@ builder.Services.AddScoped<ITaskProjectService, TaskProjectService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<ITermService, TermService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -53,6 +54,7 @@ builder.Services.AddScoped<ITaskCommentRepository, TaskCommentRepository>();
 builder.Services.AddScoped<ITaskAssigneeRepository, TaskAssigneeRepository>();
 builder.Services.AddScoped<ITaskIssueRepository, TaskIssueRepository>();
 builder.Services.AddScoped<ITermRepository, TermRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 //Signalr
 builder.Services.AddSignalR();

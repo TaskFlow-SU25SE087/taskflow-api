@@ -21,12 +21,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITaskAssigneeRepository _taskAssigneeRepository;
         private readonly IProjectMemberRepository _projectMemberRepository;
         private readonly ISprintRepository _sprintRepository;
+        private readonly INotificationService _notificationService;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
             ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
             ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository,
-            ISprintRepository sprintRepository)
+            ISprintRepository sprintRepository,
+            INotificationService notificationService)
         {
             _taskProjectRepository = taskProjectRepository;
             _boardRepository = boardRepository;
@@ -38,6 +40,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _taskAssigneeRepository = taskAssigneeRepository;
             _projectMemberRepository = projectMemberRepository;
             _sprintRepository = sprintRepository;
+            _notificationService = notificationService;
         }
 
         public async Task AddTagForTask(Guid TaskId, Guid TagId)
@@ -225,6 +228,17 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.UpdatedAt = DateTime.UtcNow;
 
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
+
+            // Notify all assignees about the update
+            var assignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
+            foreach (var assignee in assignees)
+            {
+                if (assignee.ImplementerId.HasValue)
+                {
+                    await _notificationService.NotifyTaskUpdateAsync(assignee.ImplementerId.Value, taskUpdate.ProjectId, TaskId, $"Task '{taskUpdate.Title}' has been updated.");
+                }
+            }
+
             return taskUpdate;
         }
 
