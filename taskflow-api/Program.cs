@@ -38,6 +38,7 @@ builder.Services.AddScoped<ITaskProjectService, TaskProjectService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<ITermService, TermService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
