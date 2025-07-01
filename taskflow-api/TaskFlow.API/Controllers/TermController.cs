@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<string>.Success("create term succes");
         }
 
-        [HttpPut("/{termId}")]
+        [HttpPut("{termId}")]
         public async Task<ApiResponse<string>> UpdateTerm([FromRoute] Guid termId, [FromQuery] UpdateTerm request)
         {
             await _termService.UpdateTerm(termId, request);
@@ -49,14 +49,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _termService.LockTerm(termId);
             return ApiResponse<string>.Success("lock term succes");
         }
-        [HttpDelete("/{termId}")]
+        [HttpDelete("{termId}")]
         public async Task<ApiResponse<string>> DeleteTerm([FromRoute] Guid termId)
         {
             await _termService.Delete(termId);
             return ApiResponse<string>.Success("delete term succes");
         }
 
-        [HttpGet("/{termId}")]
+        [HttpGet("{termId}")]
         public async Task<ApiResponse<Term>> GetTermById([FromRoute] Guid termId)
         {
             var term = await _termService.GetTermById(termId);
