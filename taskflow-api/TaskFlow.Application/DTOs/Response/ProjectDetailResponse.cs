@@ -14,6 +14,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdate { get; set; }
         public List<BoardDetailResponse> Boards { get; set; } = new();
+        public List<ProjectPartResponse> ProjectParts { get; set; } = new();
     }
 
     public class BoardDetailResponse

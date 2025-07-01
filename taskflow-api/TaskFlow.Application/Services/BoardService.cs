@@ -116,14 +116,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _boardRepository.UpdateListBoardsAsync(boards);
             return true;
 
-            //var listBoards = _mapper.Map<List<Board>>(request);
-            //if (listBoards == null || listBoards.Count == 0)
-            //{
-            //    throw new AppException(ErrorCode.CannotUpdateBoard);
-            //}
-            ////Update the order of the boards
-            //await _boardRepository.UpdateListBoardsAsync(listBoards);
-            //return true;
         }
 
     }

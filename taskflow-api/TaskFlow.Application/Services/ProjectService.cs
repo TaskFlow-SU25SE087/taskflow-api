@@ -145,15 +145,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Color = "#FF5733", // Default color
             };
             await _TagRepository.AddTagAsync(Tag);
-            return new ProjectResponse
-            {
-                Id = projectId,
-                Title = request.Title,
-                Semester = project.Semester,
-                Description = request.Description,
-                ProgrammingLanguage = project.ProgrammingLanguage,
-                Framework = project.Framework,
-            };
+            var result = _mapper.Map<ProjectResponse>(project);
+            return result;
         }
 
         public async Task<ProjectDetailResponse> GetProject(Guid ProjectId)
@@ -172,40 +165,12 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.Unauthorized);
             }
             var userId = Guid.Parse(userIdStr);
-            //get Projects by userId
-            //var projectsQuery = _projectRepository.GetProjectsByUserIdAsync(userId);
             var projectsQuery = await _projectRepository.GetListProjectResponseByUserAsync(userId);
             if (projectsQuery == null)
             {
                 throw new AppException(ErrorCode.NoProjectsFound);
             }
             return projectsQuery;
-            ////Page the projects
-            //PagingParams pagingParams = new PagingParams
-            //{
-            //    PageNumber = Page,
-            //    PageSize = 10
-            //};
-            //var pagedProjects = await projectsQuery.ToPagedListAsync(pagingParams);
-            //// map the projects to response DTO
-            //var responseList = new List<ProjectsResponse>();
-            //foreach (var project in pagedProjects.Items)
-            //{
-            //    var response = _mapper.Map<ProjectsResponse>(project, opt =>
-            //    {
-            //        opt.Items["userId"] = userId;
-            //    });
-            //    response.Role = project.Members.FirstOrDefault(m => m.UserId == userId)?.Role;
-            //    responseList.Add(response);
-            //}
-            //return new PagedResult<ProjectsResponse>
-            //{
-            //    Items = responseList,
-            //    TotalItems = pagedProjects.TotalItems,
-            //    PageNumber = pagedProjects.PageNumber,
-            //    PageSize = pagedProjects.PageSize,
-            //    TotalPages = pagedProjects.TotalPages
-            //};
         }
 
         public async Task<ProjectResponse> UpdateProject(UpdateProjectRequest request)

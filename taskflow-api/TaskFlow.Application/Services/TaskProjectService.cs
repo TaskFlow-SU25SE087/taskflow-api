@@ -223,11 +223,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.Description = request.Description;
             taskUpdate.Priority = request.Priority;
             taskUpdate.UpdatedAt = DateTime.UtcNow;
-            //if (request.File != null)
-            //{
-            //    var filePath = await _fileService.UploadFileAsync(request.File);
-            //    taskUpdate.File = filePath;
-            //}
+
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
             return taskUpdate;
         }

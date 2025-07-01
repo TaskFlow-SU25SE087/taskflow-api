@@ -136,12 +136,6 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<PagedResult<UserAdminResponse>> GetAllUser(int Page)
         {
-            //string cacheKey = $"all_user_page_{Page}";
-            //if (_cache.TryGetValue(cacheKey, out PagedResult<UserAdminResponse> cachedResult))
-            //{
-            //    return cachedResult;
-            //}
-
             var pagingParams = new PagingParams
             {
                 PageNumber = Page,
@@ -178,12 +172,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 PageNumber = pagingParams.PageNumber,
                 PageSize = pagingParams.PageSize
             };
-            //set cache for 5 minutes
-            //_cache.Set(cacheKey, result, new MemoryCacheEntryOptions
-            //{
-            //    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15), // cache for 15 minutes
-            //    SlidingExpiration = TimeSpan.FromMinutes(5) //if accessed within 5 minutes, reset the cache timer
-            //});
             return result;
         }
 
@@ -307,11 +295,9 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 if (!string.IsNullOrEmpty(user.Avatar))
                 {
-                    // Delete old avatar image if it exists???
-                    //ImageHelper.DeleteImage(user.Avatar, _env.WebRootPath);
+
                 }
-                //var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
-                //var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
+
                 var avatarPath = await _fileService.UploadPictureAsync(model.Avatar);
                 if (avatarPath == null)
                 {
