@@ -27,9 +27,19 @@ namespace taskflow_api.TaskFlow.API.Controllers
         public async Task<ApiResponse<string>> CreateProjectPart(
             [FromRoute] Guid projectId, [FromBody] CreateProjectPartRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             await _projectPartService.CreatePart(projectId, request);
             return ApiResponse<string>.Success("Create information for project successfully");
+        }
+
+        [HttpPatch("{partId}/connect-repo")]
+        [Authorize]
+        public async Task<ApiResponse<string>> ConnectRepo(
+            [FromRoute] Guid projectId, [FromRoute] Guid partId, [FromBody] ConnectRepoRequest request)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+            await _projectPartService.ConnectRepo(partId, request);
+            return ApiResponse<string>.Success("Connect repository successfully");
         }
     }
 }
