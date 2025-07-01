@@ -239,7 +239,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 if (assignee.ImplementerId.HasValue)
                 {
-                    await _notificationService.NotifyTaskUpdateAsync(assignee.ImplementerId.Value, TaskId, $"Task '{taskUpdate.Title}' has been updated.");
+                    await _notificationService.NotifyTaskUpdateAsync(assignee.ImplementerId.Value, taskUpdate.ProjectId, TaskId, $"Task '{taskUpdate.Title}' has been updated.");
                 }
             }
 

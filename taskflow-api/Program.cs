@@ -54,6 +54,7 @@ builder.Services.AddScoped<ITaskCommentRepository, TaskCommentRepository>();
 builder.Services.AddScoped<ITaskAssigneeRepository, TaskAssigneeRepository>();
 builder.Services.AddScoped<ITaskIssueRepository, TaskIssueRepository>();
 builder.Services.AddScoped<ITermRepository, TermRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 //Signalr
 builder.Services.AddSignalR();
