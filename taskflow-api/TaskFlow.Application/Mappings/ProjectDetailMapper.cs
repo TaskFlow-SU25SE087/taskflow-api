@@ -24,6 +24,8 @@ namespace taskflow_api.TaskFlow.Application.Mappings
             CreateMap<Tag, TagDetailResponse>();
 
             CreateMap<Sprint, SprintDetailResponse>();
+            CreateMap<ProjectPart, ProjectPartResponse>();
+
         }
     }
 }

@@ -17,7 +17,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public RepoProvider? RepoProvider { get; set; }
         public string? RepoUrl { get; set; }
         public string? AccessToken { get; set; }
-        public string? Branch { get; set; } = "main";
+        public string? Branch { get; set; }
         public string? WebhookUrl { get; set; }
     }
 }
