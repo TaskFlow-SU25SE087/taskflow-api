@@ -84,6 +84,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             return await _projectMemberRepository.GetAllMembersInProjectAsync(projectId);
         }
 
+        public Task<ProjectMemberResponse> GetMeInProject(Guid ProjectId, Guid ProjectMemberId)
+        {
+            return _projectMemberRepository.GetMeInProjectAsync(ProjectId, ProjectMemberId);
+        }
+
         public async Task<bool> LeaveTheProject(Guid projectId)
         {
             var httpContext = _httpContextAccessor.HttpContext;

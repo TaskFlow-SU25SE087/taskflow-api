@@ -53,6 +53,19 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
+        public async Task<ProjectMemberResponse?> GetMeInProjectAsync(Guid projectId, Guid projectMemberId)
+        {
+            return await _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId && pm.Id == projectMemberId && pm.IsActive)
+                .Select(pm => new ProjectMemberResponse
+                {
+                    ProjectId = pm.ProjectId,
+                    ProjectMemberId = pm.Id,
+                    Role = pm.Role,
+                })
+                .FirstOrDefaultAsync();
+        }
+
         public Task<int> GetProjectCountByUserIdAsync(Guid userId)
         {
             return _context.ProjectMembers

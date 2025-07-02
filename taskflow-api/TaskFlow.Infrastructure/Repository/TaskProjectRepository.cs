@@ -75,9 +75,10 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                         where ta.RefId == t.Id && ta.Type == RefType.Task && ta.IsActive
                         select new TaskAssigneeResponse
                         {
+                            ProjectMemberId = pm.Id,
                             Executor = u.FullName,
                             Avatar = u.Avatar,
-                            Role = pm.Role
+                            Role = pm.Role,
                         }
                     ).ToList(),
                     Tags = t.TaskTags

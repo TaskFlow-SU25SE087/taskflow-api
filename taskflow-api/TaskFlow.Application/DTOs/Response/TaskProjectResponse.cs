@@ -34,6 +34,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
     }
         public class TaskAssigneeResponse
         {
+            public Guid ProjectMemberId { get; set; }
             public string? Executor { get; set; }
             public string? Avatar { get; set; }
             public ProjectRole Role { get; set; }
