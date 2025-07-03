@@ -57,11 +57,11 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<bool> AuthorizeAsync(Guid projectId, params ProjectRole[] allowedRoles)
         {
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext == null) return false;
+            if (httpContext == null) throw new AppException(ErrorCode.Unauthorized);
 
             //var roleClaim = httpContext.User.FindFirst(ClaimTypes.Role);;
             var userIdClaim = httpContext.User.FindFirst("ID");
-            if (userIdClaim == null) return false;
+            if (userIdClaim == null) throw new AppException(ErrorCode.Unauthorized);
             var userId = Guid.Parse(userIdClaim.Value);
 
             var projectMember = await _context.ProjectMembers
@@ -70,7 +70,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .Include(pm => pm.User)
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.User.Id == userId);
 
-            if (projectMember == null || !projectMember.IsActive) return false;
+            if (projectMember == null || !projectMember.IsActive) throw new AppException(ErrorCode.Unauthorized);
 
             if (projectMember.User.Role == UserRole.User)
             {

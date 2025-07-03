@@ -9,11 +9,10 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string Description { get; set; } = string.Empty;
         public Guid OwnerId { get; set; }
         public string Semester { get; set; } = null!;
-        public ProgrammingLanguage ProgrammingLanguage { get; set; }
-        public Framework Framework { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdate { get; set; }
         public List<BoardDetailResponse> Boards { get; set; } = new();
+        public List<ProjectPartResponse> ProjectParts { get; set; } = new();
     }
 
     public class BoardDetailResponse

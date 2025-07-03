@@ -38,6 +38,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail SprintNameAlreadyExists = new(3007, "Sprint name already exists", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotCreateSprint = new(3008, "Cannot create sprint", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail TermHasProjectsOrUsers = new(3009, "Term has projects or users", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail PartNotFound = new(3010, "Repo not found", StatusCodes.Status404NotFound);
 
         public static readonly ErrorDetail InvalidToken = new(4001, "Invalid token", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail RefreshTokenExpired = new(4002, "Refresh token expired", StatusCodes.Status401Unauthorized);
@@ -70,6 +71,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail NoFile = new(9003, "No file", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail InvalidTermDates = new(9004, "Invalid term dates", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail TermNotFound = new(9005, "Term not found", StatusCodes.Status404NotFound);
-
+        public static readonly ErrorDetail InvalidRepoOrToken = new(9006, "Invalid repository or token", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail WebhookCreationFailed = new(9007, "Failed to create webhook", StatusCodes.Status400BadRequest);
     }
 }

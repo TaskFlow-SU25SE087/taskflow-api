@@ -10,5 +10,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<bool> RemoveMember(Guid projectId, Guid userId);
         public Task<bool> LeaveTheProject(Guid projectId);
         public Task<List<MemberResponse>> GetAllMemberInProject(Guid projectId);
+        Task<ProjectMemberResponse> GetMeInProject(Guid ProjectId, Guid ProjectMemberId);
     }
 }

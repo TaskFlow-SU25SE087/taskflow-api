@@ -79,5 +79,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var members = await _context.GetAllMemberInProject(projectId);
             return ApiResponse<List<MemberResponse>>.Success(members);
         }
+
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<ApiResponse<ProjectMemberResponse>> GetMeInProject([FromRoute] Guid projectId)
+        {
+            Guid projectMemberId = await _authorization.AuthorizeAndGetMemberAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+
+            var result = await _context.GetMeInProject(projectId, projectMemberId);
+            return ApiResponse<ProjectMemberResponse>.Success(result);
+        }
     }
 }

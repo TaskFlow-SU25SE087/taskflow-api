@@ -39,6 +39,9 @@ builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<ITermService, TermService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
+builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
+builder.Services.AddHttpClient<IRepoService, GitHubRepoService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -55,6 +58,7 @@ builder.Services.AddScoped<ITaskAssigneeRepository, TaskAssigneeRepository>();
 builder.Services.AddScoped<ITaskIssueRepository, TaskIssueRepository>();
 builder.Services.AddScoped<ITermRepository, TermRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IProjectPartRepository, ProjectPartRepository>();
 
 //Signalr
 builder.Services.AddSignalR();

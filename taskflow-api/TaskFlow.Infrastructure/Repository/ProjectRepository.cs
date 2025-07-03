@@ -46,6 +46,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
                 var project = _context.Projects
             .Include(p => p.Members)
+            .Include(p => p.ProjectParts)
             .Include(p => p.Boards)
                 .ThenInclude(b => b.TaskProject)
                     .ThenInclude(t => t.TaskComments)

@@ -24,7 +24,7 @@
                 return ApiResponse<UserResponse>.Success(user);
             }
 
-            [HttpPut("/{userId}")]
+            [HttpPut("{userId}")]
             public async Task<ApiResponse<UserResponse>> UpdateUser(Guid userId, [FromForm] UpdateUserRequest model)
             {
                 var user = await _userService.UpdateUser(userId, model);

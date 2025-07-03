@@ -32,8 +32,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<TaskTag> TaskTags { get; set; } = null!;
         public DbSet<TaskComment> TaskComments { get; set; } = null!;
         public DbSet<Term> Terms { get; set; } = null!;
+        public DbSet<ProjectPart> ProjectParts { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -191,6 +191,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasOne(p => p.Term)
                 .WithMany(t => t.Projects)
                 .HasForeignKey(p => p.TermId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Project <-> ProjectPart
+            modelBuilder.Entity<ProjectPart>()
+                .HasOne(pp => pp.Project)
+                .WithMany(p => p.ProjectParts)
+                .HasForeignKey(pp => pp.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

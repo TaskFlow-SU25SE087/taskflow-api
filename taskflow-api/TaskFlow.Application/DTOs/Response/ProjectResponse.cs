@@ -9,7 +9,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Semester { get; set; } = null!;
-        public ProgrammingLanguage ProgrammingLanguage { get; set; }
-        public Framework Framework { get; set; }
+        public List<ProjectPartResponse> projectParts { get; set; } = new List<ProjectPartResponse>();
     }
 }
