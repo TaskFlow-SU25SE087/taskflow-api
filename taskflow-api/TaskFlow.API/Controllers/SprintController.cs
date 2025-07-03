@@ -84,5 +84,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _context.ChangeStatusSprint(sprintId, status);
             return ApiResponse<bool>.Success(true);
         }
+
+        [HttpGet("{sprintId}/tasks")]
+        [Authorize]
+        public async Task<ApiResponse<List<TaskProjectResponse>>> GetTasksInSprint(
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId)
+        {
+             await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+
+            var result = await _context.GetTaskInSprints(projectId, sprintId);
+            return ApiResponse<List<TaskProjectResponse>>.Success(result);
+        }
     }
 }

@@ -88,6 +88,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
+        public async Task<List<TaskProjectResponse>> GetTaskInSprints(Guid ProjectId, Guid SprintId)
+        {
+            return await _taskProjectRepository.GetListTaskBySprintIdAsync(SprintId); 
+        }
+
         public async Task<List<SprintResponse>> ListPrints(Guid ProjectId)
         {
             var result = await _sprintRepository.GetListPrintAsync(ProjectId);
