@@ -17,6 +17,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task RevokeTaskAssignment(Guid ProjectId, Guid TaskId, RemoveAssignmentReasonRequest request);
         Task SubmitTaskCompletion(Guid Project, Guid taskId, CompleteTaskRequest request);
         Task<List<ListTaskProjectNotSprint>> GettAllTaskNotSprint(Guid ProjectId);
-        Task ChangeBoard(Guid BoardId, Guid Task);
+        Task ChangeBoard(Guid BoardId, Guid TaskId);
     }
 }

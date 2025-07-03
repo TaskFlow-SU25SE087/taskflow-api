@@ -117,16 +117,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
         }
 
-        public async Task ChangeBoard(Guid BoardId, Guid Task)
+        public async Task ChangeBoard(Guid BoardId, Guid TaskId)
         {
-            var taskProject = await _taskProjectRepository.GetTaskByIdAsync(Task);
-            var sprint =  _sprintRepository.GetSprintByIdAsync(taskProject?.SprintId ?? Guid.Empty);
-            if (sprint.Status.Equals(SprintStatus.InProgress))
+            var taskProject = await _taskProjectRepository.GetTaskByIdAsync(TaskId);
+            if (taskProject!.BoardId == BoardId)
             {
-                taskProject!.BoardId = BoardId;
-                await _taskProjectRepository.UpdateTaskAsync(taskProject);
+                throw new AppException(ErrorCode.TaskAlreadyInThisBoard);
             }
-            throw new AppException(ErrorCode.CannotUpdateStatus);
+            var sprint = await  _sprintRepository.GetSprintByIdAsync(taskProject?.SprintId ?? Guid.Empty);
+            if (!sprint!.Status.Equals(SprintStatus.InProgress))
+            {
+                throw new AppException(ErrorCode.CannotUpdateStatus);
+            }
+            taskProject!.BoardId = BoardId;
+            await _taskProjectRepository.UpdateTaskAsync(taskProject);
         }
 
         public async Task<bool> DeleteTask(Guid taskId)
