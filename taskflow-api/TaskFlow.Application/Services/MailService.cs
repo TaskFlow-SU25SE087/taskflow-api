@@ -54,6 +54,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
+        public async Task SendTaskUpdateEmailAsync(string toEmail, string toName, string taskTitle, string updateMessage)
+        {
+            var subject = $"Update on Task: {taskTitle}";
+            var body = $"Hello {toName},<br/><br/>The task '<b>{taskTitle}</b>' has been updated.<br/><br/>{updateMessage}<br/><br/>Best regards,<br/>TaskFlow Team";
+            var mailContent = new MailContent
+            {
+                To = toEmail,
+                Subject = subject,
+                Body = body
+            };
+            await SendMailAsync(mailContent);
+        }
+
         public async Task SendMailJoinProject(string email, Guid ProjectId, string token, string type)
         {
             var verificationUrl = $"{_appSetting.FrontEndBaseUrl}/project/{ProjectId}/member/verify-join?token={token}";

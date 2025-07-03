@@ -34,13 +34,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
             if (member != null && member.User != null && !string.IsNullOrEmpty(member.User.Email))
             {
-                var mailContent = new MailContent
-                {
-                    To = member.User.Email,
-                    Subject = "Task Updated Notification",
-                    Body = message
-                };
-                await _mailService.SendMailAsync(mailContent);
+                await _mailService.SendTaskUpdateEmailAsync(
+                    member.User.Email,
+                    member.User.FullName ?? member.User.UserName ?? "User",
+                    "Task Update",
+                    message
+                );
             }
 
             // In-app notification (database)
