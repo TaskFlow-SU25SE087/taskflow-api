@@ -15,17 +15,20 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IProjectMemberRepository _projectMemberRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IHubContext<TaskHub> _hubContext;
+        private readonly IProjectRepository _projectRepository;
 
         public NotificationService(
             IMailService mailService,
             IProjectMemberRepository projectMemberRepository,
             INotificationRepository notificationRepository,
-            IHubContext<TaskHub> hubContext)
+            IHubContext<TaskHub> hubContext,
+            IProjectRepository projectRepository)
         {
             _mailService = mailService;
             _projectMemberRepository = projectMemberRepository;
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
+            _projectRepository = projectRepository;
         }
 
         public async Task NotifyTaskUpdateAsync(Guid userId, Guid projectId, Guid taskId, string message)
@@ -65,6 +68,47 @@ namespace taskflow_api.TaskFlow.Application.Services
                 notification.IsRead,
                 notification.CreatedAt
             });
+        }
+    public async Task NotifyProjectMemberChangeAsync(Guid projectId, string message)
+        {
+            var members = await _projectMemberRepository.GetAllMembersInProjectAsync(projectId);
+            var project = await _projectRepository.GetProjectByIdAsync(projectId);
+            var projectName = project?.Title ?? "Project";
+            foreach (var member in members)
+            {
+                // Email notification
+                if (!string.IsNullOrEmpty(member.Email))
+                {
+                    await _mailService.SendProjectMemberChangeEmailAsync(
+                        member.Email,
+                        !string.IsNullOrEmpty(member.FullName) ? member.FullName : member.Email,
+                        projectName,
+                        message
+                    );
+                }
+
+                // In-app notification (database)
+                var notification = new Notification
+                {
+                    UserId = member.Id,
+                    ProjectId = projectId,
+                    Message = message,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _notificationRepository.AddNotificationAsync(notification);
+
+                // SignalR notification (send to user)
+                await _hubContext.Clients.User(member.Id.ToString()).SendAsync("ReceiveNotification", new
+                {
+                    notification.Id,
+                    notification.UserId,
+                    notification.ProjectId,
+                    notification.Message,
+                    notification.IsRead,
+                    notification.CreatedAt
+                });
+            }
         }
     }
 }

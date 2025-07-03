@@ -11,5 +11,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task SendReactivationEmail(string email,string username, string fullname, string token);
         Task SendWelcomeEmail(string email, string fullname, string token);
         Task SendResetPasswordEmail(string email, string token);
+        Task SendProjectMemberChangeEmailAsync(string toEmail, string toName, string projectName, string changeMessage);
     }
 }
