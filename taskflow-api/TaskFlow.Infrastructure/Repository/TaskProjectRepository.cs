@@ -124,7 +124,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     Deadline = t.Deadline,
                     AttachmentUrl = t.AttachmentUrl,
                     CompletionAttachmentUrls = t.CompletionAttachmentUrlsList,
+                    SprintId = t.SprintId ?? Guid.Empty,
                     SprintName = t.Sprint != null ? t.Sprint.Name : "No Sprint",
+                    BoardId = (Guid)t.BoardId!,
                     Status = t.Board!.Name,
                     Commnets = t.TaskComments
                         .Select(c => new CommnetResponse
