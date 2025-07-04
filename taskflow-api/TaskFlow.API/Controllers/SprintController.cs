@@ -95,5 +95,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.GetTaskInSprints(projectId, sprintId);
             return ApiResponse<List<TaskProjectResponse>>.Success(result);
         }
+
+        [HttpGet("current")]
+        [Authorize]
+        public async Task<ApiResponse<SprintResponse?>> GetCurrentSprint([FromRoute] Guid projectId)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            var result = await _context.GetCurrentSprint(projectId);
+            return ApiResponse<SprintResponse?>.Success(result);
+        }
     }
 }

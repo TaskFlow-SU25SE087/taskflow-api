@@ -13,5 +13,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID);
         Task ChangeStatusSprint(Guid SpringId, SprintStatus status);
         Task<List<TaskProjectResponse>> GetTaskInSprints(Guid ProjectId, Guid SprintId);
+        Task<SprintResponse?> GetCurrentSprint(Guid ProjectId);
     }
 }

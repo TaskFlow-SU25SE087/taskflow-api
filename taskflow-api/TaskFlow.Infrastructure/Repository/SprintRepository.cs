@@ -37,10 +37,28 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public Task<SprintResponse?> GetCurrentSprint(Guid projectId)
+        {
+            return _context.Sprints
+                .Where(s => s.ProjectId == projectId && s.IsActive
+                && s.Status.Equals(SprintStatus.InProgress))
+                .Select(s => new SprintResponse
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Description = s.Description,
+                    StartDate = s.StartDate,
+                    EndDate = s.EndDate,
+                    Status = s.Status,
+                })
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<Sprint?> GetLastSprint(Guid projectId)
         {
             return await _context.Sprints
-                .Where(s => s.ProjectId == projectId && s.IsActive)
+                .Where(s => s.ProjectId == projectId && s.IsActive 
+                && s.Status.Equals(SprintStatus.Completed))
                 .OrderByDescending(s => s.EndDate)
                 .FirstOrDefaultAsync();
         }

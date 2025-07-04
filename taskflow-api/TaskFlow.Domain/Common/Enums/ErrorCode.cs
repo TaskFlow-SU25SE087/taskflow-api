@@ -40,6 +40,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail TermHasProjectsOrUsers = new(3009, "Term has projects or users", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail PartNotFound = new(3010, "Repo not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail SprintAlreadyInProgress = new(3011, "Sprint is already in progress", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail CannotStartSprint = new(3012, "Cannot start sprint", StatusCodes.Status400BadRequest);
 
         public static readonly ErrorDetail InvalidToken = new(4001, "Invalid token", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail RefreshTokenExpired = new(4002, "Refresh token expired", StatusCodes.Status401Unauthorized);
