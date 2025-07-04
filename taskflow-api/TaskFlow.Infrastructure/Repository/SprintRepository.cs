@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -19,6 +20,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return _context.Sprints
                 .Where(s => s.ProjectId == projectId && s.Name == name && s.IsActive)
+                .AnyAsync();
+        }
+
+        public async Task<bool> CheckSprintStartDate(Guid projectId)
+        {
+            return await _context.Sprints
+                .Where(s => s.ProjectId == projectId && s.IsActive 
+                && s.Status.Equals(SprintStatus.InProgress))
                 .AnyAsync();
         }
 

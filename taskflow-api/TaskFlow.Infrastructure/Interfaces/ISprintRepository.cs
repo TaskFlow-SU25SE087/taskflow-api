@@ -11,5 +11,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<Sprint?> GetSprintByIdAsync(Guid sprintId);
         Task<bool> CheckSprintName(Guid projectId, string name);
         Task <Sprint?> GetLastSprint(Guid projectId);
+        Task<bool> CheckSprintStartDate(Guid projectId);
     }
 }

@@ -33,9 +33,20 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             var sprint = await _sprintRepository.GetSprintByIdAsync(SpringId);
             sprint!.Status = status;
-            await _sprintRepository.UpdateSprintAsync(sprint);
-
-            if (status.Equals(SprintStatus.Completed))
+            if (status.Equals(SprintStatus.InProgress)) //start sprint
+            {
+                bool checkSprintStart = await _sprintRepository.CheckSprintStartDate(sprint.ProjectId);
+                if (checkSprintStart)
+                {
+                    throw new AppException(ErrorCode.SprintAlreadyInProgress);
+                }
+                if (sprint.StartDate <= DateTime.UtcNow)
+                {
+                    throw new AppException(ErrorCode.CannotStartSprint);
+                }
+                await _sprintRepository.UpdateSprintAsync(sprint);
+            }
+            else if (status.Equals(SprintStatus.Completed))// complete sprint
             {
                 // new next sprint
                 var lastSprint = await _sprintRepository.GetLastSprint(sprint.ProjectId);
@@ -57,6 +68,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     task.Note = task.Note + " " + DateTime.UtcNow + " End sprint: " + sprint.Name; 
                 }
                 await _taskProjectRepository.UpdateListTaskAsync(lisktaskproject);
+                await _sprintRepository.UpdateSprintAsync(sprint);
             }
         }
 
@@ -67,9 +79,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.SprintNameAlreadyExists);
             }
-            var LastSprint = await _sprintRepository.GetLastSprint(ProjectId);
-            if (LastSprint != null && LastSprint.Status == SprintStatus.Completed 
-                && request.StartDate < LastSprint.EndDate)
+            if (request.StartDate < DateTime.UtcNow)
             {
                 throw new AppException(ErrorCode.CannotCreateSprint);
             }
