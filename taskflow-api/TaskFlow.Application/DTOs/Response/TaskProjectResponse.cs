@@ -14,6 +14,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime Deadline { get; set; }
+        public Guid SprintId { get; set; }
         public string SprintName { get; set; } = string.Empty;
         public string? AttachmentUrl { get; set; } = string.Empty;
         [JsonIgnore]
@@ -23,6 +24,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
             get => string.IsNullOrEmpty(CompletionAttachmentUrl) ? new List<string>() : CompletionAttachmentUrl.Split('|').ToList();
             set => CompletionAttachmentUrl = string.Join('|', value);
         }
+        public Guid BoardId { get; set; }
         public string Status { get; set; } = null!;
         public List<TaskAssigneeResponse> TaskAssignees { get; set; } = new List<TaskAssigneeResponse>();
         public List<TaskTagResponse> Tags { get; set; } = new List<TaskTagResponse>();

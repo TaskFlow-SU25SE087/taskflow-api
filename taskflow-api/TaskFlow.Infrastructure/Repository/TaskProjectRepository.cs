@@ -54,10 +54,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     Priority = t.Priority,
                     CreatedAt = t.CreatedAt,
                     UpdatedAt = t.UpdatedAt,
+                    BoardId = (Guid)t.BoardId!,
                     Status = t.Board!.Name,
                     Deadline = t.Deadline,
                     AttachmentUrl = t.AttachmentUrl,
                     CompletionAttachmentUrls = t.CompletionAttachmentUrlsList,
+                    SprintId = t.SprintId ?? Guid.Empty,
                     SprintName = t.Sprint != null ? t.Sprint.Name : "No Sprint",
                     Commnets = t.TaskComments
                         .Select(c => new CommnetResponse
