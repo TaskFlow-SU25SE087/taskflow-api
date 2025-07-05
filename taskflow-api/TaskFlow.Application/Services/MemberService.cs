@@ -19,11 +19,12 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IMailService _mailService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITagRepository _TagRepository;
+        private readonly INotificationService _notificationService;
 
         public MemberService(UserManager<User> userManager, IVerifyTokenRopository verifyTokenRopository,
                             IProjectRepository projectRepository, IProjectMemberRepository projectMemberRepository,
                             IMailService mailService, IHttpContextAccessor httpContextAccessor,
-                            ITagRepository TagRepository)
+                            ITagRepository TagRepository, INotificationService notificationService)
         {
             _userManager = userManager;
             _verifyTokenRopository = verifyTokenRopository;
@@ -32,6 +33,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _mailService = mailService;
             _httpContextAccessor = httpContextAccessor;
             _TagRepository = TagRepository;
+            _notificationService = notificationService;
         }
         public async Task<bool> AddMember(Guid ProjectId, AddMemberRequest request)
         {
@@ -63,6 +65,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 //member back to the project
                 //send email to the user
                 await _mailService.SendMailJoinProject(request.Email, ProjectId, token, "come back to the project");
+                await _notificationService.NotifyProjectMemberChangeAsync(ProjectId, $"Member {(string.IsNullOrEmpty(user.Result.FullName) ? user.Result.Email : user.Result.FullName)} has rejoined the project.");
                 return true;
             }
             //create new member
@@ -76,6 +79,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
             await _mailService.SendMailJoinProject(request.Email, ProjectId, token, "join the project");
+            await _notificationService.NotifyProjectMemberChangeAsync(ProjectId, $"Member {(string.IsNullOrEmpty(user.Result.FullName) ? user.Result.Email : user.Result.FullName)} has been added to the project.");
             return true;
         }
 
@@ -125,6 +129,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             member!.IsActive = false;
             member.HasJoinedBefore = true; // Mark as has joined before
             await _projectMemberRepository.UpdateMember(member);
+            await _notificationService.NotifyProjectMemberChangeAsync(projectId, $"Member {(string.IsNullOrEmpty(member.User?.FullName) ? member.User?.Email : member.User?.FullName) ?? member.UserId.ToString()} has been removed from the project.");
             return true;
         }
         public async Task<bool> VerifyJoinProject(string token)

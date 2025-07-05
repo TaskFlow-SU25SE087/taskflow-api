@@ -22,7 +22,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         private readonly ITaskFlowAuthorizationService _authorization;
         private readonly ITaskCommentService _taskCommentService;
         
-        private readonly IHubContext<TaskHub> _hubContext;
+        
 
         public TaskController(ITaskProjectService context, ITaskFlowAuthorizationService authorization,
             ITaskCommentService taskCommentService, IHubContext<TaskHub> hubContext)
@@ -30,7 +30,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _context = context;
             _authorization = authorization;
             _taskCommentService = taskCommentService;
-            _hubContext = hubContext;
+            
         }
 
         [HttpPost]
@@ -75,12 +75,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             }
             var result = await _context.UpdateTask(request, taskId);
 
-            await _hubContext.Clients.Group(projectId.ToString())
-                .SendAsync("TaskUpdated", new {
-                    TaskId = result.Id,
-                    Message = "Task has been updated",
-                    Task = result
-                });
+            
 
             return ApiResponse<TaskProject>.Success(result);
         }

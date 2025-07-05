@@ -54,6 +54,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
+        public async Task SendTaskUpdateEmailAsync(string toEmail, string toName, string taskTitle, string updateMessage)
+        {
+            var subject = $"Update on Task: {taskTitle}";
+            var body = $"Hello {toName},<br/><br/>The task '<b>{taskTitle}</b>' has been updated.<br/><br/>{updateMessage}<br/><br/>Best regards,<br/>TaskFlow Team";
+            var mailContent = new MailContent
+            {
+                To = toEmail,
+                Subject = subject,
+                Body = body
+            };
+            await SendMailAsync(mailContent);
+        }
+
         public async Task SendMailJoinProject(string email, Guid ProjectId, string token, string type)
         {
             var verificationUrl = $"{_appSetting.FrontEndBaseUrl}/project/{ProjectId}/member/verify-join?token={token}";
@@ -289,6 +302,18 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 Console.WriteLine($"Error sending verification email: {ex.Message}");
             }
+        }
+    public async Task SendProjectMemberChangeEmailAsync(string toEmail, string toName, string projectName, string changeMessage)
+        {
+            var subject = $"Project Member Change in {projectName}";
+            var body = $"Hello {toName},<br/><br/>There has been a change in the project '<b>{projectName}</b>':<br/><br/>{changeMessage}<br/><br/>Best regards,<br/>TaskFlow Team";
+            var mailContent = new MailContent
+            {
+                To = toEmail,
+                Subject = subject,
+                Body = body
+            };
+            await SendMailAsync(mailContent);
         }
     }
 }
