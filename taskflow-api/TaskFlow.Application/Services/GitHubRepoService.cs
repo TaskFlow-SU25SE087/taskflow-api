@@ -1,6 +1,9 @@
 ﻿using Azure;
+using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.Interfaces;
 
 namespace taskflow_api.TaskFlow.Application.Services
@@ -38,6 +41,25 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var response = await _httpClient.SendAsync(request);
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken)
+        {
+            var zipUrl = $"https://api.github.com/repos/{repoFullName}/zipball/{commitId}";
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken);
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TaskFlow-Agent");
+
+            var response = await _httpClient.GetAsync(zipUrl);
+            response.EnsureSuccessStatusCode();
+
+            var tempZipPath = Path.Combine(Path.GetTempPath(), $"{commitId}.zip");
+            await using (var fs = new FileStream(tempZipPath, FileMode.Create))
+            {
+                await response.Content.CopyToAsync(fs);
+            }
+            var extractPath = Path.Combine(Path.GetTempPath(), $"repo_{commitId}");
+            ZipFile.ExtractToDirectory(tempZipPath, extractPath);
+            return extractPath;
         }
 
         public async Task<bool> TestConnection(string repoUrl, string token)

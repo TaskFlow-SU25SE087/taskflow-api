@@ -20,6 +20,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl)
+        {
+            return await _context.ProjectParts
+                .FirstOrDefaultAsync(x => x.RepoUrl == repoUrl);
+
+        }
+
         public async Task<ProjectPart?> GetPartByIdAsync(Guid partId)
         {
             return await _context.ProjectParts

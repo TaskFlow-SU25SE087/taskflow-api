@@ -89,6 +89,29 @@ namespace taskflow_api.TaskFlow.Application.Services
                 {
                     var message = commit["message"]?.ToString();
                     var commitId = commit["id"]?.ToString();
+
+                    if (string.IsNullOrEmpty(commitId)) continue;
+
+                    var Repo = await _projectPartRepository.GetByRepoUrlAsync(repoUrl);
+                    if (Repo == null)
+                    {
+                        continue;
+                    }
+
+                    //doawload file commit
+                    var extractPath = await _repoService.DownloadCommitSourceAsync(repoFullName, commitId, Repo.AccessToken);
+
+                    var files = Directory.GetFiles(extractPath, "*.*", SearchOption.AllDirectories);
+                    foreach (var file in files)
+                    {
+                        _logger.LogInformation(file);
+                    }
+
+                    //check code
+
+
+                    //delete files
+                    //Directory.Delete(extractPath, true);
                 }
             }
         }

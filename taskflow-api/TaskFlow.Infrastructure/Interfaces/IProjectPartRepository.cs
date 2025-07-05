@@ -7,5 +7,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task CreatePartAsync(ProjectPart data);
         Task<ProjectPart?> GetPartByIdAsync(Guid partId);
         Task UpdateAsync(ProjectPart part);
+        Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl);
     }
 }

@@ -4,5 +4,6 @@
     {
         Task<bool> TestConnection(string repoUrl, string token);
         Task<bool> CreateWebhook(string repoUrl, string token, string webhookUrl);
+        Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken);
     }
 }
