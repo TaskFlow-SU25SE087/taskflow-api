@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250705104018_add_commitRecord_and_Delete_Branch")]
+    partial class add_commitRecord_and_Delete_Branch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,42 +52,6 @@ namespace taskflow_api.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Boards");
-                });
-
-            modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.CommitRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CommitId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CommitMessage")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("ProjectPartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("PushedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Pusher")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ResultSummary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectPartId");
-
-                    b.ToTable("CommitRecords");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Issue", b =>
@@ -808,17 +775,6 @@ namespace taskflow_api.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.CommitRecord", b =>
-                {
-                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.ProjectPart", "ProjectPart")
-                        .WithMany("CommitRecords")
-                        .HasForeignKey("ProjectPartId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ProjectPart");
-                });
-
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Issue", b =>
                 {
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Project", "Project")
@@ -1086,11 +1042,6 @@ namespace taskflow_api.Migrations
                     b.Navigation("TaskComments");
 
                     b.Navigation("taskUsers");
-                });
-
-            modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.ProjectPart", b =>
-                {
-                    b.Navigation("CommitRecords");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Sprint", b =>

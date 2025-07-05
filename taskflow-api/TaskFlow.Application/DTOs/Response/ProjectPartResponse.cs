@@ -11,6 +11,5 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public Framework Framework { get; set; } = Framework.None;
         public RepoProvider? RepoProvider { get; set; }
         public string? RepoUrl { get; set; }
-        public string? Branch { get; set; } = "main";
     }
 }

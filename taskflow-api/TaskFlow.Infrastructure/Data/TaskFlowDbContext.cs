@@ -34,6 +34,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<Term> Terms { get; set; } = null!;
         public DbSet<ProjectPart> ProjectParts { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
+        public DbSet<CommitRecord> CommitRecords { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -198,6 +199,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasOne(pp => pp.Project)
                 .WithMany(p => p.ProjectParts)
                 .HasForeignKey(pp => pp.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ProjectPart <-> CommitRecord
+            modelBuilder.Entity<CommitRecord>()
+                .HasOne(cr => cr.ProjectPart)
+                .WithMany(pp => pp.CommitRecords)
+                .HasForeignKey(cr => cr.ProjectPartId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

@@ -40,7 +40,6 @@ builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<ITermService, TermService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
-builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
 builder.Services.AddHttpClient<IRepoService, GitHubRepoService>();
 
 //Repository
@@ -135,9 +134,10 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 // Configure CORS policy
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+    .AddNewtonsoftJson(options =>
     {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 builder.Services.AddCors(options =>
@@ -216,6 +216,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddMemoryCache();
 
+builder.Logging.AddConsole();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

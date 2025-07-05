@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+﻿using Newtonsoft.Json.Linq;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
 {
@@ -6,5 +7,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         Task CreatePart(Guid ProjectId, CreateProjectPartRequest request);
         Task ConnectRepo(Guid partId, ConnectRepoRequest request);
+        Task ProcessGitHubPushEvent(JObject data);
     }
 }

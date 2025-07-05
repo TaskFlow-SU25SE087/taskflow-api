@@ -18,7 +18,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var uri = ConvertRepoUrlToApi(repoUrl) + "/hooks";
 
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", token);
             request.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
 
             var payload = new
@@ -46,7 +46,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var uri = ConvertRepoUrlToApi(repoUrl);
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
             // set the user agent
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", token);
             request.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
 
             var response = await _httpClient.SendAsync(request);
