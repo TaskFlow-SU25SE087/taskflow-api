@@ -11,18 +11,11 @@ namespace taskflow_api.TaskFlow.Application.Services
 {
     public class DeadlineNotificationService : BackgroundService
     {
-        private readonly ITaskProjectRepository _taskProjectRepository;
-        private readonly ITaskAssigneeRepository _taskAssigneeRepository;
-        private readonly INotificationService _notificationService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public DeadlineNotificationService(
-            ITaskProjectRepository taskProjectRepository,
-            ITaskAssigneeRepository taskAssigneeRepository,
-            INotificationService notificationService)
+        public DeadlineNotificationService(IServiceProvider serviceProvider)
         {
-            _taskProjectRepository = taskProjectRepository;
-            _taskAssigneeRepository = taskAssigneeRepository;
-            _notificationService = notificationService;
+            _serviceProvider = serviceProvider;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,31 +29,38 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         private async Task CheckAndNotifyTasksAsync()
         {
-            var now = DateTime.UtcNow;
-            var tasks = await _taskProjectRepository.GetAllActiveTasksAsync();
-            foreach (var task in tasks)
+            using (var scope = _serviceProvider.CreateScope())
             {
-                if (task.Deadline70Notified || task.Deadline <= task.CreatedAt)
-                    continue;
-                var totalDuration = task.Deadline - task.CreatedAt;
-                var elapsed = now - task.CreatedAt;
-                if (elapsed.TotalSeconds / totalDuration.TotalSeconds >= 0.7)
+                var taskProjectRepository = scope.ServiceProvider.GetRequiredService<ITaskProjectRepository>();
+                var taskAssigneeRepository = scope.ServiceProvider.GetRequiredService<ITaskAssigneeRepository>();
+                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+
+                var now = DateTime.UtcNow;
+                var tasks = await taskProjectRepository.GetAllActiveTasksAsync();
+                foreach (var task in tasks)
                 {
-                    var assignees = await _taskAssigneeRepository.taskAssigneesAsync(task.Id);
-                    foreach (var assignee in assignees)
+                    if (task.Deadline70Notified || task.Deadline <= task.CreatedAt)
+                        continue;
+                    var totalDuration = task.Deadline - task.CreatedAt;
+                    var elapsed = now - task.CreatedAt;
+                    if (elapsed.TotalSeconds / totalDuration.TotalSeconds >= 0.7)
                     {
-                        if (assignee.ImplementerId.HasValue)
+                        var assignees = await taskAssigneeRepository.taskAssigneesAsync(task.Id);
+                        foreach (var assignee in assignees)
                         {
-                            await _notificationService.NotifyTaskUpdateAsync(
-                                assignee.ImplementerId.Value,
-                                task.ProjectId,
-                                task.Id,
-                                $"Task '{task.Title}' is approaching its deadline (70% of time elapsed). Please review and take necessary action."
-                            );
+                            if (assignee.ImplementerId.HasValue)
+                            {
+                                await notificationService.NotifyTaskUpdateAsync(
+                                    assignee.ImplementerId.Value,
+                                    task.ProjectId,
+                                    task.Id,
+                                    $"Task '{task.Title}' is approaching its deadline (70% of time elapsed). Please review and take necessary action."
+                                );
+                            }
                         }
+                        task.Deadline70Notified = true;
+                        await taskProjectRepository.UpdateTaskAsync(task);
                     }
-                    task.Deadline70Notified = true;
-                    await _taskProjectRepository.UpdateTaskAsync(task);
                 }
             }
         }
