@@ -36,6 +36,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         }
         public DateTime Deadline { get; set; } = DateTime.UtcNow.AddDays(7);
         public bool IsActive { get; set; } = false;
+        public bool Deadline70Notified { get; set; } = false;
 
         public List<TaskAssignee> TaskAssignees { get; set; } = new List<TaskAssignee>();
         public List<Issue> Issues { get; set; } = new List<Issue>();

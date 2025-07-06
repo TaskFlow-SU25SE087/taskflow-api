@@ -139,5 +139,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.TaskProjects.Update(task);
             await _context.SaveChangesAsync();
         }
+    public Task<List<TaskProject>> GetAllActiveTasksAsync()
+        {
+            return _context.TaskProjects
+                .Where(t => t.IsActive)
+                .ToListAsync();
+        }
     }
 }
