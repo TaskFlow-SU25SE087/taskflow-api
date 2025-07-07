@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json;
@@ -20,6 +21,7 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Infrastructure.Repository;
 using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -98,6 +100,8 @@ builder.Services.AddSwaggerGen(c =>
             new List<string>()
         }
     });
+    //add enum
+    c.SchemaFilter<EnumSchemaFilter>();
 });
 
 builder.Services.AddDbContext<TaskFlowDbContext>(options =>
