@@ -47,6 +47,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
                 // save file urls to the task
                 newIssue!.IssueAttachmentUrlsList = urls;
+            }
                 //save Issue
                 await _issueRepository.CreateTaskIssueAsync(newIssue);
                 if (request.Type == TypeIssue.Bug)
@@ -69,7 +70,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                     }
                     await _taskAssigneeRepository.CreateListTaskAssignee(lissTaskAssignee);
                 }
-            }
         }
     }
 }

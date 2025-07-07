@@ -25,14 +25,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             _issueService = issueService;
         }
         [HttpPost("tasks/{taskId}/issues/create")]
-        public async Task<ApiResponse<bool>> CreateIssueTask(
+        public async Task<ApiResponse<string>> CreateIssueTask(
             [FromRoute] Guid projectId, [FromRoute] Guid taskId,[FromForm] CreateTaskIssueRequest request)
         {
             var projectmember = await _authorization
                 .AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
 
             await _issueService.CreateTaskIssue(projectmember, projectId, taskId, request);
-            return ApiResponse<bool>.Success(true);
+            return ApiResponse<string>.Success("Issue created successfully");
         }
     }
 }
