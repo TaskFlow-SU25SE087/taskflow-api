@@ -7,10 +7,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
 {
     public class TaskFlowDbContext : IdentityUserContext<User, Guid>
     {
-        public TaskFlowDbContext()
-        {
-        }
-
         public TaskFlowDbContext(DbContextOptions<TaskFlowDbContext> options) : base(options)
         {
         }

@@ -27,6 +27,7 @@ using taskflow_api.TaskFlow.Shared.Helpers;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddHostedService<DeadlineNotificationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IMailService, MailService>();
