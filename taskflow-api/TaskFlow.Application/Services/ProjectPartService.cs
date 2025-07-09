@@ -6,6 +6,7 @@ using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -100,15 +101,16 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                     //doawload file commit
                     var extractPath = await _repoService.DownloadCommitSourceAsync(repoFullName, commitId, Repo.AccessToken);
-
                     var files = Directory.GetFiles(extractPath, "*.*", SearchOption.AllDirectories);
-                    foreach (var file in files)
-                    {
-                        _logger.LogInformation(file);
-                    }
 
                     //check code
-
+                    var languageKey = LanguageMap.GetToolKey(Repo.ProgrammingLanguage);
+                    if (languageKey == null)
+                    {
+                        _logger.LogWarning($"Unsupported programming language: {Repo.ProgrammingLanguage}");
+                        continue;
+                    }
+                        var framework = Repo.Framework;
 
                     //delete files
                     //Directory.Delete(extractPath, true);
