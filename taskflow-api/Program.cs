@@ -12,7 +12,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using taskflow_api.TaskFlow.API.Hubs;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
-using taskflow_api.TaskFlow.Application.DTOs.Common.Attributes;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Application.Mappings;
 using taskflow_api.TaskFlow.Application.Services;
@@ -65,7 +64,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IProjectPartRepository, ProjectPartRepository>();
 builder.Services.AddScoped<IUserIntegrationRepository, UserIntegrationRepository>();
 builder.Services.AddScoped<ICommitRecordRepository, CommitRecordRepository>();
-
+builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
 //Signalr
 builder.Services.AddSignalR();
 
@@ -126,6 +125,9 @@ builder.Services.AddSingleton(s =>
 //SonarQube
 builder.Services.Configure<SonarQubeSetting>(
     builder.Configuration.GetSection("SonarQube"));
+
+//RabbitMQ
+builder.Services.Configure<RabbitMQSetting>(builder.Configuration.GetSection("RabbitMQ"));
 
 // Override default 400 validation error response to return custom ApiResponse format
 // This ensures all model validation errors are consistently returned in ApiResponse<T> structure
@@ -242,7 +244,7 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseCors("AllowFE");
 app.UseAuthentication();

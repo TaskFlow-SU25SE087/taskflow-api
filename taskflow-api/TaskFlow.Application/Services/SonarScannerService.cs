@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Diagnostics;
-using taskflow_api.TaskFlow.Application.DTOs.Common.Attributes;
+using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.Interfaces;
 
 namespace taskflow_api.TaskFlow.Application.Services
@@ -25,7 +25,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var process = new ProcessStartInfo
             {
-                FileName = "sonar-scanner",
+                FileName = _sonarSetting.ScannerPath,
                 WorkingDirectory = extractPath,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,

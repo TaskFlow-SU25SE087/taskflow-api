@@ -57,8 +57,9 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 await response.Content.CopyToAsync(fs);
             }
-            var extractPath = Path.Combine(Path.GetTempPath(), $"repo_{commitId}");
-            ZipFile.ExtractToDirectory(tempZipPath, extractPath);
+            //var extractPath = Path.Combine(Path.GetTempPath(), $"repo_{commitId}");
+            var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
+            ZipFile.ExtractToDirectory(tempZipPath, extractPath, true);
             return extractPath;
         }
 
