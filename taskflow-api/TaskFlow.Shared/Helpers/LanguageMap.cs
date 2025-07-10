@@ -12,11 +12,11 @@ namespace taskflow_api.TaskFlow.Shared.Helpers
             { ProgrammingLanguage.TypeScript, "typescript" },
             { ProgrammingLanguage.Python, "python" },
             { ProgrammingLanguage.PHP, "php" },
-            { ProgrammingLanguage.Go, "go" },
-            { ProgrammingLanguage.Ruby, "ruby" },
-            { ProgrammingLanguage.CPlusPlus, "cpp" },
-            { ProgrammingLanguage.Swift, "swift" },
-            { ProgrammingLanguage.Kotlin, "kotlin" }
+            //{ ProgrammingLanguage.Go, "go" },
+            //{ ProgrammingLanguage.Ruby, "ruby" },
+            //{ ProgrammingLanguage.CPlusPlus, "cpp" },
+            //{ ProgrammingLanguage.Swift, "swift" },
+            //{ ProgrammingLanguage.Kotlin, "kotlin" }
         };
 
         public static string? GetToolKey(ProgrammingLanguage language)

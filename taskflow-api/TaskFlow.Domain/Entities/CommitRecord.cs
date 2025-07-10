@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
@@ -15,9 +16,13 @@ namespace taskflow_api.TaskFlow.Domain.Entities
 
         public string Pusher { get; set; } = string.Empty;
         public DateTime PushedAt { get; set; } = DateTime.UtcNow;
+        public StatusCommit Status { get; set; } = StatusCommit.Checking;
 
+        public string? CommitUrl { get; set; }
         public string? CommitMessage { get; set; }
         public string? ResultSummary { get; set; }
-        public string? Notes { get; set; }
+        public DateTime? ExpectedFinishAt { get; set; }
+
+        public List<CommitCheckResult> CheckResults { get; set; } = new List<CommitCheckResult>();
     }
 }

@@ -4,6 +4,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 using taskflow_api.TaskFlow.Shared.Helpers;
@@ -17,15 +18,20 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly AppSetting _appSetting;
         private readonly string _BaseUrl;
         private readonly ILogger<ProjectPartService> _logger;
+        private readonly ICodeScanService _codeScanService;
+        private readonly ICommitRecordRepository _commitRecordRepository;
 
         public ProjectPartService(IProjectPartRepository projectPartRepository, IRepoService repoService,
-            IOptions<AppSetting> appSetting, ILogger<ProjectPartService> logger)
+            IOptions<AppSetting> appSetting, ILogger<ProjectPartService> logger,
+            ICodeScanService codeScanService, ICommitRecordRepository commitRecordRepository)
         {
             _projectPartRepository = projectPartRepository;
             _repoService = repoService;
             _appSetting = appSetting.Value;
             _BaseUrl = appSetting.Value.BaseUrl!;
             _logger = logger;
+            _codeScanService = codeScanService;
+            _commitRecordRepository = commitRecordRepository;
         }
 
         public async Task ConnectRepo(Guid partId, ConnectRepoRequest request)
@@ -83,13 +89,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             var pusher = payload["pusher"]?["name"]?.ToString();
             var commits = payload["commits"]?.ToObject<List<JObject>>();
 
+
             //get commit
             if (commits != null)
             {
+                #region doawnload commit source
                 foreach (var commit in commits)
                 {
                     var message = commit["message"]?.ToString();
                     var commitId = commit["id"]?.ToString();
+                    var timestamp = commit["timestamp"]?.ToObject<DateTime>();
 
                     if (string.IsNullOrEmpty(commitId)) continue;
 
@@ -100,21 +109,44 @@ namespace taskflow_api.TaskFlow.Application.Services
                     }
 
                     //doawload file commit
+                    //var userIntegration
                     var extractPath = await _repoService.DownloadCommitSourceAsync(repoFullName, commitId, Repo.AccessToken);
                     var files = Directory.GetFiles(extractPath, "*.*", SearchOption.AllDirectories);
 
                     //check code
+                    var framework = Repo.Framework;
                     var languageKey = LanguageMap.GetToolKey(Repo.ProgrammingLanguage);
                     if (languageKey == null)
                     {
                         _logger.LogWarning($"Unsupported programming language: {Repo.ProgrammingLanguage}");
                         continue;
                     }
-                        var framework = Repo.Framework;
+                    //create commit record
+                    var commitRecord = new CommitRecord
+                    {
+                        ProjectPartId = Repo.Id,
+                        CommitId = commitId,
+                        Pusher = pusher ?? "unknown",
+                        CommitMessage = message,
+                        CommitUrl = $"https://github.com/{repoFullName}/commit/{commitId}",
+                        PushedAt = timestamp ?? DateTime.UtcNow,
+                        Status = StatusCommit.Checking,
 
+                    };
+                    await _commitRecordRepository.Create(commitRecord);
+
+
+                    // check codacy
+                    await _codeScanService.ScanCommit(extractPath, $"taskflow-{Repo.Id}");
                     //delete files
-                    //Directory.Delete(extractPath, true);
+                    Directory.Delete(extractPath, true);
+                    //update commit record status
+                    commitRecord.Status = StatusCommit.Done;
+                    commitRecord.ResultSummary = "Check completed";
+                    await _commitRecordRepository.Update(commitRecord);
                 }
+                #endregion
+
             }
         }
     }

@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using taskflow_api.TaskFlow.API.Hubs;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Common.Attributes;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Application.Mappings;
 using taskflow_api.TaskFlow.Application.Services;
@@ -44,6 +45,7 @@ builder.Services.AddScoped<ITermService, TermService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
 builder.Services.AddHttpClient<IRepoService, GitHubRepoService>();
+builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -61,6 +63,8 @@ builder.Services.AddScoped<ITaskIssueRepository, TaskIssueRepository>();
 builder.Services.AddScoped<ITermRepository, TermRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IProjectPartRepository, ProjectPartRepository>();
+builder.Services.AddScoped<IUserIntegrationRepository, UserIntegrationRepository>();
+builder.Services.AddScoped<ICommitRecordRepository, CommitRecordRepository>();
 
 //Signalr
 builder.Services.AddSignalR();
@@ -119,6 +123,9 @@ builder.Services.AddSingleton(s =>
     return new Cloudinary(account);
 });
 
+//SonarQube
+builder.Services.Configure<SonarQubeSetting>(
+    builder.Configuration.GetSection("SonarQube"));
 
 // Override default 400 validation error response to return custom ApiResponse format
 // This ensures all model validation errors are consistently returned in ApiResponse<T> structure
@@ -235,7 +242,7 @@ if (app.Environment.IsDevelopment())
 }
 
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseCors("AllowFE");
 app.UseAuthentication();

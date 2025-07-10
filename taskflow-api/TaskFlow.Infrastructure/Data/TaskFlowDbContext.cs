@@ -31,6 +31,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<ProjectPart> ProjectParts { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<CommitRecord> CommitRecords { get; set; } = null!;
+        public DbSet<UserIntegration> UserIntegrations { get; set; } = null!;
+        public DbSet<CommitCheckResult> CommitCheckResults { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -203,6 +205,20 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .WithMany(pp => pp.CommitRecords)
                 .HasForeignKey(cr => cr.ProjectPartId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // User <-> UserIntegration
+            modelBuilder.Entity<UserIntegration>()
+                .HasOne<User>()
+                .WithMany()
+                .HasForeignKey(ui => ui.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CommitRecord <-> CommitCheckResult
+            modelBuilder.Entity<CommitCheckResult>()
+            .HasOne(r => r.CommitRecord)
+            .WithMany(c => c.CheckResults)
+            .HasForeignKey(r => r.CommitRecordId)
+            .OnDelete(DeleteBehavior.Cascade);
         }
     }
 
