@@ -9,10 +9,9 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Guid CommitRecordId { get; set; }
         public CommitRecord CommitRecord { get; set; } = null!;
 
-        [Required]
-        public string ResultType { get; set; } = string.Empty;
-        public string? Value { get; set; }
-        public string? Notes { get; set; }
+        public bool Result { get; set; } = false;
+        public string OutputLog { get; set; } = string.Empty;
+        public string ErrorLog { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

@@ -60,6 +60,9 @@ namespace taskflow_api.TaskFlow.Application.Services
             //var extractPath = Path.Combine(Path.GetTempPath(), $"repo_{commitId}");
             var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
             ZipFile.ExtractToDirectory(tempZipPath, extractPath, true);
+
+            //delete file
+            File.Delete(tempZipPath);
             return extractPath;
         }
 

@@ -20,10 +20,12 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ILogger<ProjectPartService> _logger;
         private readonly ICodeScanService _codeScanService;
         private readonly ICommitRecordRepository _commitRecordRepository;
+        private readonly IRabbitMQService _rabbitMQService;
 
         public ProjectPartService(IProjectPartRepository projectPartRepository, IRepoService repoService,
             IOptions<AppSetting> appSetting, ILogger<ProjectPartService> logger,
-            ICodeScanService codeScanService, ICommitRecordRepository commitRecordRepository)
+            ICodeScanService codeScanService, ICommitRecordRepository commitRecordRepository,
+            IRabbitMQService rabbitMQService)
         {
             _projectPartRepository = projectPartRepository;
             _repoService = repoService;
@@ -32,6 +34,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _logger = logger;
             _codeScanService = codeScanService;
             _commitRecordRepository = commitRecordRepository;
+            _rabbitMQService = rabbitMQService;
         }
 
         public async Task ConnectRepo(Guid partId, ConnectRepoRequest request)
@@ -91,62 +94,55 @@ namespace taskflow_api.TaskFlow.Application.Services
 
 
             //get commit
-            if (commits != null)
+            if (commits == null)
+                return;
+
+            foreach ( var commit in commits )
             {
-                #region doawnload commit source
-                foreach (var commit in commits)
+                var message = commit["message"]?.ToString();
+                var commitId = commit["id"]?.ToString();
+                var timestamp = commit["timestamp"]?.ToObject<DateTime>();
+
+                if (string.IsNullOrEmpty(commitId)) continue;
+                // get repo git
+                var repo = await _projectPartRepository.GetByRepoUrlAsync(repoUrl);
+                if (repo == null)
                 {
-                    var message = commit["message"]?.ToString();
-                    var commitId = commit["id"]?.ToString();
-                    var timestamp = commit["timestamp"]?.ToObject<DateTime>();
-
-                    if (string.IsNullOrEmpty(commitId)) continue;
-
-                    var Repo = await _projectPartRepository.GetByRepoUrlAsync(repoUrl);
-                    if (Repo == null)
-                    {
-                        continue;
-                    }
-
-                    //doawload file commit
-                    //var userIntegration
-                    var extractPath = await _repoService.DownloadCommitSourceAsync(repoFullName, commitId, Repo.AccessToken);
-                    var files = Directory.GetFiles(extractPath, "*.*", SearchOption.AllDirectories);
-
-                    //check code
-                    var framework = Repo.Framework;
-                    var languageKey = LanguageMap.GetToolKey(Repo.ProgrammingLanguage);
-                    if (languageKey == null)
-                    {
-                        _logger.LogWarning($"Unsupported programming language: {Repo.ProgrammingLanguage}");
-                        continue;
-                    }
-                    //create commit record
-                    var commitRecord = new CommitRecord
-                    {
-                        ProjectPartId = Repo.Id,
-                        CommitId = commitId,
-                        Pusher = pusher ?? "unknown",
-                        CommitMessage = message,
-                        CommitUrl = $"https://github.com/{repoFullName}/commit/{commitId}",
-                        PushedAt = timestamp ?? DateTime.UtcNow,
-                        Status = StatusCommit.Checking,
-
-                    };
-                    await _commitRecordRepository.Create(commitRecord);
-
-
-                    // check codacy
-                    await _codeScanService.ScanCommit(extractPath, $"taskflow-{Repo.Id}");
-                    //delete files
-                    Directory.Delete(extractPath, true);
-                    //update commit record status
-                    commitRecord.Status = StatusCommit.Done;
-                    commitRecord.ResultSummary = "Check completed";
-                    await _commitRecordRepository.Update(commitRecord);
+                    _logger.LogWarning($"Repo not found for url: {repoUrl}");
+                    continue;
                 }
-                #endregion
 
+                //check if commit already exists
+                var existed = await _commitRecordRepository.ExistsByCommitId(commitId);
+                if (existed)
+                {
+                    _logger.LogInformation($"Commit {commitId} already processed.");
+                    continue;
+                }
+                // create commit record
+                var commitRecord = new CommitRecord
+                {
+                    ProjectPartId = repo.Id,
+                    CommitId = commitId,
+                    Pusher = pusher ?? "unknown",
+                    CommitMessage = message,
+                    CommitUrl = $"https://github.com/{repoFullName}/commit/{commitId}",
+                    PushedAt = timestamp ?? DateTime.UtcNow,
+                    Status = StatusCommit.Checking
+                };
+
+                await _commitRecordRepository.Create(commitRecord);
+
+                //send to rabbitmq for processing
+                _rabbitMQService.SendCommitJob(new CommitJobMessage
+                {
+                    CommitRecordId = commitRecord.Id,
+                    RepoFullName = repoFullName,
+                    CommitId = commitId,
+                    AccessToken = repo.AccessToken
+                });
+
+                _logger.LogInformation($"Pushed job for commit {commitId} to RabbitMQ.");
             }
         }
     }

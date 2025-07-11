@@ -1,7 +1,9 @@
-﻿namespace taskflow_api.TaskFlow.Application.Interfaces
+﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+
+namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface IRabbitMQService
     {
-        void ConnectAndSendMessage(string message);
+        void SendCommitJob(CommitJobMessage job);
     }
 }

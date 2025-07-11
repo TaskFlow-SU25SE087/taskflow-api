@@ -2,6 +2,7 @@
 using RabbitMQ.Client;
 using System.Runtime;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.Interfaces;
 
 namespace taskflow_api.TaskFlow.Application.Services
@@ -9,14 +10,17 @@ namespace taskflow_api.TaskFlow.Application.Services
     public class RabbitMQService : IRabbitMQService
     {
         private readonly RabbitMQSetting _settings;
+        private readonly ILogger<RabbitMQService> _logger;
 
-        public RabbitMQService(IOptions<RabbitMQSetting> settings)
+        public RabbitMQService(IOptions<RabbitMQSetting> settings, ILogger<RabbitMQService> logger)
         {
             _settings = settings.Value;
+            _logger = logger;
         }
-        public void ConnectAndSendMessage(string message)
+       
+        public void SendCommitJob(CommitJobMessage job)
         {
-            var factory = new ConnectionFactory
+            var factory = new ConnectionFactory()
             {
                 HostName = _settings.HostName,
                 Port = _settings.Port,
@@ -26,18 +30,20 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
-            channel.QueueDeclare(queue: _settings.QueueName,
-                             durable: true,
-                             exclusive: false,
-                             autoDelete: false,
-                             arguments: null);
 
-            var body = System.Text.Encoding.UTF8.GetBytes(message);
+            channel.QueueDeclare(queue: _settings.ScanCommitQueue,
+                                 durable: true,
+                                 exclusive: false,
+                                 autoDelete: false);
+
+            var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(job);
+
             channel.BasicPublish(exchange: "",
-                                 routingKey: _settings.QueueName,
-                                 basicProperties: null,
-                                 body: body);
-            Console.WriteLine($" [x] Sent {message} to {_settings.QueueName} queue.");
+                         routingKey: _settings.ScanCommitQueue,
+                         basicProperties: null,
+                         body: body);
+
+            _logger.LogInformation($"CommitJob sent to RabbitMQ: {job.CommitId}");
         }
     }
 }

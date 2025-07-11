@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 
@@ -17,6 +18,17 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             await _context.CommitRecords.AddAsync(data);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> ExistsByCommitId(string commitId)
+        {
+            return await _context.CommitRecords.AnyAsync(c => c.CommitId == commitId);
+        }
+
+        public async Task<CommitRecord?> GetById(Guid commitId)
+        {
+            var commitRecord = await _context.CommitRecords.FindAsync(commitId);
+            return commitRecord;
         }
 
         public async Task Update(CommitRecord data)

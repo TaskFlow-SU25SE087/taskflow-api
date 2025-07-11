@@ -65,6 +65,8 @@ builder.Services.AddScoped<IProjectPartRepository, ProjectPartRepository>();
 builder.Services.AddScoped<IUserIntegrationRepository, UserIntegrationRepository>();
 builder.Services.AddScoped<ICommitRecordRepository, CommitRecordRepository>();
 builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
+builder.Services.AddScoped<ICommitCheckResultRepository, CommitCheckResultRepository>();
+
 //Signalr
 builder.Services.AddSignalR();
 
@@ -123,6 +125,7 @@ builder.Services.AddSingleton(s =>
 });
 
 //SonarQube
+builder.Services.AddHostedService<RabbitScanCodeConsumerHostedService>();
 builder.Services.Configure<SonarQubeSetting>(
     builder.Configuration.GetSection("SonarQube"));
 
@@ -160,7 +163,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins!)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

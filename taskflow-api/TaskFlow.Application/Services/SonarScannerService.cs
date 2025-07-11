@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 
 namespace taskflow_api.TaskFlow.Application.Services
@@ -13,7 +14,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             _sonarSetting = sonarSetting.Value;
         }
-        public async Task ScanCommit(string extractPath, string projectKey)
+        public async Task<CommitScanResult> ScanCommit(string extractPath, string projectKey)
         {
             var sonarPropsPath = Path.Combine(extractPath, "sonar-project.properties");
             await File.WriteAllTextAsync(sonarPropsPath, $@"
@@ -32,8 +33,19 @@ namespace taskflow_api.TaskFlow.Application.Services
                 RedirectStandardError = true,
             };
 
-            var proc = Process.Start(process);
+            var proc = Process.Start(process)!;
+            var output = await proc.StandardOutput.ReadToEndAsync();
+            var error = await proc.StandardError.ReadToEndAsync();
             await proc.WaitForExitAsync();
+
+            var reresult = new CommitScanResult
+            {
+                Success = proc.ExitCode == 0,
+                OutputLog = output,
+                ErrorLog = error
+            };
+
+            return reresult;
         }
     }
 }
