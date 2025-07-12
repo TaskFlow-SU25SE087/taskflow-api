@@ -133,6 +133,10 @@ builder.Services.Configure<SonarQubeSetting>(
 //RabbitMQ
 builder.Services.Configure<RabbitMQSetting>(builder.Configuration.GetSection("RabbitMQ"));
 
+//GitHub login 
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+
 // Override default 400 validation error response to return custom ApiResponse format
 // This ensures all model validation errors are consistently returned in ApiResponse<T> structure
 builder.Services.Configure<ApiBehaviorOptions>(options =>
