@@ -45,6 +45,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
 builder.Services.AddHttpClient<IRepoService, GitHubRepoService>();
 builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
+builder.Services.AddScoped<IGitHubService, GitHubService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -66,6 +67,7 @@ builder.Services.AddScoped<IUserIntegrationRepository, UserIntegrationRepository
 builder.Services.AddScoped<ICommitRecordRepository, CommitRecordRepository>();
 builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
 builder.Services.AddScoped<ICommitCheckResultRepository, CommitCheckResultRepository>();
+builder.Services.AddScoped<IUserGitHubRepository, UserGitHubRepository>();
 
 //Signalr
 builder.Services.AddSignalR();
