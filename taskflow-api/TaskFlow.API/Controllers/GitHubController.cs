@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
@@ -25,19 +26,28 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<string>.Success(url);
         }
 
-        [HttpGet("callback")]
+        [Authorize]
+        [HttpPost("callback")]
         public async Task<ApiResponse<string>> ExchangeCodeForToken(string code)
         {
             var at = await _gitHubService.ExchangeCodeForToken(code);
             return ApiResponse<string>.Success(at);
         }
 
+        [Authorize]
         [HttpGet("repos")]
-        public async Task<ApiResponse<List<GitHubRepoDto>>> GetUserRepos([FromHeader(Name = "Authorization")] string token)
+        public async Task<ApiResponse<List<GitHubRepoDto>>> GetUserRepos()
         {
-            var at = token.Replace("Bearer ", "");
-            var repos = await _gitHubService.GetUserRepos(at);
+            var repos = await _gitHubService.GetUserRepos();
             return ApiResponse<List<GitHubRepoDto>>.Success(repos);
+        }
+
+        [Authorize]
+        [HttpGet("connection-status")]
+        public async Task<ApiResponse<bool>> CheckUserConnectGitHub()
+        {
+            var isConnected = await _gitHubService.CheckUserConnectGitHub();
+            return ApiResponse<bool>.Success(isConnected);
         }
     }
 }

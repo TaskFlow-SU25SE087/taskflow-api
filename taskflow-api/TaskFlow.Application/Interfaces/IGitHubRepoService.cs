@@ -9,6 +9,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken);
         string GetGitHubLoginUrl();
         Task<string> ExchangeCodeForToken(string code);
-        Task<List<GitHubRepoDto>> GetUserRepos(string accessToken);
+        Task<List<GitHubRepoDto>> GetUserRepos();
+        Task<bool> CheckUserConnectGitHub();
     }
 }

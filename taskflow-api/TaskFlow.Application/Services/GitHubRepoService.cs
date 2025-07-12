@@ -9,8 +9,10 @@ using System.Text.Json;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
+using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -31,6 +33,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("taskflow-app");
             _httpContextAccessor = httpContextAccessor;
         }
+
+        public async Task<bool> CheckUserConnectGitHub()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var userIdStr = httpContext?.User.FindFirst("id")?.Value;
+            if (userIdStr == null)
+                throw new AppException(ErrorCode.Unauthorized);
+
+            var userId = Guid.Parse(userIdStr);
+
+            var token = await _tokenRepo.GetTokenByUserIdAsync(userId);
+            return token != null;
+        }
+
         public async Task<bool> CreateWebhook(string repoUrl, string token, string webhookUrl)
         {
             var uri = ConvertRepoUrlToApi(repoUrl) + "/hooks";
@@ -132,9 +148,21 @@ namespace taskflow_api.TaskFlow.Application.Services
             return $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={redirectUri}&scope=repo";
         }
 
-        public async Task<List<GitHubRepoDto>> GetUserRepos(string accessToken)
+        public async Task<List<GitHubRepoDto>> GetUserRepos()
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken);
+            var httpContext = _httpContextAccessor.HttpContext;
+            var userIdStr = httpContext?.User.FindFirst("id")?.Value;
+            if (userIdStr == null)
+                throw new AppException(ErrorCode.Unauthorized);
+
+            var userId = Guid.Parse(userIdStr);
+
+            var tokenRecord = await _tokenRepo.GetTokenByUserIdAsync(userId);
+            if (tokenRecord == null)
+                throw new AppException(ErrorCode.GitHubTokenNotFound);
+            var AT = tokenRecord.AccessToken;
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", AT);
 
             var response = await _httpClient.GetAsync("https://api.github.com/user/repos");
             response.EnsureSuccessStatusCode();
