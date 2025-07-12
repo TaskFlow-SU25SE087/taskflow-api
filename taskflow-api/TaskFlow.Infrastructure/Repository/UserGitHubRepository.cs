@@ -24,5 +24,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.UserGitHubTokens.Add(token);
             await _context.SaveChangesAsync();
         }
+
+        public async Task Update(UserGitHubToken data)
+        {
+            _context.UserGitHubTokens.Update(data);
+            await _context.SaveChangesAsync();
+        }
     }
 }

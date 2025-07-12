@@ -16,8 +16,11 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Framework Framework { get; set; } = Framework.None;
         public RepoProvider? RepoProvider { get; set; }
         public string? RepoUrl { get; set; }
-        public string? AccessToken { get; set; }
         public string? WebhookUrl { get; set; }
+
+        public Guid? UserGitHubTokenId { get; set; }
+        public UserGitHubToken? UserGitHubToken { get; set; }
+
 
         public List<CommitRecord> CommitRecords { get; set; } = new List<CommitRecord>();
     }

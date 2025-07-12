@@ -6,6 +6,7 @@ using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
+using taskflow_api.TaskFlow.Infrastructure.Repository;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 using taskflow_api.TaskFlow.Shared.Helpers;
 
@@ -14,18 +15,21 @@ namespace taskflow_api.TaskFlow.Application.Services
     public class ProjectPartService : IProjectPartService
     {
         private readonly IProjectPartRepository _projectPartRepository;
-        private readonly IRepoService _repoService;
+        private readonly IGitHubRepoService _repoService;
         private readonly AppSetting _appSetting;
         private readonly string _BaseUrl;
         private readonly ILogger<ProjectPartService> _logger;
         private readonly ICodeScanService _codeScanService;
         private readonly ICommitRecordRepository _commitRecordRepository;
         private readonly IRabbitMQService _rabbitMQService;
+        private readonly IUserGitHubRepository _userGitHubRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ProjectPartService(IProjectPartRepository projectPartRepository, IRepoService repoService,
+        public ProjectPartService(IProjectPartRepository projectPartRepository, IGitHubRepoService repoService,
             IOptions<AppSetting> appSetting, ILogger<ProjectPartService> logger,
             ICodeScanService codeScanService, ICommitRecordRepository commitRecordRepository,
-            IRabbitMQService rabbitMQService)
+            IRabbitMQService rabbitMQService, IUserGitHubRepository userGitHubRepository,
+            IHttpContextAccessor httpContextAccessor)
         {
             _projectPartRepository = projectPartRepository;
             _repoService = repoService;
@@ -35,11 +39,22 @@ namespace taskflow_api.TaskFlow.Application.Services
             _codeScanService = codeScanService;
             _commitRecordRepository = commitRecordRepository;
             _rabbitMQService = rabbitMQService;
+            _userGitHubRepository = userGitHubRepository;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task ConnectRepo(Guid partId, ConnectRepoRequest request)
         {
-            var valid = await _repoService.TestConnection(request.RepoUrl, request.AccessToken);
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            //get UserGitHub 
+            var userGitHub = await _userGitHubRepository.GetTokenByUserIdAsync(Guid.Parse(UserId!));
+            if (userGitHub == null)
+            {
+                throw new AppException(ErrorCode.UserGitHubTokenNotFound);
+            }
+            //test connect repository 
+            var valid = await _repoService.TestConnection(request.RepoUrl, userGitHub!.AccessToken);
             if (!valid) throw new AppException(ErrorCode.InvalidRepoOrToken);
 
             var part = await _projectPartRepository.GetPartByIdAsync(partId);
@@ -47,14 +62,15 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.PartNotFound);
             }
+            
             //currently supports github first
             part.RepoProvider = RepoProvider.GitHub;
             part.RepoUrl = request.RepoUrl;
-            part.AccessToken = request.AccessToken;
+            part.UserGitHubTokenId = userGitHub!.Id;
 
             //create webhook
             var webhookUrl = $"{_BaseUrl}/api/webhooks/github";
-            var checkCreateWebhookUrl = await _repoService.CreateWebhook(request.RepoUrl, request.AccessToken, webhookUrl);
+            var checkCreateWebhookUrl = await _repoService.CreateWebhook(request.RepoUrl, userGitHub.AccessToken, webhookUrl);
             if(!checkCreateWebhookUrl)
             {
                 throw new AppException(ErrorCode.WebhookCreationFailed);
@@ -139,7 +155,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CommitRecordId = commitRecord.Id,
                     RepoFullName = repoFullName,
                     CommitId = commitId,
-                    AccessToken = repo.AccessToken
+                    AccessToken = repo.UserGitHubToken!.AccessToken
                 });
 
                 _logger.LogInformation($"Pushed job for commit {commitId} to RabbitMQ.");

@@ -43,9 +43,8 @@ builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<ITermService, TermService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
-builder.Services.AddHttpClient<IRepoService, GitHubRepoService>();
+builder.Services.AddHttpClient<IGitHubRepoService, GitHubRepoService>();
 builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
-builder.Services.AddScoped<IGitHubService, GitHubService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();

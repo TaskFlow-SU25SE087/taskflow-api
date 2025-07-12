@@ -6,5 +6,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task SaveTokenAsync(UserGitHubToken token);
         Task<UserGitHubToken?> GetTokenByUserIdAsync(Guid userId);
+        Task Update(UserGitHubToken data);
     }
 }

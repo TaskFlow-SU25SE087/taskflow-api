@@ -212,6 +212,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .WithMany(c => c.CheckResults)
                 .HasForeignKey(r => r.CommitRecordId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // UserGitHubToken <-> ProjectPart
+            modelBuilder.Entity<ProjectPart>()
+                .HasOne(p => p.UserGitHubToken)
+                .WithMany()
+                .HasForeignKey(p => p.UserGitHubTokenId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 

@@ -57,7 +57,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                 using var scope = _serviceProvider.CreateScope();
                 var commitRepo = scope.ServiceProvider.GetRequiredService<ICommitRecordRepository>();
-                var repoService = scope.ServiceProvider.GetRequiredService<IRepoService>();
+                var repoService = scope.ServiceProvider.GetRequiredService<IGitHubRepoService>();
                 var codeScanService = scope.ServiceProvider.GetRequiredService<ICodeScanService>();
 
 
