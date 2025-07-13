@@ -23,6 +23,12 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string? ResultSummary { get; set; }
         public DateTime? ExpectedFinishAt { get; set; }
 
-        public List<CommitCheckResult> CheckResults { get; set; } = new List<CommitCheckResult>();
+        public bool Result { get; set; } = false;
+        public string OutputLog { get; set; } = string.Empty;
+        public string ErrorLog { get; set; } = string.Empty;
+        public string ProjectKey { get; set; } = string.Empty;
+
+        public List<CommitScanIssue> CommitScanIssues { get; set; } = new List<CommitScanIssue>();
+
     }
 }

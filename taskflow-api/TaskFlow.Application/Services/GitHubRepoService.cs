@@ -2,7 +2,8 @@
     using Azure.Core;
     using Microsoft.AspNetCore.Http.HttpResults;
     using Newtonsoft.Json.Linq;
-    using System.IO.Compression;
+using System.Diagnostics;
+using System.IO.Compression;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Text.Json;
@@ -46,7 +47,43 @@
                 return token != null;
             }
 
-            public async Task<bool> CreateWebhook(string repoUrl, string token, string webhookUrl)
+        public async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
+        {
+            var tmpPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tmpPath);
+
+            var repoUrl = $"https://{accessToken}@github.com/{repoFullName}.git";
+
+            //clone repo code git 
+            var gitClone = new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = $"clone {repoUrl} .",
+                WorkingDirectory = tmpPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+            var cloneProc = Process.Start(gitClone)!;
+            await cloneProc.WaitForExitAsync();
+
+            //checkout commit
+            var gitCheckout = new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = $"checkout {commitId}",
+                WorkingDirectory = tmpPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+            var checkoutProc = Process.Start(gitCheckout)!;
+            await checkoutProc.WaitForExitAsync();
+
+            return tmpPath;
+        }
+
+        public async Task<bool> CreateWebhook(string repoUrl, string token, string webhookUrl)
             {
                 var uri = ConvertRepoUrlToApi(repoUrl) + "/hooks";
 

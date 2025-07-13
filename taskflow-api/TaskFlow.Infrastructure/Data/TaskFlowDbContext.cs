@@ -31,8 +31,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<ProjectPart> ProjectParts { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<CommitRecord> CommitRecords { get; set; } = null!;
-        public DbSet<CommitCheckResult> CommitCheckResults { get; set; } = null!;
         public DbSet<UserGitHubToken> UserGitHubTokens { get; set; } = null!;
+        public DbSet<CommitScanIssue> CommitScanIssues { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -206,19 +206,19 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasForeignKey(cr => cr.ProjectPartId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-             // CommitRecord <-> CommitCheckResult
-                modelBuilder.Entity<CommitCheckResult>()
-                .HasOne(r => r.CommitRecord)
-                .WithMany(c => c.CheckResults)
-                .HasForeignKey(r => r.CommitRecordId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             // UserGitHubToken <-> ProjectPart
             modelBuilder.Entity<ProjectPart>()
                 .HasOne(p => p.UserGitHubToken)
                 .WithMany()
                 .HasForeignKey(p => p.UserGitHubTokenId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // CommitScanIssue <-> CommitRecord
+            modelBuilder.Entity<CommitScanIssue>()
+                .HasOne(x => x.CommitRecord)
+                .WithMany(x => x.CommitScanIssues)
+                .HasForeignKey(x => x.CommitRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 

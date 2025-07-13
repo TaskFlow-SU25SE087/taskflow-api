@@ -27,7 +27,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
 
         public async Task<CommitRecord?> GetById(Guid commitId)
         {
-            var commitRecord = await _context.CommitRecords.FindAsync(commitId);
+            var commitRecord = await _context.CommitRecords
+                .Include(c => c.ProjectPart)
+                .FirstOrDefaultAsync(c => c.Id == commitId);
             return commitRecord;
         }
 

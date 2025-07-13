@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Runtime;
@@ -12,6 +11,7 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Infrastructure.Repository;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -21,7 +21,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly RabbitMQSetting _settings;
         private readonly IServiceProvider _serviceProvider;
 
-        public RabbitScanCodeConsumerHostedService(ILogger<RabbitScanCodeConsumerHostedService> logger, 
+        public RabbitScanCodeConsumerHostedService(ILogger<RabbitScanCodeConsumerHostedService> logger,
             IOptions<RabbitMQSetting> settings, IServiceProvider serviceProvider)
         {
             _logger = logger;
@@ -68,8 +68,51 @@ namespace taskflow_api.TaskFlow.Application.Services
                     {
                         var extractPath = await repoService
                         .DownloadCommitSourceAsync(job.RepoFullName, job.CommitId, job.AccessToken);
-
+                        //scan code by SonarQube
                         var result = await codeScanService.ScanCommit(extractPath, $"taskflow-{commit.ProjectPartId}");
+
+                        // save output check record
+                        using var scopeCheck = _serviceProvider.CreateScope();
+
+                        if (result.Success)
+                        {
+                            var sonarService = scope.ServiceProvider
+                                    .GetRequiredService<ICodeScanService>();
+                            var issues = await sonarService.GetIssuesByProjectAsync(result.ProjectKey);
+
+                            var commitScanIssueRepo = scope.ServiceProvider
+                                    .GetRequiredService<ICommitScanIssueRepository>();
+
+                            var issueRepo = scope.ServiceProvider
+                                    .GetRequiredService<ITaskIssueRepository>();
+                            foreach (var i in issues)
+                            {
+                                //save result 
+                                var scanIssue = new CommitScanIssue
+                                {
+                                    CommitRecordId = commit.Id,
+                                    Rule = i.Rule,
+                                    Severity = i.Severity,
+                                    Message = i.Message,
+                                    FilePath = i.Component,
+                                    Line = i.Line,
+                                    CreatedAt = DateTime.UtcNow
+                                };
+                                await commitScanIssueRepo.CreateAsync(scanIssue);
+
+                                //create task issue
+                                var issue = new Issue
+                                {
+                                    ProjectId = commit.ProjectPart.ProjectId,
+                                    Title = $"{i.Severity}: {i.Message}",
+                                    Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
+                                    Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
+                                    Type = TypeIssue.FeatureRequest,
+                                    IsActive = true
+                                };
+                                await issueRepo.CreateTaskIssueAsync(issue);
+                            }
+                        }
 
                         Directory.Delete(extractPath, true);
 
@@ -77,25 +120,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                         commit.Status = StatusCommit.Done;
                         commit.ResultSummary = "Scan completed via RabbitMQ.";
                         await commitRepo.Update(commit);
-
-                        //get CommitID
-                        var commitRecord = await commitRepo.GetById(job.CommitRecordId);
-
-                        job.CommitId = commit.Id.ToString();
-                        //create result commit
-                        var commitResult = new CommitCheckResult
-                        {
-                            CommitRecordId = commitRecord!.Id,
-                            Result = result.Success,
-                            OutputLog = result.OutputLog,
-                            ErrorLog = result.ErrorLog,
-                            CreatedAt = DateTime.UtcNow
-                        };
-                        using var scopecheck = _serviceProvider.CreateScope();
-                        var commitCheckResultRepo = scopecheck.ServiceProvider.GetRequiredService<ICommitCheckResultRepository>();
-
-                        await commitCheckResultRepo.CreateCommitResult(commitResult);
-
                     }
                 }
                 channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);

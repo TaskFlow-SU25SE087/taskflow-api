@@ -41,11 +41,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
-        public async Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl)
-        {
+            public async Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl)
+            {
             return await _context.ProjectParts
-                .FirstOrDefaultAsync(x => x.RepoUrl == repoUrl);
-
+                 .Include(x => x.UserGitHubToken)
+                 .FirstOrDefaultAsync(x => x.RepoUrl == repoUrl);
         }
 
         public async Task<ProjectPart?> GetPartByIdAsync(Guid partId)
