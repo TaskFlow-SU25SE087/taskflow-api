@@ -130,7 +130,7 @@ using System.IO.Compression;
 
                 //delete file
                 File.Delete(tempZipPath);
-                return extractPath;
+            return extractPath;
             }
 
             public async Task<string> ExchangeCodeForToken(string code)

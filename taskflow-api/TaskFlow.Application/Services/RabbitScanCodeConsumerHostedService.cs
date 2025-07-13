@@ -71,6 +71,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                         //scan code by SonarQube
                         var result = await codeScanService.ScanCommit(extractPath, $"taskflow-{commit.ProjectPartId}");
 
+                        //save commit record
+                        commit.ProjectKey = result.ProjectKey;
+                        commit.OutputLog = result.OutputLog;
+                        commit.ErrorLog = result.ErrorLog;
+                        commit.Result = result.Success;
+                        await commitRepo.Update(commit);
+
                         // save output check record
                         using var scopeCheck = _serviceProvider.CreateScope();
 
