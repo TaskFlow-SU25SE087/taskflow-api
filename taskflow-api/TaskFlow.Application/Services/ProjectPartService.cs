@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -92,6 +93,16 @@ namespace taskflow_api.TaskFlow.Application.Services
                 ProjectId = ProjectId
             };
             await _projectPartRepository.CreatePartAsync(part);
+        }
+
+        public async Task<List<ProjectPartResponse>> GetAllRepositories(Guid ProjectId)
+        {
+            var part = await _projectPartRepository.GetAllPartsByProjectIdAsync(ProjectId);
+            if (part == null)
+            {
+                throw new AppException(ErrorCode.NoHaveRepoInProject);
+            }
+            return part;
         }
 
         public async Task ProcessGitHubPushEvent(JObject payload)

@@ -143,7 +143,7 @@
             public string GetGitHubLoginUrl()
             {
                 var clientId = _config["GitHub:ClientId"];
-                var redirectUri = _config["GitHub:RedirectUri"];
+                    var redirectUri = _config["GitHub:RedirectUri"];
                 return $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={redirectUri}&scope=repo,admin:repo_hook";
             }
 

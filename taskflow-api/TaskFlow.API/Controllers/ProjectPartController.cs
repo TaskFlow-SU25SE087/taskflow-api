@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
@@ -40,6 +42,15 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             await _projectPartService.ConnectRepo(partId, request);
             return ApiResponse<string>.Success("Connect repository successfully");
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<ApiResponse<List<ProjectPartResponse>>> GetAllRepositories([FromRoute] Guid projectId)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Member, ProjectRole.Leader);
+            var parts = await _projectPartService.GetAllRepositories(projectId);
+            return ApiResponse<List<ProjectPartResponse>>.Success(parts);
         }
     }
 }

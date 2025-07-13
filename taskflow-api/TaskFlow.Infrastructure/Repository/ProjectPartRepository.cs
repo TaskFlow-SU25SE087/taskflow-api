@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -18,6 +19,26 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             await _context.ProjectParts.AddAsync(data);
             await _context.SaveChangesAsync();
+        }
+
+        public Task<List<ProjectPartResponse>> GetAllPartsByProjectIdAsync(Guid projectId)
+        {
+            return _context.ProjectParts
+                .Where(x => x.ProjectId == projectId)
+                .Select(x => new ProjectPartResponse
+                {
+                    Id = x.Id,
+                    ProjectId = x.ProjectId,
+                    Name = x.Name,
+                    ProgrammingLanguage = x.ProgrammingLanguage,
+                    Framework = x.Framework,
+                    RepoProvider = x.RepoProvider,
+                    RepoUrl = x.RepoUrl,
+                    OwnerId = x.UserGitHubToken.UserId,
+                    OwnerName = x.UserGitHubToken.User.FullName,
+                    AvatrarUrl = x.UserGitHubToken.User.Avatar
+                })
+                .ToListAsync();
         }
 
         public async Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl)

@@ -77,5 +77,6 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail WebhookCreationFailed = new(9007, "Failed to create webhook", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail UserGitHubTokenNotFound = new(9008, "User GitHub token not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail GitHubTokenNotFound = new(9009, "GitHub token not found", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail NoHaveRepoInProject = new(9010, "No repositories found in the project", StatusCodes.Status404NotFound);
     }
 }

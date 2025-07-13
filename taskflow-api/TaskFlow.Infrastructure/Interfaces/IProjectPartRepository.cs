@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
@@ -8,5 +9,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<ProjectPart?> GetPartByIdAsync(Guid partId);
         Task UpdateAsync(ProjectPart part);
         Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl);
+        Task<List<ProjectPartResponse>> GetAllPartsByProjectIdAsync(Guid projectId);
     }
 }
