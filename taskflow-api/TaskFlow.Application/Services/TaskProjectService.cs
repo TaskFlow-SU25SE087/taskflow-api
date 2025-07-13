@@ -126,10 +126,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
 
             // Get old board info
-            var oldBoard = await _boardRepository.GetBoardByIdAsync(taskProject.BoardId);
-            var oldBoardName = oldBoard?.Title ?? "Unknown";
+            var oldBoard = await _boardRepository.GetBoardByIdAsync(taskProject.BoardId.HasValue ? taskProject.BoardId.Value : Guid.Empty);
+            var oldBoardName = oldBoard?.Name ?? "Unknown";
 
-            var sprint = await  _sprintRepository.GetSprintByIdAsync(taskProject?.SprintId ?? Guid.Empty);
+            var sprint = await  _sprintRepository.GetSprintByIdAsync(taskProject.SprintId.HasValue ? taskProject.SprintId.Value : Guid.Empty);
             if (!sprint!.Status.Equals(SprintStatus.InProgress))
             {
                 throw new AppException(ErrorCode.CannotUpdateStatus);
@@ -141,7 +141,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             // Get new board info
             var newBoard = await _boardRepository.GetBoardByIdAsync(BoardId);
-            var newBoardName = newBoard?.Title ?? "Unknown";
+            var newBoardName = newBoard?.Name ?? "Unknown";
 
             // Get all assignees for the task
             var assignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
