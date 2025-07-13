@@ -110,5 +110,52 @@ namespace taskflow_api.TaskFlow.Application.Services
                 });
             }
         }
+    public async Task NotifyTaskBoardChangeAsync(
+            Guid projectId,
+            Guid taskId,
+            string oldBoardName,
+            string newBoardName,
+            List<Guid> userIds)
+        {
+            string message = $"Task has moved from board '{oldBoardName}' to '{newBoardName}'.";
+            foreach (var userId in userIds)
+            {
+                // Email notification
+                var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
+                if (member != null && member.User != null && !string.IsNullOrEmpty(member.User.Email))
+                {
+                    await _mailService.SendTaskUpdateEmailAsync(
+                        member.User.Email,
+                        member.User.FullName ?? member.User.UserName ?? "User",
+                        "Task Board Changed",
+                        message
+                    );
+                }
+
+                // In-app notification (database)
+                var notification = new Notification
+                {
+                    UserId = userId,
+                    ProjectId = projectId,
+                    TaskId = taskId,
+                    Message = message,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _notificationRepository.AddNotificationAsync(notification);
+
+                // SignalR notification (send to user)
+                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
+                {
+                    notification.Id,
+                    notification.UserId,
+                    notification.ProjectId,
+                    notification.TaskId,
+                    notification.Message,
+                    notification.IsRead,
+                    notification.CreatedAt
+                });
+            }
+        }
     }
 }
