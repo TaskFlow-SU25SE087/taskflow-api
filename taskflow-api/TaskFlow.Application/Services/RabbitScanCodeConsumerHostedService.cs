@@ -69,13 +69,19 @@ namespace taskflow_api.TaskFlow.Application.Services
                         var extractPath = await repoService
                         .DownloadCommitSourceAsync(job.RepoFullName, job.CommitId, job.AccessToken);
                         //scan code by SonarQube
-                        var result = await codeScanService.ScanCommit(extractPath, $"taskflow-{commit.ProjectPartId}");
+                        var result = await codeScanService.ScanCommit(
+                            extractPath, 
+                            $"taskflow-{commit.ProjectPartId}",
+                            job.Language,
+                            job.Framework
+                            );
 
                         //save commit record
                         commit.ProjectKey = result.ProjectKey;
                         commit.OutputLog = result.OutputLog;
                         commit.ErrorLog = result.ErrorLog;
                         commit.Result = result.Success;
+                        commit.ExpectedFinishAt = DateTime.UtcNow;
                         await commitRepo.Update(commit);
 
                         // save output check record

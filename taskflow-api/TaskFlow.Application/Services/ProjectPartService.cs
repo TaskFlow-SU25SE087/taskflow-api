@@ -155,7 +155,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CommitMessage = message,
                     CommitUrl = $"https://github.com/{repoFullName}/commit/{commitId}",
                     PushedAt = timestamp ?? DateTime.UtcNow,
-                    Status = StatusCommit.Checking
+                    Status = StatusCommit.Checking,
+                    ExpectedFinishAt = DateTime.UtcNow.AddMinutes(10),
                 };
 
                 await _commitRecordRepository.Create(commitRecord);
@@ -166,7 +167,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CommitRecordId = commitRecord.Id,
                     RepoFullName = repoFullName,
                     CommitId = commitId,
-                    AccessToken = repo.UserGitHubToken!.AccessToken
+                    AccessToken = repo.UserGitHubToken!.AccessToken,
+                    Language = repo.ProgrammingLanguage,
+                    Framework = repo.Framework,
                 });
 
                 _logger.LogInformation($"Pushed job for commit {commitId} to RabbitMQ.");

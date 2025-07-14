@@ -6,6 +6,7 @@ using System.Text.Json;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -60,7 +61,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return issues;
         }
 
-        public async Task<CommitScanResult> ScanCommit(string extractPath, string projectKey)
+        public async Task<CommitScanResult> ScanCommit(string extractPath, string projectKey, ProgrammingLanguage language, Framework framework)
         {
             var sonarPropsPath = Path.Combine(extractPath, "sonar-project.properties");
             await File.WriteAllTextAsync(sonarPropsPath, $@"
