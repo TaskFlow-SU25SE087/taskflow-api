@@ -124,13 +124,34 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.TaskAlreadyInThisBoard);
             }
+
+            // Get old board info
+            var oldBoard = await _boardRepository.GetBoardByIdAsync(taskProject.BoardId);
+            var oldBoardName = oldBoard?.Title ?? "Unknown";
+
             var sprint = await  _sprintRepository.GetSprintByIdAsync(taskProject?.SprintId ?? Guid.Empty);
             if (!sprint!.Status.Equals(SprintStatus.InProgress))
             {
                 throw new AppException(ErrorCode.CannotUpdateStatus);
             }
+
+            // Change board
             taskProject!.BoardId = BoardId;
             await _taskProjectRepository.UpdateTaskAsync(taskProject);
+
+            // Get new board info
+            var newBoard = await _boardRepository.GetBoardByIdAsync(BoardId);
+            var newBoardName = newBoard?.Title ?? "Unknown";
+
+            // Get all assignees for the task
+            var assignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
+            var userIds = assignees
+                .Where(a => a.ImplementerId.HasValue)
+                .Select(a => a.ImplementerId.Value)
+                .ToList();
+
+            // Send notification
+            await _notificationService.NotifyTaskBoardChangeAsync(taskProject.ProjectId, TaskId, oldBoardName, newBoardName, userIds);
         }
 
         public async Task<bool> DeleteTask(Guid taskId)

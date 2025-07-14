@@ -39,6 +39,27 @@ namespace taskflow_api.TaskFlow.Application.Services
                 var tasks = await taskProjectRepository.GetAllActiveTasksAsync();
                 foreach (var task in tasks)
                 {
+                    // Notify when deadline is expired
+                    if (!task.DeadlineExpiredNotified && now > task.Deadline)
+                    {
+                        var assignees = await taskAssigneeRepository.taskAssigneesAsync(task.Id);
+                        foreach (var assignee in assignees)
+                        {
+                            if (assignee.ImplementerId.HasValue)
+                            {
+                                await notificationService.NotifyTaskUpdateAsync(
+                                    assignee.ImplementerId.Value,
+                                    task.ProjectId,
+                                    task.Id,
+                                    $"Task '{task.Title}' deadline has expired. Please take immediate action."
+                                );
+                            }
+                        }
+                        task.DeadlineExpiredNotified = true;
+                        await taskProjectRepository.UpdateTaskAsync(task);
+                        continue; // Skip further checks for this task
+                    }
+
                     if (task.Deadline70Notified || task.Deadline <= task.CreatedAt)
                         continue;
                     var totalDuration = task.Deadline - task.CreatedAt;
