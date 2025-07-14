@@ -100,6 +100,17 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     .GetRequiredService<ITaskIssueRepository>();
                             foreach (var i in issues)
                             {
+                                var filePath = i.Component.Contains(":") ? i.Component.Split(':')[1] : i.Component;
+                                var fullPath = Path.Combine(extractPath, filePath);
+                                string lineContent = string.Empty;
+                                if (File.Exists(fullPath))
+                                {
+                                    var lines = File.ReadAllLines(fullPath);
+                                    if (i.Line > 0 && i.Line <= lines.Length)
+                                    {
+                                        lineContent = lines[i.Line - 1];
+                                    }
+                                }
                                 //save result 
                                 var scanIssue = new CommitScanIssue
                                 {
@@ -107,8 +118,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     Rule = i.Rule,
                                     Severity = i.Severity,
                                     Message = i.Message,
-                                    FilePath = i.Component,
+                                    FilePath = i.Component.Contains(":") ? i.Component.Split(':', 2)[1] : i.Component,
                                     Line = i.Line,
+                                    LineContent = lineContent,
                                     CreatedAt = DateTime.UtcNow
                                 };
                                 await commitScanIssueRepo.CreateAsync(scanIssue);

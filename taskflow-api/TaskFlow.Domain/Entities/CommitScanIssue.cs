@@ -22,6 +22,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         [Required]
         public string FilePath { get; set; } = string.Empty;
         public int? Line { get; set; }
+        public string? LineContent { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
