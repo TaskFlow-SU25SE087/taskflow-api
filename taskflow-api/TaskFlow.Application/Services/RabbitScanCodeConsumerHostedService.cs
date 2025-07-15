@@ -69,12 +69,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                         var extractPath = await repoService
                         .DownloadCommitSourceAsync(job.RepoFullName, job.CommitId, job.AccessToken);
                         //scan code by SonarQube
+                        var scanStart = DateTime.UtcNow;
                         var result = await codeScanService.ScanCommit(
                             extractPath, 
                             $"taskflow-{commit.ProjectPartId}",
                             job.Language,
                             job.Framework
                             );
+                        var scanEnd = DateTime.UtcNow;
+                        commit.ScanDuration = scanEnd - scanStart;
 
                         //save commit record
                         commit.ProjectKey = result.ProjectKey;
@@ -98,6 +101,22 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                             var issueRepo = scope.ServiceProvider
                                     .GetRequiredService<ITaskIssueRepository>();
+                            //get quality gate status
+                            var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
+                            commit.QualityGateStatus = qgStatus;
+
+                            // save quality gate status
+                            var metrics = await sonarService.GetProjectMeasuresAsync(result.ProjectKey);
+
+                            //save result matrics
+                            commit.Bugs = metrics.Bugs;
+                            commit.Vulnerabilities = metrics.Vulnerabilities;
+                            commit.CodeSmells = metrics.CodeSmells;
+                            commit.SecurityHotspots = metrics.SecurityHotspots;
+                            commit.DuplicatedLines = metrics.DuplicatedLines;
+                            commit.DuplicatedBlocks = metrics.DuplicatedBlocks;
+                            commit.DuplicatedLinesDensity = metrics.DuplicatedLinesDensity;
+                            commit.Coverage = metrics.Coverage;
                             foreach (var i in issues)
                             {
                                 var filePath = i.Component.Contains(":") ? i.Component.Split(':')[1] : i.Component;
