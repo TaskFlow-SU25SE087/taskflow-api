@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
@@ -15,10 +17,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
     {
         private readonly IMemberService _context;
         private readonly ITaskFlowAuthorizationService _authorization;
-        public MemberController(IMemberService context, ITaskFlowAuthorizationService authorization)
+        private readonly AppSetting _appSetting;
+
+        public MemberController(IMemberService context, ITaskFlowAuthorizationService authorization,
+            IOptions<AppSetting> appSetting)
         {
             _context = context;
             _authorization = authorization;
+            _appSetting = appSetting.Value;
         }
 
         [HttpPost("add")]
@@ -61,10 +67,25 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpGet("verify-join")]
-        public async Task<ApiResponse<bool>> VerifyJoinProject([FromQuery] string token)
+        public async Task<IActionResult> VerifyJoinProjectRedirect([FromQuery] string token)
         {
-            bool result = await _context.VerifyJoinProject(token);
-            return ApiResponse<bool>.Success(result);
+            try
+            {
+                bool result = await _context.VerifyJoinProject(token);
+                if (result)
+                {
+                    return Redirect($"{_appSetting.FrontEndBaseUrl}/projects");
+                }
+                else
+                {
+                    return Redirect($"{_appSetting.FrontEndBaseUrl}/auth/verify-falied");
+                }
+            }
+            catch(AppException ex)
+            {
+                return Redirect($"{_appSetting.FrontEndBaseUrl}/error");
+            }
+
         }
 
         [HttpGet("list")]
