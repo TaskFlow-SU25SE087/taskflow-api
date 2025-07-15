@@ -7,6 +7,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task CreateProjectMemeberAsync(ProjectMember data);
         Task<ProjectMember?> FindMemberInProject(Guid projectId, Guid userId);
+        Task<ProjectMember?> FindMemberInProjectByProjectMemberID(Guid ProjectMemberId);
         Task UpdateMember(ProjectMember data);
         Task<int> GetProjectCountByUserIdAsync(Guid userId);
         Task<bool> GetUserIsActiveInProjectAsync(Guid userId);

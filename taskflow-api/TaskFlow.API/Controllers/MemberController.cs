@@ -47,16 +47,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(result);
         }
 
-        [HttpDelete("remove/{userId}")]
+        [HttpDelete("remove/{projectMemberId}")]
         [Authorize]
-        public async Task<ApiResponse<bool>> RemoveMember([FromRoute] Guid projectId, [FromRoute] Guid userId)
+        public async Task<ApiResponse<bool>> RemoveMember([FromRoute] Guid projectId, [FromRoute] Guid projectMemberId)
         {
             var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             if (!isAuthorized)
             {
                 return ApiResponse<bool>.Error(9002, "Unauthorized access");
             }
-            var result = await _context.RemoveMember(projectId, userId);
+            var result = await _context.RemoveMember(projectId, projectMemberId);
             return ApiResponse<bool>.Success(result);
         }
 
