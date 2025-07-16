@@ -25,12 +25,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IRabbitMQService _rabbitMQService;
         private readonly IUserGitHubRepository _userGitHubRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICommitScanIssueRepository _commitScanIssueRepository;
+        private int PageSizeCommit = 10;
 
         public ProjectPartService(IProjectPartRepository projectPartRepository, IGitHubRepoService repoService,
             IOptions<AppSetting> appSetting, ILogger<ProjectPartService> logger,
             ICodeScanService codeScanService, ICommitRecordRepository commitRecordRepository,
             IRabbitMQService rabbitMQService, IUserGitHubRepository userGitHubRepository,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, ICommitScanIssueRepository commitScanIssueRepository)
         {
             _projectPartRepository = projectPartRepository;
             _repoService = repoService;
@@ -42,6 +44,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _rabbitMQService = rabbitMQService;
             _userGitHubRepository = userGitHubRepository;
             _httpContextAccessor = httpContextAccessor;
+            _commitScanIssueRepository = commitScanIssueRepository;
         }
 
         public async Task ConnectRepo(Guid partId, ConnectRepoRequest request)
@@ -103,6 +106,26 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.NoHaveRepoInProject);
             }
             return part;
+        }
+
+        public async Task<List<CommitDetailResponse>> GetCommitDetail(string commitId)
+        {
+            return await _commitScanIssueRepository.GetByCommitCheckResultId(commitId);
+        }
+
+        public async Task<PagedResult<CommitRecordResponse>> GetCommits(Guid partId, int page)
+        {
+            var commits = await _commitRecordRepository.GetCommitRecordsByPartId(partId, page, PageSizeCommit);
+            var countCommits = await _commitRecordRepository.CountCommitByProjectPart(partId);
+            var result = new PagedResult<CommitRecordResponse>
+            {
+                Items = commits,
+                PageNumber = page,
+                PageSize = PageSizeCommit,
+                TotalPages = (int)Math.Ceiling((double)countCommits / PageSizeCommit),
+            };
+
+            return result;
         }
 
         public async Task ProcessGitHubPushEvent(JObject payload)

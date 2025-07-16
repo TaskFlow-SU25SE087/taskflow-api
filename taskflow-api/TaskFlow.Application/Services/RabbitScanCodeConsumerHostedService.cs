@@ -88,8 +88,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                         await commitRepo.Update(commit);
 
                         // save output check record
-                        using var scopeCheck = _serviceProvider.CreateScope();
-
                         if (result.Success)
                         {
                             var sonarService = scope.ServiceProvider
@@ -121,6 +119,16 @@ namespace taskflow_api.TaskFlow.Application.Services
                             {
                                 var filePath = i.Component.Contains(":") ? i.Component.Split(':')[1] : i.Component;
                                 var fullPath = Path.Combine(extractPath, filePath);
+                                var folderName = Path.GetFileName(extractPath);
+                                string cleanFilePath;
+                                if (filePath.StartsWith(folderName + "/") || filePath.StartsWith(folderName + "\\"))
+                                {
+                                    cleanFilePath = filePath.Substring(folderName.Length + 1);
+                                }
+                                else
+                                {
+                                    cleanFilePath = Path.GetFileName(filePath);
+                                }
                                 string lineContent = string.Empty;
                                 if (File.Exists(fullPath))
                                 {
@@ -137,7 +145,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     Rule = i.Rule,
                                     Severity = i.Severity,
                                     Message = i.Message,
-                                    FilePath = i.Component.Contains(":") ? i.Component.Split(':', 2)[1] : i.Component,
+                                    FilePath = cleanFilePath,
                                     Line = i.Line,
                                     LineContent = lineContent,
                                     CreatedAt = DateTime.UtcNow
