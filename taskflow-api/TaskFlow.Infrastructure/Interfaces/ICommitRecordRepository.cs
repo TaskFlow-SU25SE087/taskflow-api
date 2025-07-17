@@ -11,5 +11,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<bool> ExistsByCommitId(string commitId);
         Task<List<CommitRecordResponse>> GetCommitRecordsByPartId(Guid projectPartId, int page, int pageSize);
         Task<int> CountCommitByProjectPart(Guid projectPart);
+        Task<bool> checkDuplicateResult(Guid projectPartId, string message, string lineContent, string blamedEmail, string blamedName, string cleanFilePath);
     }
 }

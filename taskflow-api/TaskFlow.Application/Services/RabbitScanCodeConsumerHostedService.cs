@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Diagnostics;
 using System.Runtime;
 using System.Text;
 using System.Text.Json;
@@ -117,6 +118,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                             commit.Coverage = metrics.Coverage;
                             foreach (var i in issues)
                             {
+                                string blamedEmail = string.Empty;
+                                string blamedName = string.Empty;
                                 var filePath = i.Component.Contains(":") ? i.Component.Split(':')[1] : i.Component;
                                 var fullPath = Path.Combine(extractPath, filePath);
                                 var folderName = Path.GetFileName(extractPath);
@@ -138,8 +141,49 @@ namespace taskflow_api.TaskFlow.Application.Services
                                         lineContent = lines[i.Line - 1];
                                     }
                                 }
-                                //save result 
-                                var scanIssue = new CommitScanIssue
+                                if (File.Exists(fullPath) && i.Line > 0)
+                                {
+                                    try
+                                    {
+                                        var blameProcess = new Process
+                                        {
+                                            StartInfo = new ProcessStartInfo
+                                            {
+                                                FileName = "git",
+                                                Arguments = $"blame -L {i.Line},{i.Line} --line-porcelain \"{fullPath}\"",
+                                                WorkingDirectory = extractPath,
+                                                RedirectStandardOutput = true,
+                                                RedirectStandardError = true,
+                                                UseShellExecute = false,
+                                                CreateNoWindow = true
+                                            }
+                                        };
+                                        blameProcess.Start();
+                                        var output = await blameProcess.StandardOutput.ReadToEndAsync();
+                                        blameProcess.WaitForExit();
+
+                                        foreach (var line in output.Split('\n'))
+                                        {
+                                            if (line.StartsWith("author-mail "))
+                                                blamedEmail = line.Substring("author-mail ".Length).Trim('<', '>', '\r');
+                                            if (line.StartsWith("author "))
+                                                blamedName = line.Substring("author ".Length).Trim();
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning($"Failed to get git blame: {ex.Message}");
+                                    }
+                                }
+                                //bool isDuplicate = await commitScanIssueRepo.CheckIssueReult(
+                                //    i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
+                                bool isDuplicate = await commitRepo.checkDuplicateResult(
+                                    commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath
+                                    );
+                                if (!isDuplicate)
+                                {
+                                    //save result 
+                                    var scanIssue = new CommitScanIssue
                                 {
                                     CommitRecordId = commit.Id,
                                     Rule = i.Rule,
@@ -148,8 +192,10 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     FilePath = cleanFilePath,
                                     Line = i.Line,
                                     LineContent = lineContent,
-                                    CreatedAt = DateTime.UtcNow
-                                };
+                                    CreatedAt = DateTime.UtcNow,
+                                    BlamedGitEmail = blamedEmail,
+                                    BlamedGitName = blamedName
+                                    };
                                 await commitScanIssueRepo.CreateAsync(scanIssue);
 
                                 //create task issue
@@ -163,10 +209,22 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     IsActive = true
                                 };
                                 await issueRepo.CreateTaskIssueAsync(issue);
+                                }
+
                             }
                         }
-
-                        Directory.Delete(extractPath, true);
+                        //delete extractPath folder
+                        try
+                        {
+                            if (Directory.Exists(extractPath))
+                            {
+                                Directory.Delete(extractPath, true);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning($"Failed to delete extractPath folder '{extractPath}': {ex.Message}");
+                        }
 
                         //update status commit
                         commit.Status = StatusCommit.Done;

@@ -16,5 +16,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string FilePath { get; set; } = string.Empty;
         public int? Line { get; set; }
         public string? LineContent { get; set; } = string.Empty;
+        public string? BlamedGitEmail { get; set; } = string.Empty;
+        public string? BlamedGitName { get; set; } = string.Empty;
     }
 }

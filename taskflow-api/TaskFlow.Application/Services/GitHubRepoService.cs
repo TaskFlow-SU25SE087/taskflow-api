@@ -121,26 +121,55 @@ using System.IO.Compression;
 
             public async Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken)
             {
-                var zipUrl = $"https://api.github.com/repos/{repoFullName}/zipball/{commitId}";
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken);
-                _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TaskFlow-Agent");
-
-                var response = await _httpClient.GetAsync(zipUrl);
-                response.EnsureSuccessStatusCode();
-
-                var tempZipPath = Path.Combine(Path.GetTempPath(), $"{commitId}.zip");
-                await using (var fs = new FileStream(tempZipPath, FileMode.Create))
-                {
-                    await response.Content.CopyToAsync(fs);
-                }
-                //var extractPath = Path.Combine(Path.GetTempPath(), $"repo_{commitId}");
                 var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
-                ZipFile.ExtractToDirectory(tempZipPath, extractPath, true);
 
-                //delete file
-                File.Delete(tempZipPath);
-            return extractPath;
-            }
+                var cloneUrl = $"https://{accessToken}:x-oauth-basic@github.com/{repoFullName}.git";
+
+                //clone .git and repo git 
+                var cloneProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "git",
+                        Arguments = $"clone \"{cloneUrl}\" \"{extractPath}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    }
+                };
+                cloneProcess.Start();
+                string cloneOutput = await cloneProcess.StandardOutput.ReadToEndAsync();
+                string cloneError = await cloneProcess.StandardError.ReadToEndAsync();
+                await cloneProcess.WaitForExitAsync();
+
+                if (cloneProcess.ExitCode != 0)
+                    throw new Exception($"git clone failed:\n{cloneError}");
+
+                 //checkout commit
+                 var checkoutProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "git",
+                        Arguments = $"checkout {commitId}",
+                        WorkingDirectory = extractPath,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    }
+                };
+                checkoutProcess.Start();
+                string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
+                string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
+                await checkoutProcess.WaitForExitAsync();
+
+                if (checkoutProcess.ExitCode != 0)
+                    throw new Exception($"git checkout failed:\n{checkoutError}");
+
+                return extractPath;
+             }
 
             public async Task<string> ExchangeCodeForToken(string code)
             {
@@ -190,7 +219,7 @@ using System.IO.Compression;
             {
                 var clientId = _config["GitHub:ClientId"];
                     var redirectUri = _config["GitHub:RedirectUri"];
-                return $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={redirectUri}&scope=repo,admin:repo_hook";
+            return $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={redirectUri}&scope=repo,admin:repo_hook,user:email";
             }
 
             public async Task<List<GitHubRepoDto>> GetUserRepos()

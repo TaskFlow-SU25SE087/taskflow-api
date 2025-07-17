@@ -15,6 +15,16 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
+        public async Task<bool> CheckIssueReult(string message, string lineContent, string blamedEmail, string blamedName, string cleanFilePath)
+        {
+            return await _context.CommitScanIssues
+                .AnyAsync(x => x.Message == message &&
+                               x.LineContent == lineContent &&
+                               x.BlamedGitEmail == blamedEmail &&
+                               x.BlamedGitName == blamedName &&
+                               x.FilePath == cleanFilePath);
+        }
+
         public async Task CreateAsync(CommitScanIssue issue)
         {
             await _context.CommitScanIssues.AddAsync(issue);
@@ -32,7 +42,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     Message = x.Message,
                     FilePath = x.FilePath,
                     Line = x.Line,
-                    LineContent = x.LineContent ?? string.Empty
+                    LineContent = x.LineContent ?? string.Empty,
+                    BlamedGitEmail = x.BlamedGitEmail ?? string.Empty,
+                    BlamedGitName = x.BlamedGitName ?? string.Empty
                 })
                 .ToListAsync();
         }
