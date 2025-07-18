@@ -157,5 +157,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                 });
             }
         }
+    public async Task<List<Notification>> GetUserNotificationsAsync(Guid userId)
+        {
+            return await _notificationRepository.GetUserNotificationsAsync(userId);
+        }
     }
 }
