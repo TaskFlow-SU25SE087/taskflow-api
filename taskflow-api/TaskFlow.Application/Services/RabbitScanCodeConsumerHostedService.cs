@@ -1,7 +1,7 @@
-﻿
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Diagnostics;
 using System.Runtime;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +12,7 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Infrastructure.Repository;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -21,7 +22,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly RabbitMQSetting _settings;
         private readonly IServiceProvider _serviceProvider;
 
-        public RabbitScanCodeConsumerHostedService(ILogger<RabbitScanCodeConsumerHostedService> logger, 
+        public RabbitScanCodeConsumerHostedService(ILogger<RabbitScanCodeConsumerHostedService> logger,
             IOptions<RabbitMQSetting> settings, IServiceProvider serviceProvider)
         {
             _logger = logger;
@@ -68,34 +69,167 @@ namespace taskflow_api.TaskFlow.Application.Services
                     {
                         var extractPath = await repoService
                         .DownloadCommitSourceAsync(job.RepoFullName, job.CommitId, job.AccessToken);
+                        //scan code by SonarQube
+                        var scanStart = DateTime.UtcNow;
+                        var result = await codeScanService.ScanCommit(
+                            extractPath, 
+                            $"taskflow-{commit.ProjectPartId}",
+                            job.Language,
+                            job.Framework
+                            );
+                        var scanEnd = DateTime.UtcNow;
+                        commit.ScanDuration = scanEnd - scanStart;
 
-                        var result = await codeScanService.ScanCommit(extractPath, $"taskflow-{commit.ProjectPartId}");
+                        //save commit record
+                        commit.ProjectKey = result.ProjectKey;
+                        commit.OutputLog = result.OutputLog;
+                        commit.ErrorLog = result.ErrorLog;
+                        commit.Result = result.Success;
+                        commit.ExpectedFinishAt = DateTime.UtcNow;
+                        await commitRepo.Update(commit);
 
-                        Directory.Delete(extractPath, true);
+                        // save output check record
+                        if (result.Success)
+                        {
+                            var sonarService = scope.ServiceProvider
+                                    .GetRequiredService<ICodeScanService>();
+                            var issues = await sonarService.GetIssuesByProjectAsync(result.ProjectKey);
+
+                            var commitScanIssueRepo = scope.ServiceProvider
+                                    .GetRequiredService<ICommitScanIssueRepository>();
+
+                            var issueRepo = scope.ServiceProvider
+                                    .GetRequiredService<ITaskIssueRepository>();
+                            //get quality gate status
+                            var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
+                            commit.QualityGateStatus = qgStatus;
+
+                            // save quality gate status
+                            var metrics = await sonarService.GetProjectMeasuresAsync(result.ProjectKey);
+
+                            //save result matrics
+                            commit.Bugs = metrics.Bugs;
+                            commit.Vulnerabilities = metrics.Vulnerabilities;
+                            commit.CodeSmells = metrics.CodeSmells;
+                            commit.SecurityHotspots = metrics.SecurityHotspots;
+                            commit.DuplicatedLines = metrics.DuplicatedLines;
+                            commit.DuplicatedBlocks = metrics.DuplicatedBlocks;
+                            commit.DuplicatedLinesDensity = metrics.DuplicatedLinesDensity;
+                            commit.Coverage = metrics.Coverage;
+                            foreach (var i in issues)
+                            {
+                                string blamedEmail = string.Empty;
+                                string blamedName = string.Empty;
+                                var filePath = i.Component.Contains(":") ? i.Component.Split(':')[1] : i.Component;
+                                var fullPath = Path.Combine(extractPath, filePath);
+                                var folderName = Path.GetFileName(extractPath);
+                                string cleanFilePath;
+                                if (filePath.StartsWith(folderName + "/") || filePath.StartsWith(folderName + "\\"))
+                                {
+                                    cleanFilePath = filePath.Substring(folderName.Length + 1);
+                                }
+                                else
+                                {
+                                    cleanFilePath = Path.GetFileName(filePath);
+                                }
+                                string lineContent = string.Empty;
+                                if (File.Exists(fullPath))
+                                {
+                                    var lines = File.ReadAllLines(fullPath);
+                                    if (i.Line > 0 && i.Line <= lines.Length)
+                                    {
+                                        lineContent = lines[i.Line - 1];
+                                    }
+                                }
+                                if (File.Exists(fullPath) && i.Line > 0)
+                                {
+                                    try
+                                    {
+                                        var blameProcess = new Process
+                                        {
+                                            StartInfo = new ProcessStartInfo
+                                            {
+                                                FileName = "git",
+                                                Arguments = $"blame -L {i.Line},{i.Line} --line-porcelain \"{fullPath}\"",
+                                                WorkingDirectory = extractPath,
+                                                RedirectStandardOutput = true,
+                                                RedirectStandardError = true,
+                                                UseShellExecute = false,
+                                                CreateNoWindow = true
+                                            }
+                                        };
+                                        blameProcess.Start();
+                                        var output = await blameProcess.StandardOutput.ReadToEndAsync();
+                                        blameProcess.WaitForExit();
+
+                                        foreach (var line in output.Split('\n'))
+                                        {
+                                            if (line.StartsWith("author-mail "))
+                                                blamedEmail = line.Substring("author-mail ".Length).Trim('<', '>', '\r');
+                                            if (line.StartsWith("author "))
+                                                blamedName = line.Substring("author ".Length).Trim();
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning($"Failed to get git blame: {ex.Message}");
+                                    }
+                                }
+                                //bool isDuplicate = await commitScanIssueRepo.CheckIssueReult(
+                                //    i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
+                                bool isDuplicate = await commitRepo.checkDuplicateResult(
+                                    commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath
+                                    );
+                                if (!isDuplicate)
+                                {
+                                    //save result 
+                                    var scanIssue = new CommitScanIssue
+                                {
+                                    CommitRecordId = commit.Id,
+                                    Rule = i.Rule,
+                                    Severity = i.Severity,
+                                    Message = i.Message,
+                                    FilePath = cleanFilePath,
+                                    Line = i.Line,
+                                    LineContent = lineContent,
+                                    CreatedAt = DateTime.UtcNow,
+                                    BlamedGitEmail = blamedEmail,
+                                    BlamedGitName = blamedName
+                                    };
+                                await commitScanIssueRepo.CreateAsync(scanIssue);
+
+                                //create task issue
+                                var issue = new Issue
+                                {
+                                    ProjectId = commit.ProjectPart.ProjectId,
+                                    Title = $"{i.Severity}: {i.Message}",
+                                    Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
+                                    Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
+                                    Type = TypeIssue.FeatureRequest,
+                                    IsActive = true
+                                };
+                                await issueRepo.CreateTaskIssueAsync(issue);
+                                }
+
+                            }
+                        }
+                        //delete extractPath folder
+                        try
+                        {
+                            if (Directory.Exists(extractPath))
+                            {
+                                Directory.Delete(extractPath, true);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning($"Failed to delete extractPath folder '{extractPath}': {ex.Message}");
+                        }
 
                         //update status commit
                         commit.Status = StatusCommit.Done;
                         commit.ResultSummary = "Scan completed via RabbitMQ.";
                         await commitRepo.Update(commit);
-
-                        //get CommitID
-                        var commitRecord = await commitRepo.GetById(job.CommitRecordId);
-
-                        job.CommitId = commit.Id.ToString();
-                        //create result commit
-                        var commitResult = new CommitCheckResult
-                        {
-                            CommitRecordId = commitRecord!.Id,
-                            Result = result.Success,
-                            OutputLog = result.OutputLog,
-                            ErrorLog = result.ErrorLog,
-                            CreatedAt = DateTime.UtcNow
-                        };
-                        using var scopecheck = _serviceProvider.CreateScope();
-                        var commitCheckResultRepo = scopecheck.ServiceProvider.GetRequiredService<ICommitCheckResultRepository>();
-
-                        await commitCheckResultRepo.CreateCommitResult(commitResult);
-
                     }
                 }
                 channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);

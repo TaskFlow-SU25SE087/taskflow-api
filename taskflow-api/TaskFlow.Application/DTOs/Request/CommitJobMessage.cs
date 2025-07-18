@@ -9,5 +9,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
         public string RepoFullName { get; set; } = string.Empty;
         public string CommitId { get; set; } = string.Empty;
         public string AccessToken { get; set; } = string.Empty;
+        public ProgrammingLanguage Language { get; set; }
+        public Framework Framework { get; set; }
     }
 }

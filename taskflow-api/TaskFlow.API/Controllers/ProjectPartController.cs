@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Net;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
@@ -51,6 +52,26 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _authorization.AuthorizeAsync(projectId, ProjectRole.Member, ProjectRole.Leader);
             var parts = await _projectPartService.GetAllRepositories(projectId);
             return ApiResponse<List<ProjectPartResponse>>.Success(parts);
+        }
+
+        [HttpGet("{partId}/commits")]
+        [Authorize]
+        public async Task<ApiResponse<PagedResult<CommitRecordResponse>>> GetCommits(
+            [FromRoute] Guid projectId, [FromRoute] Guid partId, int page)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Member, ProjectRole.Leader);
+            var commits = await _projectPartService.GetCommits(partId, page);
+            return ApiResponse<PagedResult<CommitRecordResponse>>.Success(commits);
+        }
+
+        [HttpGet("{partId}/commit/{commitId}")]
+        [Authorize]
+        public async Task<ApiResponse<List<CommitDetailResponse>>> GetCommit(
+            [FromRoute] Guid projectId, [FromRoute] Guid partId, [FromRoute] string commitId)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Member, ProjectRole.Leader);
+            var commit = await _projectPartService.GetCommitDetail(commitId);
+            return ApiResponse<List<CommitDetailResponse>>.Success(commit);
         }
     }
 }

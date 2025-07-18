@@ -2,7 +2,8 @@
     using Azure.Core;
     using Microsoft.AspNetCore.Http.HttpResults;
     using Newtonsoft.Json.Linq;
-    using System.IO.Compression;
+using System.Diagnostics;
+using System.IO.Compression;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Text.Json;
@@ -22,31 +23,76 @@
             private readonly IConfiguration _config;
             private readonly IUserGitHubRepository _tokenRepo;
             private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<GitHubRepoService> _logger;
 
-            public GitHubRepoService(HttpClient httpClient, IConfiguration config, 
-                IUserGitHubRepository tokenRepo, IHttpContextAccessor httpContextAccessor)
+        public GitHubRepoService(HttpClient httpClient, IConfiguration config, 
+                IUserGitHubRepository tokenRepo, IHttpContextAccessor httpContextAccessor,
+                ILogger<GitHubRepoService> logger)
+        {
+            _httpClient = httpClient;
+            _config = config;
+            _tokenRepo = tokenRepo;
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("taskflow-app");
+            _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+        }
+
+        public async Task<bool> CheckUserConnectGitHub()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var userIdStr = httpContext?.User.FindFirst("id")?.Value;
+            if (userIdStr == null)
+                throw new AppException(ErrorCode.Unauthorized);
+
+            var userId = Guid.Parse(userIdStr);
+
+            var token = await _tokenRepo.GetTokenByUserIdAsync(userId);
+            return token != null;
+        }
+
+        public async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
+        {
+            var tmpPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tmpPath);
+
+            var repoUrl = $"https://{accessToken}@github.com/{repoFullName}.git";
+            async Task RunProcess(string fileName, string arguments, string workingDir)
             {
-                _httpClient = httpClient;
-                _config = config;
-                _tokenRepo = tokenRepo;
-                _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("taskflow-app");
-                _httpContextAccessor = httpContextAccessor;
+                //clone repo code git 
+                var process = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    WorkingDirectory = workingDir,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+                _logger.LogInformation("Running command: {File} {Args} in {Dir}", fileName, arguments, workingDir);
+                var proc = Process.Start(process)!;
+                var output = await proc.StandardOutput.ReadToEndAsync();
+                var error = await proc.StandardError.ReadToEndAsync();
+                await proc.WaitForExitAsync();
+
+                _logger.LogInformation("Command output: {Output}", output);
+                if (!string.IsNullOrWhiteSpace(error))
+                    _logger.LogError("Command error: {Error}", error);
+                _logger.LogInformation("Command exit code: {ExitCode}", proc.ExitCode);
+
+
+                if (proc.ExitCode != 0)
+                    throw new Exception($"Command '{fileName} {arguments}' failed. Check server logs.");
+
+                //clone repo code git
+                await RunProcess("git", $"clone {repoUrl} .", tmpPath);
+                //checkout commit
+                await RunProcess("git", $"checkout {commitId}", tmpPath);
             }
 
-            public async Task<bool> CheckUserConnectGitHub()
-            {
-                var httpContext = _httpContextAccessor.HttpContext;
-                var userIdStr = httpContext?.User.FindFirst("id")?.Value;
-                if (userIdStr == null)
-                    throw new AppException(ErrorCode.Unauthorized);
+            return tmpPath;
+        }
 
-                var userId = Guid.Parse(userIdStr);
-
-                var token = await _tokenRepo.GetTokenByUserIdAsync(userId);
-                return token != null;
-            }
-
-            public async Task<bool> CreateWebhook(string repoUrl, string token, string webhookUrl)
+        public async Task<bool> CreateWebhook(string repoUrl, string token, string webhookUrl)
             {
                 var uri = ConvertRepoUrlToApi(repoUrl) + "/hooks";
 
@@ -75,26 +121,55 @@
 
             public async Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken)
             {
-                var zipUrl = $"https://api.github.com/repos/{repoFullName}/zipball/{commitId}";
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken);
-                _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TaskFlow-Agent");
-
-                var response = await _httpClient.GetAsync(zipUrl);
-                response.EnsureSuccessStatusCode();
-
-                var tempZipPath = Path.Combine(Path.GetTempPath(), $"{commitId}.zip");
-                await using (var fs = new FileStream(tempZipPath, FileMode.Create))
-                {
-                    await response.Content.CopyToAsync(fs);
-                }
-                //var extractPath = Path.Combine(Path.GetTempPath(), $"repo_{commitId}");
                 var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
-                ZipFile.ExtractToDirectory(tempZipPath, extractPath, true);
 
-                //delete file
-                File.Delete(tempZipPath);
+                var cloneUrl = $"https://{accessToken}:x-oauth-basic@github.com/{repoFullName}.git";
+
+                //clone .git and repo git 
+                var cloneProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "git",
+                        Arguments = $"clone \"{cloneUrl}\" \"{extractPath}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    }
+                };
+                cloneProcess.Start();
+                string cloneOutput = await cloneProcess.StandardOutput.ReadToEndAsync();
+                string cloneError = await cloneProcess.StandardError.ReadToEndAsync();
+                await cloneProcess.WaitForExitAsync();
+
+                if (cloneProcess.ExitCode != 0)
+                    throw new Exception($"git clone failed:\n{cloneError}");
+
+                 //checkout commit
+                 var checkoutProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "git",
+                        Arguments = $"checkout {commitId}",
+                        WorkingDirectory = extractPath,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    }
+                };
+                checkoutProcess.Start();
+                string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
+                string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
+                await checkoutProcess.WaitForExitAsync();
+
+                if (checkoutProcess.ExitCode != 0)
+                    throw new Exception($"git checkout failed:\n{checkoutError}");
+
                 return extractPath;
-            }
+             }
 
             public async Task<string> ExchangeCodeForToken(string code)
             {
@@ -144,7 +219,7 @@
             {
                 var clientId = _config["GitHub:ClientId"];
                     var redirectUri = _config["GitHub:RedirectUri"];
-                return $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={redirectUri}&scope=repo,admin:repo_hook";
+            return $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={redirectUri}&scope=repo,admin:repo_hook,user:email";
             }
 
             public async Task<List<GitHubRepoDto>> GetUserRepos()

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250714111818_add_LineContent")]
+    partial class add_LineContent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,12 +60,6 @@ namespace taskflow_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Bugs")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CodeSmells")
-                        .HasColumnType("int");
-
                     b.Property<string>("CommitId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -72,18 +69,6 @@ namespace taskflow_api.Migrations
 
                     b.Property<string>("CommitUrl")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Coverage")
-                        .HasColumnType("float");
-
-                    b.Property<int>("DuplicatedBlocks")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DuplicatedLines")
-                        .HasColumnType("int");
-
-                    b.Property<double>("DuplicatedLinesDensity")
-                        .HasColumnType("float");
 
                     b.Property<string>("ErrorLog")
                         .IsRequired()
@@ -110,26 +95,13 @@ namespace taskflow_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("QualityGateStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Result")
                         .HasColumnType("bit");
 
                     b.Property<string>("ResultSummary")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeSpan>("ScanDuration")
-                        .HasColumnType("time");
-
-                    b.Property<int>("SecurityHotspots")
-                        .HasColumnType("int");
-
                     b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Vulnerabilities")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -144,12 +116,6 @@ namespace taskflow_api.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BlamedGitEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BlamedGitName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("CommitRecordId")
                         .HasColumnType("uniqueidentifier");

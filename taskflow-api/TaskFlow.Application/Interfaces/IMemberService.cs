@@ -7,7 +7,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         public Task<bool> AddMember(Guid ProjectId, AddMemberRequest request);
         public Task<bool> VerifyJoinProject(string token);
-        public Task<bool> RemoveMember(Guid projectId, Guid userId);
+        public Task<bool> RemoveMember(Guid projectId, Guid projectMemberId);
         public Task<bool> LeaveTheProject(Guid projectId);
         public Task<List<MemberResponse>> GetAllMemberInProject(Guid projectId);
         Task<ProjectMemberResponse> GetMeInProject(Guid ProjectId, Guid ProjectMemberId);

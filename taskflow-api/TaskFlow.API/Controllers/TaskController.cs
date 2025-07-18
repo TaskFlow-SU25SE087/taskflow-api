@@ -104,7 +104,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
-        [HttpPost("{taskId}/complete")]
+        [HttpPost("{taskId}/upflie")]
         [Authorize]
         public async Task<ApiResponse<bool>> AcceptTask(
             [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromForm] CompleteTaskRequest data)

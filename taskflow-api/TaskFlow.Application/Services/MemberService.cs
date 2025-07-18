@@ -88,7 +88,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return await _projectMemberRepository.GetAllMembersInProjectAsync(projectId);
         }
 
-        public Task<ProjectMemberResponse> GetMeInProject(Guid ProjectId, Guid ProjectMemberId)
+        public Task<ProjectMemberResponse?> GetMeInProject(Guid ProjectId, Guid ProjectMemberId)
         {
             return _projectMemberRepository.GetMeInProjectAsync(ProjectId, ProjectMemberId);
         }
@@ -118,9 +118,9 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _projectMemberRepository.UpdateMember(member);
             return true;
         }
-        public async Task<bool> RemoveMember(Guid projectId, Guid userId)
+        public async Task<bool> RemoveMember(Guid projectId, Guid projectMemberId)
         {
-            var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
+            var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             if (member == null)
             {
                 throw new AppException(ErrorCode.NoUserFound);
