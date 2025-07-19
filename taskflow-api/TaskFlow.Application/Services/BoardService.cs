@@ -49,8 +49,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.BoardNotFound);
             }
             //check max board order
+            int countBoard = await _boardRepository.CountBoard(boardDelete.ProjectId);
             var maxOrder = await _boardRepository.GetMaxOrder(boardDelete.ProjectId);
-            if (boardDelete.Order <= 3 )
+            if (boardDelete.Order == 0 || boardDelete.Order == maxOrder || countBoard == 3)
             {
                 throw new AppException(ErrorCode.CannotDeleteBoard);
             }

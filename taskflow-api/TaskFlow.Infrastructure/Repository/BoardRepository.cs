@@ -15,6 +15,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
+        public Task<int> CountBoard(Guid projectId)
+        {
+            return _context.Boards
+                .CountAsync(b => b.ProjectId == projectId && b.IsActive);
+        }
+
         public async Task CreateBoardsAsync(Board data)
         {
             _context.Boards.Add(data);

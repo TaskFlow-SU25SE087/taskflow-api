@@ -15,5 +15,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<Guid> GetIdBoardOrderFirtsAsync(Guid ProjectId);
         Task<List<BoardResponse>> GetListBoardAsync(Guid ProjectID);
         Task<List<Board>> GetBoardsByIdsAsync(List<Guid> boardIds);
+        Task<int> CountBoard(Guid projectId);
     }
 }
