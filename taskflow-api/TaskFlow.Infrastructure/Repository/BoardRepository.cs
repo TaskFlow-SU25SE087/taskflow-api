@@ -55,7 +55,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<Guid> GetIdBoardOrderFirtsAsync(Guid ProjectId)
         {
             var BoardId = await _context.Boards
-                .Where(b => b.ProjectId == ProjectId && b.IsActive && b.Order ==1)
+                .Where(b => b.ProjectId == ProjectId && b.IsActive && b.Order ==  0)
                 .OrderBy(b => b.Order)
                 .Select(b => b.Id)
                 .FirstOrDefaultAsync();

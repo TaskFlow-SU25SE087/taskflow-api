@@ -111,7 +111,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     ProjectId = projectId,
                     Name = "Not Started",
                     Description = "Tasks that have not been started yet.",
-                    Order = ++Order,
+                    Order = Order,
                     IsActive = true
                 },
                  new Board
