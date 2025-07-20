@@ -26,13 +26,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IUserGitHubRepository _userGitHubRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICommitScanIssueRepository _commitScanIssueRepository;
+        private readonly IGitMemberRepository _gitMemberRepository;
         private int PageSizeCommit = 10;
 
         public ProjectPartService(IProjectPartRepository projectPartRepository, IGitHubRepoService repoService,
             IOptions<AppSetting> appSetting, ILogger<ProjectPartService> logger,
             ICodeScanService codeScanService, ICommitRecordRepository commitRecordRepository,
             IRabbitMQService rabbitMQService, IUserGitHubRepository userGitHubRepository,
-            IHttpContextAccessor httpContextAccessor, ICommitScanIssueRepository commitScanIssueRepository)
+            IHttpContextAccessor httpContextAccessor, ICommitScanIssueRepository commitScanIssueRepository,
+            IGitMemberRepository gitMemberRepository)
         {
             _projectPartRepository = projectPartRepository;
             _repoService = repoService;
@@ -45,6 +47,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _userGitHubRepository = userGitHubRepository;
             _httpContextAccessor = httpContextAccessor;
             _commitScanIssueRepository = commitScanIssueRepository;
+            _gitMemberRepository = gitMemberRepository;
         }
 
         public async Task ConnectRepo(Guid partId, ConnectRepoRequest request)
@@ -83,7 +86,27 @@ namespace taskflow_api.TaskFlow.Application.Services
             part.WebhookUrl = webhookUrl;
             await _projectPartRepository.UpdateAsync(part);
 
-
+            //Get all member join git
+            var gitMembers = await _repoService.GetGitHubRepoMembers(request.RepoUrl, userGitHub.AccessToken);
+            if (gitMembers == null || gitMembers.Count == 0)
+            {
+                _logger.LogWarning($"No members found in repository {request.RepoUrl}");
+                return;
+            }
+            //create git member
+            var gitMemberEntities = new List<GitMember>();
+            foreach (var gitMember in gitMembers)
+            {
+                gitMemberEntities.Add(new GitMember
+                {
+                    ProjectPartId = partId,
+                    GitName = gitMember.Name,
+                    GitEmail = gitMember.Email,
+                    GitAvatarUrl = gitMember.AvatarUrl,
+                });
+            }
+            //save git member
+            await _gitMemberRepository.CreateListGitMember(gitMemberEntities);
         }
 
         public async Task CreatePart(Guid ProjectId, CreateProjectPartRequest request)

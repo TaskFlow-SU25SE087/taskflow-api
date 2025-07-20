@@ -13,10 +13,10 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Guid? ProjectMemberId { get; set; }
         public ProjectMember? ProjectMember { get; set; } = null!;
 
-        public string GitUserName { get; set; } = string.Empty;
+        public string GitName { get; set; } = string.Empty;
         public string GitEmail { get; set; } = string.Empty;
         public string GitAvatarUrl { get; set; } = string.Empty;
-        public string UserNameLocal { get; set; } = string.Empty;
+        public string NameLocal { get; set; } = string.Empty;
         public string EmailLocal { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

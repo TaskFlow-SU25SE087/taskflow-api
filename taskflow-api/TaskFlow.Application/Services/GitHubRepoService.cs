@@ -1,5 +1,5 @@
-﻿    using Azure;
-    using Azure.Core;
+﻿using Azure;
+using Azure.Core;
     using Microsoft.AspNetCore.Http.HttpResults;
     using Newtonsoft.Json.Linq;
 using System.Diagnostics;
@@ -17,7 +17,7 @@ using System.IO.Compression;
 
     namespace taskflow_api.TaskFlow.Application.Services
     {
-        public class GitHubRepoService : IGitHubRepoService
+    public class GitHubRepoService : IGitHubRepoService
         {
             private readonly HttpClient _httpClient;
             private readonly IConfiguration _config;
@@ -222,7 +222,63 @@ using System.IO.Compression;
             return $"https://github.com/login/oauth/authorize?client_id={clientId}&redirect_uri={redirectUri}&scope=repo,admin:repo_hook,user:email";
             }
 
-            public async Task<List<GitHubRepoDto>> GetUserRepos()
+        public async Task<List<MemberInGithubResponse>> GetGitHubRepoMembers(string repoUrl, string accessToken)
+        {
+            var uri = ConvertRepoUrlToApi(repoUrl) + "/collaborators";
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", accessToken);
+            request.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            var membersArray = JArray.Parse(content);
+
+            var members = new List<MemberInGithubResponse>();
+            foreach (var x in membersArray)
+            {
+                var login = x["login"]?.ToString() ?? "";
+                var avatarUrl = x["avatar_url"]?.ToString() ?? "";
+
+                string email = "";
+                string displayName = login;
+
+                try
+                {
+                    var userDetailRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/users/{login}");
+                    userDetailRequest.Headers.Authorization = new AuthenticationHeaderValue("token", accessToken);
+                    userDetailRequest.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
+
+                    var userDetailResponse = await _httpClient.SendAsync(userDetailRequest);
+                    if (userDetailResponse.IsSuccessStatusCode)
+                    {
+                        var userContent = await userDetailResponse.Content.ReadAsStringAsync();
+                        var userJson = JObject.Parse(userContent);
+
+                        email = userJson["email"]?.ToString() ?? "";
+
+                        var rawName = userJson["name"];
+                        displayName = (rawName != null && !string.IsNullOrWhiteSpace(rawName.ToString()))
+                            ? rawName.ToString()!
+                            : login;
+                    }
+                }
+                catch
+                {
+                }
+
+                members.Add(new MemberInGithubResponse
+                {
+                    Name = displayName,
+                    Email = email,
+                    AvatarUrl = avatarUrl
+                });
+
+                await Task.Delay(200);
+            }
+            return members;
+        }
+
+        public async Task<List<GitHubRepoDto>> GetUserRepos()
             {
                 var httpContext = _httpContextAccessor.HttpContext;
                 var userIdStr = httpContext?.User.FindFirst("id")?.Value;

@@ -12,5 +12,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<string> ExchangeCodeForToken(string code);
         Task<List<GitHubRepoDto>> GetUserRepos();
         Task<bool> CheckUserConnectGitHub();
+        Task<List<MemberInGithubResponse>> GetGitHubRepoMembers(string repoUrl, string accessToken);
     }
 }
