@@ -116,6 +116,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                             commit.DuplicatedBlocks = metrics.DuplicatedBlocks;
                             commit.DuplicatedLinesDensity = metrics.DuplicatedLinesDensity;
                             commit.Coverage = metrics.Coverage;
+                            commit.QualityScore = CommitScoreCalculator.CalculateQualityScore(commit);
                             foreach (var i in issues)
                             {
                                 string blamedEmail = string.Empty;

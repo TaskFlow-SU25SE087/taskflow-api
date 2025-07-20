@@ -3,7 +3,7 @@
 
     namespace taskflow_api.TaskFlow.Domain.Entities
     {
-        public class CommitRecord
+    public class CommitRecord
         {
             [Key]
             public Guid Id { get; set; } = Guid.NewGuid();
@@ -32,9 +32,10 @@
             public int DuplicatedBlocks { get; set; } = 0;
             public double DuplicatedLinesDensity { get; set; } = 0.0;
             public double Coverage { get; set; } = 0.0;
+            public double QualityScore { get; set; } = 0.0;
             public TimeSpan ScanDuration { get; set; } = TimeSpan.Zero;
 
-        public bool Result { get; set; } = false;
+            public bool Result { get; set; } = false;
             public string OutputLog { get; set; } = string.Empty;
             public string ErrorLog { get; set; } = string.Empty;
             public string ProjectKey { get; set; } = string.Empty;
