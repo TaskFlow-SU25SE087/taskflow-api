@@ -24,7 +24,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail InvalidEmailOrUsername = new(1015, "Invalid email or username", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail AccountExpired = new(1016, "Account has expired", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail TermExpired = new(1017, "Term has expired", StatusCodes.Status403Forbidden);
-        
+
         public static readonly ErrorDetail ImageExists = new(2001, "Image Exists", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail ImageNotCanSave = new(2002, "Image cannot be saved", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail MaxFileLimitReached = new(2003, "You have reached the maximum file limit", StatusCodes.Status403Forbidden);
@@ -65,9 +65,9 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
 
 
         public static readonly ErrorDetail TaskNotFound = new(8001, "Task not found", StatusCodes.Status404NotFound);
-        public static readonly ErrorDetail  CannotUpdateStatus = new(8002, "Cannot update task status", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail CannotUpdateStatus = new(8002, "Cannot update task status", StatusCodes.Status400BadRequest);
 
-        
+
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail Unauthorized = new(9002, "Unauthorized access", StatusCodes.Status401Unauthorized);
         public static readonly ErrorDetail NoFile = new(9003, "No file", StatusCodes.Status404NotFound);
@@ -78,5 +78,6 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail UserGitHubTokenNotFound = new(9008, "User GitHub token not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail GitHubTokenNotFound = new(9009, "GitHub token not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail NoHaveRepoInProject = new(9010, "No repositories found in the project", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail GitMemberNotFound = new(9011, "Git member not found", StatusCodes.Status404NotFound);
     }
 }

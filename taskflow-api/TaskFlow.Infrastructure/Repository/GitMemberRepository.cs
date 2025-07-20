@@ -26,10 +26,22 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<GitMember?> GetGitMemberById(Guid id)
+        {
+            var gitMember = await _context.GitMembers.FindAsync(id);
+            return gitMember;
+        }
+
         public async Task<GitMember?> GetMemberByNameAndEmailLocal(string name, string email, Guid projectPartId)
         {
             return await _context.GitMembers
                 .FirstOrDefaultAsync(gm => gm.NameLocal == name && gm.EmailLocal == email && gm.ProjectPartId == projectPartId);
+        }
+
+        public async Task Update(GitMember data)
+        {
+            _context.GitMembers.Update(data);
+            await _context.SaveChangesAsync();
         }
     }
 }

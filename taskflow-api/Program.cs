@@ -68,6 +68,7 @@ builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
 builder.Services.AddScoped<IUserGitHubRepository, UserGitHubRepository>();
 builder.Services.AddScoped<ICommitScanIssueRepository, CommitScanIssueRepository>();
 builder.Services.AddScoped<IGitMemberRepository, GitMemberRepository>();
+builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
 
 //Signalr
 builder.Services.AddSignalR();
