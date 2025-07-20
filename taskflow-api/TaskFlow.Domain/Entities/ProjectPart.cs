@@ -23,5 +23,6 @@ namespace taskflow_api.TaskFlow.Domain.Entities
 
 
         public List<CommitRecord> CommitRecords { get; set; } = new List<CommitRecord>();
+        public List<GitMember> GitMembers { get; set; } = new List<GitMember>();
     }
 }

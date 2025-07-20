@@ -33,6 +33,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<CommitRecord> CommitRecords { get; set; } = null!;
         public DbSet<UserGitHubToken> UserGitHubTokens { get; set; } = null!;
         public DbSet<CommitScanIssue> CommitScanIssues { get; set; } = null!;
+        public DbSet<GitMember> GitMembers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -219,6 +220,20 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .WithMany(x => x.CommitScanIssues)
                 .HasForeignKey(x => x.CommitRecordId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // GitMember <-> ProjectPart
+            modelBuilder.Entity<GitMember>()
+                .HasOne(gm => gm.ProjectPart)
+                .WithMany(pp => pp.GitMembers)
+                .HasForeignKey(gm => gm.ProjectPartId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // GitMember <-> ProjectMember
+            modelBuilder.Entity<GitMember>()
+                .HasOne(gm => gm.ProjectMember)
+                .WithMany(pm => pm.GitMembers)
+                .HasForeignKey(gm => gm.ProjectMemberId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 
