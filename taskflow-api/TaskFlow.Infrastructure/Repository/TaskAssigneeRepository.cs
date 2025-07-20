@@ -28,6 +28,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             return _context.SaveChangesAsync();
         }
 
+        public async Task CreateTaskAssignee(TaskAssignee taskAssignee)
+        {
+            _context.TaskAssignees.Add(taskAssignee);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<TaskAssignee?> GetTaskAssigneeAsync(Guid taskAssigneeId)
         {
             return await _context.TaskAssignees

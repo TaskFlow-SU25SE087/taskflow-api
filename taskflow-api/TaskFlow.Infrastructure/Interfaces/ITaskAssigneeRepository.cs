@@ -6,6 +6,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task AcceptTaskAsync(TaskAssignee data);
         Task CreateListTaskAssignee(List<TaskAssignee> taskAssignees);
+        Task CreateTaskAssignee(TaskAssignee taskAssignee);
         Task<bool> IsTaskAssigneeExistsAsync(Guid taskId, Guid implement);
         Task<TaskAssignee?> GetTaskAssigneeAsync(Guid taskAssigneeId);
         Task<TaskAssignee?> GetTaskAssigneeByTaskIdAndUserIDAsync(Guid taskId, Guid projectmemberId);

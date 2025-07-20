@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 
@@ -23,6 +24,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             _context.GitMembers.AddRange(data);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<GitMember?> GetMemberByNameAndEmailLocal(string name, string email, Guid projectPartId)
+        {
+            return await _context.GitMembers
+                .FirstOrDefaultAsync(gm => gm.NameLocal == name && gm.EmailLocal == email && gm.ProjectPartId == projectPartId);
         }
     }
 }

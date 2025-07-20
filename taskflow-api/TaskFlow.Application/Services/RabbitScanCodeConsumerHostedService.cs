@@ -209,6 +209,32 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     IsActive = true
                                 };
                                 await issueRepo.CreateTaskIssueAsync(issue);
+
+                                    //get user to do issue
+                                    var userRepo = scope.ServiceProvider
+                                        .GetRequiredService<IGitMemberRepository>();
+                                    var member = await userRepo
+                                    .GetMemberByNameAndEmailLocal(blamedName, blamedEmail, commit.ProjectPart.Id);
+
+                                    if (member == null)
+                                    {
+                                        _logger.LogWarning($"Member not found for name: {blamedName}, email: {blamedEmail}");
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        //Create TaskAssignee for the issue
+                                        var taskAssigneeRepo = scope.ServiceProvider
+                                            .GetRequiredService<ITaskAssigneeRepository>();
+                                        var taskAssignee = new TaskAssignee
+                                        {
+                                            RefId = issue.Id,
+                                            Type = RefType.Issue,
+                                            AssignerId = Guid.Empty,
+                                            ImplementerId = member.ProjectMemberId ?? null,
+                                        };
+                                        await taskAssigneeRepo.CreateTaskAssignee(taskAssignee);
+                                    }
                                 }
 
                             }
