@@ -66,7 +66,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 notification.TaskId,
                 notification.Message,
                 notification.IsRead,
-                notification.CreatedAt
+                notification.CreatedAt,
+                Type = "TaskUpdate"
             });
         }
     public async Task NotifyProjectMemberChangeAsync(Guid projectId, string message)
@@ -106,7 +107,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                     notification.ProjectId,
                     notification.Message,
                     notification.IsRead,
-                    notification.CreatedAt
+                    notification.CreatedAt,
+                    Type = "ProjectMemberChange"
                 });
             }
         }
@@ -153,7 +155,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                     notification.TaskId,
                     notification.Message,
                     notification.IsRead,
-                    notification.CreatedAt
+                    notification.CreatedAt,
+                    Type = "TaskBoardChange"
                 });
             }
         }
