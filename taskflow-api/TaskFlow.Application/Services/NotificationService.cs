@@ -91,7 +91,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 // In-app notification (database)
                 var notification = new Notification
                 {
-                    UserId = member.UserId,
+                    UserId = member.Id,
                     ProjectId = projectId,
                     Message = message,
                     IsRead = false,
@@ -100,7 +100,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await _notificationRepository.AddNotificationAsync(notification);
 
                 // SignalR notification (send to user)
-                await _hubContext.Clients.User(member.UserId.ToString()).SendAsync("ReceiveNotification", new
+                await _hubContext.Clients.User(member.Id.ToString()).SendAsync("ReceiveNotification", new
                 {
                     notification.Id,
                     notification.UserId,

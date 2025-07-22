@@ -73,9 +73,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
         }
 
+        public async Task<List<IssueDetailResponse>> FilterIssue(Guid projectId, IssueStatus? status, 
+            TypeIssue? type, TaskPriority? priority)
+        {
+            return await _issueRepository.GetIssue(projectId, status, type, priority);
+        }
+
         public Task<List<IssueDetailResponse>> GetAllIssue(Guid ProjectId)
         {
-            return _issueRepository.GetAllIssueAsync(ProjectId);
+            return _issueRepository.GetIssue(ProjectId);
         }
     }
 }
