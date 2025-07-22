@@ -91,7 +91,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 // In-app notification (database)
                 var notification = new Notification
                 {
-                    UserId = member.Id,
+                    UserId = member.UserId,
                     ProjectId = projectId,
                     Message = message,
                     IsRead = false,
@@ -100,7 +100,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await _notificationRepository.AddNotificationAsync(notification);
 
                 // SignalR notification (send to user)
-                await _hubContext.Clients.User(member.Id.ToString()).SendAsync("ReceiveNotification", new
+                await _hubContext.Clients.User(member.UserId.ToString()).SendAsync("ReceiveNotification", new
                 {
                     notification.Id,
                     notification.UserId,
@@ -123,7 +123,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             foreach (var userId in userIds)
             {
                 // Email notification
-                var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
+                var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(userId);
                 if (member != null && member.User != null && !string.IsNullOrEmpty(member.User.Email))
                 {
                     await _mailService.SendTaskUpdateEmailAsync(
@@ -137,7 +137,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 // In-app notification (database)
                 var notification = new Notification
                 {
-                    UserId = userId,
+                    UserId = member?.UserId ?? userId,
                     ProjectId = projectId,
                     TaskId = taskId,
                     Message = message,
@@ -147,17 +147,20 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await _notificationRepository.AddNotificationAsync(notification);
 
                 // SignalR notification (send to user)
-                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
+                if (member != null)
                 {
-                    notification.Id,
-                    notification.UserId,
-                    notification.ProjectId,
-                    notification.TaskId,
-                    notification.Message,
-                    notification.IsRead,
-                    notification.CreatedAt,
-                    Type = "TaskBoardChange"
-                });
+                    await _hubContext.Clients.User(member.UserId.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        notification.Id,
+                        notification.UserId,
+                        notification.ProjectId,
+                        notification.TaskId,
+                        notification.Message,
+                        notification.IsRead,
+                        notification.CreatedAt,
+                        Type = "TaskBoardChange"
+                    });
+                }
             }
         }
     public async Task<List<Notification>> GetUserNotificationsAsync(Guid userId)

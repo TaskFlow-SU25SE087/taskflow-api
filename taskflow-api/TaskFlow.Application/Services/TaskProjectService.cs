@@ -145,13 +145,12 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             // Get all assignees for the task
             var assignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
-            var userIds = assignees
+            var projectMemberIds = assignees
                 .Where(a => a.ImplementerId.HasValue)
                 .Select(a => a.ImplementerId.Value)
                 .ToList();
 
-            // Send notification
-            await _notificationService.NotifyTaskBoardChangeAsync(taskProject.ProjectId, TaskId, oldBoardName, newBoardName, userIds);
+            await _notificationService.NotifyTaskBoardChangeAsync(taskProject.ProjectId, TaskId, oldBoardName, newBoardName, projectMemberIds);
         }
 
         public async Task<bool> DeleteTask(Guid taskId)
