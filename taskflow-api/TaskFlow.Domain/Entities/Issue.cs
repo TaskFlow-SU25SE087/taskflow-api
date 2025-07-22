@@ -8,12 +8,14 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
-        public Guid? TaskProjectID { get; set; }
+        public Guid? TaskProjectId { get; set; }
         public TaskProject TaskProject { get; set; } = null!;
         [Required]
         public Guid ProjectId { get; set; }
         public Project Project { get; set; }
         public Guid CreatedBy { get; set; }
+        [ForeignKey("CreatedBy")]
+        public ProjectMember CreatedByMember { get; set; } = null!;
         [Required]
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;

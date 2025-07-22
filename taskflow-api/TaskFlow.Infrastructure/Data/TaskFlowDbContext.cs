@@ -110,7 +110,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
             modelBuilder.Entity<Issue>()
                 .HasOne(i => i.TaskProject)
                 .WithMany(tp => tp.Issues)
-                .HasForeignKey(i => i.TaskProjectID)
+                .HasForeignKey(i => i.TaskProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             //User <-> UserReport
@@ -233,6 +233,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .HasOne(gm => gm.ProjectMember)
                 .WithMany(pm => pm.GitMembers)
                 .HasForeignKey(gm => gm.ProjectMemberId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // projecMember <-> Issue
+            modelBuilder.Entity<Issue>()
+                .HasOne(i => i.CreatedByMember)
+                .WithMany(pm => pm.Issues)
+                .HasForeignKey(i => i.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

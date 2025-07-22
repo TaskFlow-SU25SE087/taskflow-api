@@ -83,6 +83,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
+        public Task AddSystemUSer(Guid ProjectId)
+        {
+            var systemUser = new ProjectMember
+            {
+                Id = Guid.NewGuid(),
+                UserId = Guid.Parse("00000000-0000-0000-0000-000000000001"), // System user ID
+                ProjectId = ProjectId,
+                Role = ProjectRole.System,
+                IsActive = true,
+                HasJoinedBefore = true // Mark as has joined before
+            };
+            return _projectMemberRepository.CreateProjectMemeberAsync(systemUser);
+        }
+
         public async Task<List<MemberResponse>> GetAllMemberInProject(Guid projectId)
         {
             return await _projectMemberRepository.GetAllMembersInProjectAsync(projectId);

@@ -15,6 +15,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<bool> IsUserInProjectAsync(Guid projectId, Guid userId);
         Task<List<MemberResponse>> GetAllMembersInProjectAsync(Guid projectId);
         Task<ProjectMemberResponse?> GetMeInProjectAsync(Guid projectId, Guid projectMemberId);
-
+        Task<Guid> GetSystemMemberId(Guid projectId);
     }
 }

@@ -29,13 +29,15 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<ProjectMember?> FindMemberInProject(Guid projectId, Guid userId)
         {
             return await _context.ProjectMembers
-                .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+                .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && 
+                pm.UserId == userId);
         }
 
         public async Task<ProjectMember?> FindMemberInProjectByProjectMemberID(Guid ProjectMemberId)
         {
             return await _context.ProjectMembers
-                .FirstOrDefaultAsync(pm => pm.Id == ProjectMemberId && pm.IsActive);
+                .FirstOrDefaultAsync(pm => pm.Id == ProjectMemberId && 
+                pm.IsActive);
         }
 
         public Task<int> GetActiveMembersCount(Guid ProjectId)
@@ -47,7 +49,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public Task<List<MemberResponse>> GetAllMembersInProjectAsync(Guid projectId)
         {
             return _context.ProjectMembers
-                .Where(pm => pm.ProjectId == projectId && pm.IsActive)
+                .Where(pm => pm.ProjectId == projectId && pm.IsActive && pm.Role != ProjectRole.System)
                 .Select(pm => new MemberResponse
                 {
                     Id = pm.Id,
@@ -76,6 +78,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return _context.ProjectMembers
                 .CountAsync(pm => pm.UserId == userId && pm.IsActive);
+        }
+
+        public Task<Guid> GetSystemMemberId(Guid projectId)
+        {
+            return _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId && pm.Role == ProjectRole.System)
+                .Select(pm => pm.Id)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<bool> GetUserIsActiveInProjectAsync(Guid userId)

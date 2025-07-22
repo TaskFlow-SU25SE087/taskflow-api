@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -26,7 +27,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 CreatedBy = memberId,
                 ProjectId = projectId,
-                TaskProjectID = TaskId,
+                TaskProjectId = TaskId,
                 Title = request.Title,
                 Description = request.Description,
                 Priority = request.Priority,
@@ -70,6 +71,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                     }
                     await _taskAssigneeRepository.CreateListTaskAssignee(lissTaskAssignee);
                 }
+        }
+
+        public Task<List<IssueDetailResponse>> GetAllIssue(Guid ProjectId)
+        {
+            return _issueRepository.GetAllIssueAsync(ProjectId);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
@@ -6,5 +7,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     public interface ITaskIssueRepository
     {
         Task CreateTaskIssueAsync(Issue data);
+        Task<List<IssueDetailResponse>> GetAllIssueAsync(Guid projectId);
     }
 }

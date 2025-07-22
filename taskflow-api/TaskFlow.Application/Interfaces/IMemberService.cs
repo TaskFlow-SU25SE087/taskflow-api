@@ -11,5 +11,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         public Task<bool> LeaveTheProject(Guid projectId);
         public Task<List<MemberResponse>> GetAllMemberInProject(Guid projectId);
         Task<ProjectMemberResponse> GetMeInProject(Guid ProjectId, Guid ProjectMemberId);
+        Task AddSystemUSer(Guid ProjectId);
     }
 }

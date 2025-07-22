@@ -18,5 +18,6 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public List<TaskAssignee> taskUsers { get; set; } = new List<TaskAssignee>();
         public List<TaskComment> TaskComments { get; set; } = new();
         public List<GitMember> GitMembers { get; set; } = new List<GitMember>();
+        public List<Issue> Issues { get; set; } = new List<Issue>();
     }
 }

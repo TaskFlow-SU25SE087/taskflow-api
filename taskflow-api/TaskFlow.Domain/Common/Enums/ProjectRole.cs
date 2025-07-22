@@ -4,6 +4,7 @@
     {
         Leader,
         Member,
-        Unknown
+        Unknown,
+        System
     }
 }

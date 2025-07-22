@@ -86,6 +86,14 @@ namespace taskflow_api.TaskFlow.Application.Services
                 HasJoinedBefore = true,
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
+            var UserSystem = new ProjectMember
+            {
+                UserId = Guid.Parse("00000000-0000-0000-0000-000000000001"), // System user ID
+                ProjectId = projectId,
+                Role = ProjectRole.System,
+                IsActive = true,
+                HasJoinedBefore = true,
+            };
             //create SPring for the project
             var newSprint = new Sprint
             {

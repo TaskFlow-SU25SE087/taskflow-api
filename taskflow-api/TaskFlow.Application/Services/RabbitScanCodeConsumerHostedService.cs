@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Diagnostics;
@@ -200,13 +201,16 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 await commitScanIssueRepo.CreateAsync(scanIssue);
 
                                 //create task issue
-                                var issue = new Issue
+                                var projectMemberRepo = scope.ServiceProvider.GetRequiredService<IProjectMemberRepository>();
+                                var idSystem = await projectMemberRepo.GetSystemMemberId(commit.ProjectPart.ProjectId);
+                                    var issue = new Issue
                                 {
                                     ProjectId = commit.ProjectPart.ProjectId,
                                     Title = $"{i.Severity}: {i.Message}",
                                     Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
                                     Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
                                     Type = TypeIssue.Improvement,
+                                    CreatedBy = idSystem,
                                     IsActive = true
                                 };
                                 await issueRepo.CreateTaskIssueAsync(issue);

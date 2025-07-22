@@ -111,5 +111,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.GetMeInProject(projectId, projectMemberId);
             return ApiResponse<ProjectMemberResponse>.Success(result);
         }
+
+        [HttpPost("add-system-user")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> AddSystemUser([FromRoute] Guid projectId)
+        {
+            await _context.AddSystemUSer(projectId);
+            return ApiResponse<bool>.Success(true);
+        }
     }
 }
