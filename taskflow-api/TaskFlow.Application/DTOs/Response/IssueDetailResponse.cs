@@ -16,6 +16,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public Guid CreatedBy { get; set; }
         public string NameCreate { get; set; } = string.Empty;
         public string AvatarCreate { get; set; } = string.Empty;
+        public ProjectRole RoleCreate { get; set; }
 
         public string Title { get; set; }
         public string Description { get; set; } 

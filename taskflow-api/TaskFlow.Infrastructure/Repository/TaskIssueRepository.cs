@@ -42,6 +42,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     CreatedBy = i.CreatedBy,
                     NameCreate = i.CreatedByMember!.User.FullName,
                     AvatarCreate = i.CreatedByMember.User.Avatar,
+                    RoleCreate = i.CreatedByMember.Role,
                     Title = i.Title,
                     Description = i.Description,
                     Explanation = i.Explanation,
