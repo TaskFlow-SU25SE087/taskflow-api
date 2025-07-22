@@ -13,22 +13,27 @@ namespace taskflow_api.TaskFlow.API.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly INotificationService _notificationService;
+        private readonly ITaskFlowAuthorizationService _authorizationService;
 
-        public NotificationController(INotificationService notificationService)
+        public NotificationController(INotificationService notificationService, ITaskFlowAuthorizationService authorizationService)
         {
             _notificationService = notificationService;
+            _authorizationService = authorizationService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetUserNotifications()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            try
+            {
+                var userId = await _authorizationService.GetCurrentUserIdAsync();
+                var notifications = await _notificationService.GetUserNotificationsAsync(userId);
+                return Ok(notifications);
+            }
+            catch (Exception)
             {
                 return Unauthorized();
             }
-            var notifications = await _notificationService.GetUserNotificationsAsync(userId);
-            return Ok(notifications);
         }
     }
 }

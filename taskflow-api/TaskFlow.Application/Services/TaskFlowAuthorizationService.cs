@@ -82,5 +82,13 @@ namespace taskflow_api.TaskFlow.Application.Services
             return allowedRoles.Contains(projectMember.Role);
         }
 
+        public async Task<Guid> GetCurrentUserIdAsync()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) throw new AppException(ErrorCode.Unauthorized);
+            var userIdClaim = httpContext.User.FindFirst("ID");
+            if (userIdClaim == null) throw new AppException(ErrorCode.Unauthorized);
+            return Guid.Parse(userIdClaim.Value);
+        }
     }
 }
