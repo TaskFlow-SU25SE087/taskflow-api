@@ -42,9 +42,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
-        public Task<Project?> GetProjectByIdAsync(Guid id)
+        public async Task<Project?> GetProjectByIdAsync(Guid id)
         {
-                var project = _context.Projects
+                var project = await _context.Projects
             .Include(p => p.Members)
             .Include(p => p.ProjectParts)
             .Include(p => p.Boards)
@@ -57,7 +57,28 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             .Include(p => p.Sprints)
             .FirstOrDefaultAsync(p => p.Id == id);
 
-                return project;
+            if (project != null)
+            {
+                foreach (var board in project.Boards)
+                {
+                    board.TaskProject = board.TaskProject
+                        .Where(tp => tp.IsActive)
+                        .ToList();
+
+                    foreach (var task in board.TaskProject)
+                    {
+                        task.TaskTags = task.TaskTags
+                            .Where(tt => tt.Tag != null)
+                            .ToList();
+
+                        task.TaskComments = task.TaskComments
+                            .Where(c => !string.IsNullOrWhiteSpace(c.Content))
+                            .ToList();
+                    }
+                }
+            }
+
+            return project;
         }
 
         public IQueryable<Project> GetProjectsByUserIdAsync(Guid userId)
