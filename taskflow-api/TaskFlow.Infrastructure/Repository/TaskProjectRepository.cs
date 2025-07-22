@@ -151,6 +151,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                         }
                     ).ToList(),
                     Tags = t.TaskTags
+                    .Where(tt => tt.Tag != null)
                         .Select(tt => new TaskTagResponse
                         {
                             Name = tt.Tag.Name,
@@ -158,6 +159,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                             Color = tt.Tag.Color
                         }).ToList(),
                     Issues = t.Issues
+                    .Where(i => i.IsActive)
                         .Select(i => new IssueTaskResponse
                         {
                             Id = i.Id,
@@ -171,7 +173,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                             IssueAttachmentUrls = i.IssueAttachmentUrlsList,
                             Explanation = i.Explanation,
                             Example = i.Example
-                        }).ToList()
+                        })
+                        .ToList()
                 })
                 .ToListAsync();
         }

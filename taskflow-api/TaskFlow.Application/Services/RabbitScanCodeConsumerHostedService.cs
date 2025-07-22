@@ -206,7 +206,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     Title = $"{i.Severity}: {i.Message}",
                                     Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
                                     Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
-                                    Type = TypeIssue.FeatureRequest,
+                                    Type = TypeIssue.Improvement,
                                     IsActive = true
                                 };
                                 await issueRepo.CreateTaskIssueAsync(issue);
