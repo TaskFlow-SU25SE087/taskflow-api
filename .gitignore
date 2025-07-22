@@ -51,11 +51,6 @@ bld/
 
 # Static files
 wwwroot/*
-!wwwroot/.gitkeep
-
-# Migrations folder
-Migrations/
-taskflow-api/Migrations/
 
 # SQL Server files
 *.mdf
@@ -128,3 +123,6 @@ docker-compose.*.yml
 
 # Git folder config
 .git/
+
+# Không push appsettings.json
+appsettings.json
