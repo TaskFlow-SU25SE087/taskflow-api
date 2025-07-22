@@ -260,7 +260,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 if (assignee.ImplementerId.HasValue)
                 {
-                    await _notificationService.NotifyTaskUpdateAsync(assignee.ImplementerId.Value, taskUpdate.ProjectId, TaskId, $"Task '{taskUpdate.Title}' has been updated.");
+                    // Get the ProjectMember to find the UserId
+                    var projectMember = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(assignee.ImplementerId.Value);
+                    if (projectMember != null)
+                    {
+                        await _notificationService.NotifyTaskUpdateAsync(projectMember.UserId, taskUpdate.ProjectId, TaskId, $"Task '{taskUpdate.Title}' has been updated.");
+                    }
                 }
             }
 
