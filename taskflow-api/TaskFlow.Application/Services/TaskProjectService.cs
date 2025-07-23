@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using System;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
@@ -6,6 +7,7 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -22,12 +24,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IProjectMemberRepository _projectMemberRepository;
         private readonly ISprintRepository _sprintRepository;
         private readonly INotificationService _notificationService;
+        private readonly AppTimeProvider _timeProvider;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
             ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
             ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository,
-            ISprintRepository sprintRepository,
+            ISprintRepository sprintRepository, AppTimeProvider timeProvider,
             INotificationService notificationService)
         {
             _taskProjectRepository = taskProjectRepository;
@@ -41,6 +44,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _projectMemberRepository = projectMemberRepository;
             _sprintRepository = sprintRepository;
             _notificationService = notificationService;
+            _timeProvider = timeProvider;
         }
 
         public async Task AddTagForTask(Guid TaskId, Guid TagId)
@@ -80,6 +84,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Description = request.Description,
                 Priority = request.Priority,
                 IsActive = true,
+                CreatedAt = _timeProvider.Now,
             };
             if (request.File != null)
             {
@@ -113,6 +118,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 RefId = TaskId,
                 Type = RefType.Task,
                 IsActive = true,
+                CreatedAt = _timeProvider.Now
             };
             await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
         }
@@ -249,7 +255,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.Title = request.Title;
             taskUpdate.Description = request.Description;
             taskUpdate.Priority = request.Priority;
-            taskUpdate.UpdatedAt = DateTime.UtcNow;
+            taskUpdate.UpdatedAt = _timeProvider.Now;
 
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
 
@@ -290,6 +296,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var newTaskAginee = new TaskAssignee
             {
+                CreatedAt = _timeProvider.Now,
                 ImplementerId = member.Id,
                 AssignerId = member.Id,
                 RefId = TaskId,
@@ -306,7 +313,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.UserNotAssignedToTask);
             }
-            taskAssignee.UpdatedAt = DateTime.UtcNow;
+            taskAssignee.UpdatedAt = _timeProvider.Now;
             taskAssignee.IsActive = false;
             taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(reason)
                                             ? reason

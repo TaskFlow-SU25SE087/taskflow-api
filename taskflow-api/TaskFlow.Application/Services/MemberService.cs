@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
@@ -20,11 +21,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITagRepository _TagRepository;
         private readonly INotificationService _notificationService;
+        private readonly AppTimeProvider _timeProvider;
 
         public MemberService(UserManager<User> userManager, IVerifyTokenRopository verifyTokenRopository,
                             IProjectRepository projectRepository, IProjectMemberRepository projectMemberRepository,
                             IMailService mailService, IHttpContextAccessor httpContextAccessor,
-                            ITagRepository TagRepository, INotificationService notificationService)
+                            ITagRepository TagRepository, INotificationService notificationService,
+                            AppTimeProvider timeProvider)
         {
             _userManager = userManager;
             _verifyTokenRopository = verifyTokenRopository;
@@ -34,6 +37,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _TagRepository = TagRepository;
             _notificationService = notificationService;
+            _timeProvider = timeProvider;
         }
         public async Task<bool> AddMember(Guid ProjectId, AddMemberRequest request)
         {
@@ -56,7 +60,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Token = token,
                 Type = VerifyTokenEnum.JoinProject,
                 IsUsed = false,
-                ExpiresAt = DateTime.UtcNow.AddDays(3),
+                CreatedAt = _timeProvider.Now,
+                ExpiresAt = _timeProvider.Now.AddDays(3) // Token valid for 3 days
             });
             //check member has been in the project
             var member = _projectMemberRepository.FindMemberInProject(ProjectId, user.Result.Id);

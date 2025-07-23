@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using taskflow_api.TaskFlow.API.Hubs;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Common.Attributes;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Application.Mappings;
 using taskflow_api.TaskFlow.Application.Services;
@@ -112,6 +113,11 @@ builder.Services.AddSwaggerGen(c =>
     //add enum
     c.SchemaFilter<EnumSchemaFilter>();
 });
+
+//set time
+builder.Services.Configure<TimeSettings>(builder.Configuration.GetSection("TimeSever"));
+builder.Services.AddSingleton<AppTimeProvider>();
+
 
 builder.Services.AddDbContext<TaskFlowDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("dbApp")));

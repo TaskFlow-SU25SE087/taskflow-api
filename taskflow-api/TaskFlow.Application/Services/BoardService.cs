@@ -7,6 +7,7 @@ using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Infrastructure.Repository;
 using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -14,6 +15,7 @@ namespace taskflow_api.TaskFlow.Application.Services
     {
         private readonly IBoardRepository _boardRepository;
         private readonly IMapper _mapper;
+
         public BoardService(IBoardRepository boardRepository, IMapper mapper)
         {
             _boardRepository = boardRepository;
@@ -29,11 +31,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             int Order = await _boardRepository.GetMaxOrder(ProjectID) + 1;
             var board = new Board
             {
-                Id = Guid.NewGuid(),
                 ProjectId = ProjectID,
                 Name = request.Name,
                 Description = request.Description,
                 Order = Order,
+                
                 IsActive = true
             };
             await _boardRepository.CreateBoardsAsync(board);

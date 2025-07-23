@@ -1,10 +1,12 @@
-﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+﻿using System;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -12,11 +14,14 @@ namespace taskflow_api.TaskFlow.Application.Services
     {
         private readonly ISprintRepository _sprintRepository;
         private readonly ITaskProjectRepository _taskProjectRepository;
+        private readonly AppTimeProvider _timeProvider;
 
-        public SprintService(ISprintRepository repository, ITaskProjectRepository taskProjectRepository)
+        public SprintService(ISprintRepository repository, ITaskProjectRepository taskProjectRepository,
+            AppTimeProvider timeProvider)
         {
             _sprintRepository = repository;
             _taskProjectRepository = taskProjectRepository;
+            _timeProvider = timeProvider;
         }
 
         public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID)
@@ -57,9 +62,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                     Name = "Sprint " + (lastSprint == null ? 1 : lastSprint.Name.Split(' ').LastOrDefault() + 1),
                     Description = "Next sprint after " + sprint.Name,
                     StartDate = lastSprint!.EndDate,
-                    EndDate = DateTime.UtcNow.AddDays(14), // Example: 2 weeks duration
+                    EndDate = _timeProvider.Now.AddDays(14), // Example: 2 weeks duration
                     IsActive = true,
-                    Status = SprintStatus.NotStarted
+                    Status = SprintStatus.NotStarted,
                 };
                 var lisktaskproject = await _taskProjectRepository.GetListTasksBySprintsIdsAsync(SpringId);
                 foreach (var task in lisktaskproject)
