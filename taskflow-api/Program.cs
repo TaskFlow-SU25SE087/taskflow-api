@@ -72,7 +72,7 @@ builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
 
 //Signalr
 builder.Services.AddSignalR();
-
+builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 
 
 // Mapper
