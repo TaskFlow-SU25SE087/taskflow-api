@@ -6,5 +6,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task NotifyProjectMemberChangeAsync(Guid projectId, string message);
         Task NotifyTaskBoardChangeAsync(Guid projectId, Guid taskId, string oldBoardName, string newBoardName, List<Guid> userIds);
         Task<List<taskflow_api.TaskFlow.Domain.Entities.Notification>> GetUserNotificationsAsync(Guid userId);
+        Task MarkAsReadAsync(Guid notificationId);
+        Task DeleteAllReadAsync(Guid userId);
     }
 }

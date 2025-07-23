@@ -10,5 +10,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task AddNotificationAsync(Notification notification);
         Task<List<Notification>> GetUserNotificationsAsync(Guid userId);
         Task MarkAsReadAsync(Guid notificationId);
+        Task DeleteAllReadAsync(Guid userId);
     }
 }

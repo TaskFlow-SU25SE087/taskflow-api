@@ -6,6 +6,7 @@ using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using taskflow_api.TaskFlow.API.Hubs;
+using System.Collections.Generic;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -166,6 +167,16 @@ namespace taskflow_api.TaskFlow.Application.Services
     public async Task<List<Notification>> GetUserNotificationsAsync(Guid userId)
         {
             return await _notificationRepository.GetUserNotificationsAsync(userId);
+        }
+
+        public async Task MarkAsReadAsync(Guid notificationId)
+        {
+            await _notificationRepository.MarkAsReadAsync(notificationId);
+        }
+
+        public async Task DeleteAllReadAsync(Guid userId)
+        {
+            await _notificationRepository.DeleteAllReadAsync(userId);
         }
     }
 }
