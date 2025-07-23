@@ -2,6 +2,7 @@
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -23,9 +24,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<IssueDetailResponse>> GetAllIssueAsync(Guid projectId)
+        public async Task<List<IssueDetailResponse>> GetIssue(
+            Guid projectId, IssueStatus? status = null, 
+            TypeIssue? type = null, TaskPriority? priority = null)
         {
-            var data = await _context.Issues
+            var query = _context.Issues
                 .Where(i => i.ProjectId == projectId && i.IsActive)
                 .Include(i => i.TaskProject)
                 .Include(i => i.CreatedByMember)
@@ -33,6 +36,17 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Include(i => i.TaskAssignees)
                     .ThenInclude(ta => ta.ProjectMember)
                         .ThenInclude(pm => pm.User)
+                 .AsQueryable();
+            if (status.HasValue)
+                query = query.Where(i => i.Status == status.Value);
+
+            if (type.HasValue)
+                query = query.Where(i => i.Type == type.Value);
+
+            if (priority.HasValue)
+                query = query.Where(i => i.Priority == priority.Value);
+
+            var data = await query
                 .Select(i => new IssueDetailResponse
                 {
                     Id = i.Id,

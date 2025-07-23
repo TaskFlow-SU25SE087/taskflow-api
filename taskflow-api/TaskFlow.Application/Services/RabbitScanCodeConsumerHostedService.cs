@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System;
 using System.Diagnostics;
 using System.Runtime;
 using System.Text;
@@ -22,13 +23,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ILogger<RabbitScanCodeConsumerHostedService> _logger;
         private readonly RabbitMQSetting _settings;
         private readonly IServiceProvider _serviceProvider;
+        private readonly AppTimeProvider _timeProvider;
 
         public RabbitScanCodeConsumerHostedService(ILogger<RabbitScanCodeConsumerHostedService> logger,
-            IOptions<RabbitMQSetting> settings, IServiceProvider serviceProvider)
+            IOptions<RabbitMQSetting> settings, IServiceProvider serviceProvider, AppTimeProvider timeProvider)
         {
             _logger = logger;
             _settings = settings.Value;
             _serviceProvider = serviceProvider;
+            _timeProvider = timeProvider;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -194,8 +197,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     FilePath = cleanFilePath,
                                     Line = i.Line,
                                     LineContent = lineContent,
-                                    CreatedAt = DateTime.UtcNow,
-                                    BlamedGitEmail = blamedEmail,
+                                    CreatedAt = _timeProvider.Now,
+                                        BlamedGitEmail = blamedEmail,
                                     BlamedGitName = blamedName
                                     };
                                 await commitScanIssueRepo.CreateAsync(scanIssue);
@@ -211,8 +214,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
                                     Type = TypeIssue.Improvement,
                                     CreatedBy = idSystem,
-                                    IsActive = true
-                                };
+                                    IsActive = true,
+                                    CreatedAt = _timeProvider.Now,
+                                    };
                                 await issueRepo.CreateTaskIssueAsync(issue);
 
                                     //get user to do issue
@@ -237,6 +241,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                                             Type = RefType.Issue,
                                             AssignerId = Guid.Empty,
                                             ImplementerId = member.ProjectMemberId ?? null,
+                                            CreatedAt = _timeProvider.Now,
                                         };
                                         await taskAssigneeRepo.CreateTaskAssignee(taskAssignee);
                                     }

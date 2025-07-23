@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
 using taskflow_api.Migrations;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
@@ -28,12 +29,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ISprintRepository _sprintRepository;
         private readonly ITagRepository _TagRepository;
         private readonly ITaskTagRepository _taskTagRepository;
+        private readonly AppTimeProvider _timeProvider;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
             IProjectMemberRepository projectMember, IBoardRepository boardRepository,
             IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository,
-            ISprintRepository springRepository, ITagRepository TagRepository, ITaskTagRepository taskTagRepository)
+            ISprintRepository springRepository, ITagRepository TagRepository, ITaskTagRepository taskTagRepository,
+            AppTimeProvider timeProvider)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -47,6 +50,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _sprintRepository = springRepository;
             _TagRepository = TagRepository;
             _taskTagRepository = taskTagRepository;
+            _timeProvider = timeProvider;
         }
 
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
@@ -71,6 +75,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Description = request.Description,
                 TermId = user.Term.Id,
                 Semester = user.Term.Season + user.Term.Year,
+                CreatedAt = _timeProvider.Now,
                 IsActive = true
             };
             var projectId = await _projectRepository.CreateProjectAsync(project);
@@ -100,8 +105,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 ProjectId = projectId,
                 Name = "Sprint 1",
                 Description = "First sprint of the project",
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(14),
+                StartDate = _timeProvider.Now,
+                EndDate = _timeProvider.Now.AddDays(14), // Default 2 weeks sprint
                 Status = SprintStatus.NotStarted,
                 IsActive = true
             };
@@ -191,6 +196,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             //Update the project
              project!.Title  = request.Title;
             project!.Description = request.Description;
+            project!.LastUpdate = _timeProvider.Now;
             await _projectRepository.UpdateProject(project);
             return _mapper.Map<ProjectResponse>(project);
         }

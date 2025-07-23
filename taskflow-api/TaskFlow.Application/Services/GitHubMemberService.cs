@@ -4,16 +4,19 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
     public class GitHubMemberService : IGitHubMemberService
     {
         private readonly IGitMemberRepository _gitMemberRepository;
+        private readonly AppTimeProvider _timeProvider;
 
-        public GitHubMemberService(IGitMemberRepository gitMemberRepository)
+        public GitHubMemberService(IGitMemberRepository gitMemberRepository, AppTimeProvider timeProvider)
         {
             _gitMemberRepository = gitMemberRepository;
+            _timeProvider = timeProvider;
         }
 
         public async Task AddGitLocal(Guid Id, CreateGitMemberRequest gitMember)
@@ -35,7 +38,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 ProjectMemberId = ProjectMemberId,
                 ProjectPartId = ProjectPartId,
                 NameLocal = gitMember.NameLocal,
-                EmailLocal = gitMember.EmailLocal
+                EmailLocal = gitMember.EmailLocal,
+                CreatedAt = _timeProvider.Now,
             };
              await _gitMemberRepository.CreateGitMember(data);
         }

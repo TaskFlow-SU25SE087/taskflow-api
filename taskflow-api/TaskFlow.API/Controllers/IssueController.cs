@@ -45,5 +45,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var issues = await _issueService.GetAllIssue(projectId);
             return ApiResponse<List<IssueDetailResponse>>.Success(issues);
         }
+
+        [HttpGet("issues/filter")]
+        public async Task<ApiResponse<List<IssueDetailResponse>>> FilterIssue(
+            [FromRoute] Guid projectId, [FromQuery] IssueStatus? status, 
+            [FromQuery] TypeIssue? type, [FromQuery] TaskPriority? priority)
+        {
+            var projectmember = await _authorization
+                .AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            var issues = await _issueService.FilterIssue(projectId, status, type, priority);
+            return ApiResponse<List<IssueDetailResponse>>.Success(issues);
+        }
     }
 }

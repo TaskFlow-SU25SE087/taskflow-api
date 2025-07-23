@@ -35,5 +35,34 @@ namespace taskflow_api.TaskFlow.API.Controllers
                 return Unauthorized();
             }
         }
+
+        [HttpPost("mark-read/{notificationId}")]
+        public async Task<IActionResult> MarkAsRead(Guid notificationId)
+        {
+            try
+            {
+                await _notificationService.MarkAsReadAsync(notificationId);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpDelete("delete-read")]
+        public async Task<IActionResult> DeleteAllRead()
+        {
+            try
+            {
+                var userId = await _authorizationService.GetCurrentUserIdAsync();
+                await _notificationService.DeleteAllReadAsync(userId);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
     }
 }

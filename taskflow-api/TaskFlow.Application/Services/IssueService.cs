@@ -5,6 +5,7 @@ using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
+using taskflow_api.TaskFlow.Shared.Helpers;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -13,13 +14,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITaskIssueRepository _issueRepository;
         private readonly IFileService _fileService;
         private readonly ITaskAssigneeRepository _taskAssigneeRepository;
+        private readonly AppTimeProvider _timeProvider;
 
         public IssueService(ITaskIssueRepository issueRepository, IFileService fileService,
-            ITaskAssigneeRepository taskAssigneeRepository)
+            ITaskAssigneeRepository taskAssigneeRepository, AppTimeProvider timeProvider)
         {
             _issueRepository = issueRepository;
             _fileService = fileService;
             _taskAssigneeRepository = taskAssigneeRepository;
+            _timeProvider = timeProvider;
         }
         public async Task CreateTaskIssue(Guid memberId, Guid projectId, Guid TaskId, CreateTaskIssueRequest request)
         {
@@ -35,6 +38,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Explanation = request.Explanation,
                 Example = request.Example,
                 Status = IssueStatus.Open,
+                CreatedAt = _timeProvider.Now,
                 IsActive = true,
             };
             //have files
@@ -73,9 +77,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
         }
 
+        public async Task<List<IssueDetailResponse>> FilterIssue(Guid projectId, IssueStatus? status, 
+            TypeIssue? type, TaskPriority? priority)
+        {
+            return await _issueRepository.GetIssue(projectId, status, type, priority);
+        }
+
         public Task<List<IssueDetailResponse>> GetAllIssue(Guid ProjectId)
         {
-            return _issueRepository.GetAllIssueAsync(ProjectId);
+            return _issueRepository.GetIssue(ProjectId);
         }
     }
 }

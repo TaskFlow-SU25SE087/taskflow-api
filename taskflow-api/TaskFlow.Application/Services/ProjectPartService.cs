@@ -27,6 +27,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICommitScanIssueRepository _commitScanIssueRepository;
         private readonly IGitMemberRepository _gitMemberRepository;
+        private readonly AppTimeProvider _timeProvider;
         private int PageSizeCommit = 10;
 
         public ProjectPartService(IProjectPartRepository projectPartRepository, IGitHubRepoService repoService,
@@ -34,7 +35,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             ICodeScanService codeScanService, ICommitRecordRepository commitRecordRepository,
             IRabbitMQService rabbitMQService, IUserGitHubRepository userGitHubRepository,
             IHttpContextAccessor httpContextAccessor, ICommitScanIssueRepository commitScanIssueRepository,
-            IGitMemberRepository gitMemberRepository)
+            IGitMemberRepository gitMemberRepository, AppTimeProvider timeProvider)
         {
             _projectPartRepository = projectPartRepository;
             _repoService = repoService;
@@ -48,6 +49,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _commitScanIssueRepository = commitScanIssueRepository;
             _gitMemberRepository = gitMemberRepository;
+            _timeProvider = timeProvider;
         }
 
         public async Task ConnectRepo(Guid partId, ConnectRepoRequest request)
@@ -111,7 +113,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task CreatePart(Guid ProjectId, CreateProjectPartRequest request)
         {
-            var part = new Domain.Entities.ProjectPart
+            var part = new ProjectPart
             {
                 Name = request.Name,
                 ProgrammingLanguage = request.ProgrammingLanguage,
@@ -202,7 +204,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CommitUrl = $"https://github.com/{repoFullName}/commit/{commitId}",
                     PushedAt = timestamp ?? DateTime.UtcNow,
                     Status = StatusCommit.Checking,
-                    ExpectedFinishAt = DateTime.UtcNow.AddMinutes(10),
+                    ExpectedFinishAt = _timeProvider.UtcNow.AddMinutes(10),
                 };
 
                 await _commitRecordRepository.Create(commitRecord);

@@ -6,6 +6,7 @@ using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using taskflow_api.TaskFlow.API.Hubs;
+using System.Collections.Generic;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -123,7 +124,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             foreach (var userId in userIds)
             {
                 // Email notification
-                var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
+                var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(userId);
                 if (member != null && member.User != null && !string.IsNullOrEmpty(member.User.Email))
                 {
                     await _mailService.SendTaskUpdateEmailAsync(
@@ -137,7 +138,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 // In-app notification (database)
                 var notification = new Notification
                 {
-                    UserId = userId,
+                    UserId = member?.UserId ?? userId,
                     ProjectId = projectId,
                     TaskId = taskId,
                     Message = message,
@@ -147,22 +148,35 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await _notificationRepository.AddNotificationAsync(notification);
 
                 // SignalR notification (send to user)
-                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
+                if (member != null)
                 {
-                    notification.Id,
-                    notification.UserId,
-                    notification.ProjectId,
-                    notification.TaskId,
-                    notification.Message,
-                    notification.IsRead,
-                    notification.CreatedAt,
-                    Type = "TaskBoardChange"
-                });
+                    await _hubContext.Clients.User(member.UserId.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        notification.Id,
+                        notification.UserId,
+                        notification.ProjectId,
+                        notification.TaskId,
+                        notification.Message,
+                        notification.IsRead,
+                        notification.CreatedAt,
+                        Type = "TaskBoardChange"
+                    });
+                }
             }
         }
     public async Task<List<Notification>> GetUserNotificationsAsync(Guid userId)
         {
             return await _notificationRepository.GetUserNotificationsAsync(userId);
+        }
+
+        public async Task MarkAsReadAsync(Guid notificationId)
+        {
+            await _notificationRepository.MarkAsReadAsync(notificationId);
+        }
+
+        public async Task DeleteAllReadAsync(Guid userId)
+        {
+            await _notificationRepository.DeleteAllReadAsync(userId);
         }
     }
 }
