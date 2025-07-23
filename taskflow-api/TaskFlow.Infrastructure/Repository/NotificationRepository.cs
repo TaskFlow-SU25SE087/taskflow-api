@@ -41,5 +41,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task DeleteAllReadAsync(Guid userId)
+        {
+            var readNotifications = _context.Set<Notification>().Where(n => n.UserId == userId && n.IsRead);
+            _context.Set<Notification>().RemoveRange(readNotifications);
+            await _context.SaveChangesAsync();
+        }
     }
 }

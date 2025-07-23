@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -73,7 +74,7 @@ builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
 
 //Signalr
 builder.Services.AddSignalR();
-
+builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 
 
 // Mapper
