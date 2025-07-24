@@ -251,8 +251,41 @@ builder.Services.AddMemoryCache();
 builder.Logging.AddConsole();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+//create account admin if not exists
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var userManager = services.GetRequiredService<UserManager<User>>();
+
+    if (!userManager.Users.Any())
+    {
+        var defaulAdmin = new User
+        {
+            UserName = "admin",
+            Email = "admin@taskflow.com",
+            EmailConfirmed = true,
+            FullName = "System",
+            Role = UserRole.Admin,
+            IsActive = true
+        };
+        var result = await userManager.CreateAsync(defaulAdmin, "admin123456");
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                Console.WriteLine($"Error creating default admin user: {error.Description}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Default admin user created successfully.");
+        }
+    }
+}
+
+    // Configure the HTTP request pipeline.
+    app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
