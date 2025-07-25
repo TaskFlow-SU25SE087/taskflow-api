@@ -291,7 +291,11 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskFlow API V1");
+        c.RoutePrefix = "swagger"; // Set Swagger UI at the app's root
+    });
 }
 
 

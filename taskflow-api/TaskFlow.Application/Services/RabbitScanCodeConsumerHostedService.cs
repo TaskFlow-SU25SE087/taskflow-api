@@ -90,7 +90,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                         commit.ErrorLog = result.ErrorLog;
                         commit.Result = result.Success;
                         commit.ExpectedFinishAt = DateTime.UtcNow;
-                        await commitRepo.Update(commit);
 
                         // save output check record
                         if (result.Success)
