@@ -247,6 +247,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddMemoryCache();
+builder.WebHost.UseUrls("http://*:7029");
 
 builder.Logging.AddConsole();
 var app = builder.Build();
