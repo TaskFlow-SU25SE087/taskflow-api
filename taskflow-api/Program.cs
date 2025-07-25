@@ -288,16 +288,14 @@ using (var scope = app.Services.CreateScope())
     app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
+//swager
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskFlow API V1");
         c.RoutePrefix = "swagger"; // Set Swagger UI at the app's root
     });
-}
-
 
 //app.UseHttpsRedirection();
 
