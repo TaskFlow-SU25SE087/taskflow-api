@@ -263,7 +263,7 @@ using (var scope = app.Services.CreateScope())
         // Create a default system user if no users exist
         var system = new User
         {
-            Id = new Guid("00000000-0000-0000-0000-000000000000"),
+            Id = new Guid("00000000-0000-0000-0000-000000000002"),
             UserName = "system",
             Email = "system@taskflow.com",
             EmailConfirmed = true,

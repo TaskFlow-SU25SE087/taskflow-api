@@ -93,7 +93,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
             var UserSystem = new ProjectMember
             {
-                UserId = Guid.Parse("00000000-0000-0000-0000-000000000001"), // System user ID
+                UserId = Guid.Parse("00000000-0000-0000-0000-000000000002"), // System user ID
                 ProjectId = projectId,
                 Role = ProjectRole.System,
                 IsActive = true,
