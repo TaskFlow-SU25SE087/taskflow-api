@@ -276,7 +276,7 @@ using (var scope = app.Services.CreateScope())
         // Create a default admin user if no users exist
         var admin = new User
         {
-            Id = new Guid("00000000-0000-0000-0000-000000000000"),
+            Id = new Guid("00000000-0000-0000-0000-000000000001"),
             UserName = "admin",
             Email = "admin@taskflow.com",
             EmailConfirmed = true,
