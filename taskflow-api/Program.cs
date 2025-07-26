@@ -260,20 +260,39 @@ using (var scope = app.Services.CreateScope())
 
     if (!userManager.Users.Any())
     {
-        var defaulAdmin = new User
+        // Create a default system user if no users exist
+        var system = new User
         {
-            UserName = "admin",
+            Id = new Guid("00000000-0000-0000-0000-000000000000"),
+            UserName = "system",
             Email = "admin@taskflow.com",
             EmailConfirmed = true,
             FullName = "System",
             Role = UserRole.Admin,
             IsActive = true
         };
-        var result = await userManager.CreateAsync(defaulAdmin, "admin123456");
+        var resultsy = await userManager.CreateAsync(system, "system123456");
 
-        if (!result.Succeeded)
+        // Create a default admin user if no users exist
+        var admin = new User
         {
-            foreach (var error in result.Errors)
+            Id = new Guid("00000000-0000-0000-0000-000000000000"),
+            UserName = "admin",
+            Email = "admin@taskflow.com",
+            EmailConfirmed = true,
+            FullName = "Admin",
+            Role = UserRole.Admin,
+            IsActive = true
+        };
+        var resultad = await userManager.CreateAsync(system, "admin123456");
+
+        if (!resultsy.Succeeded || !resultad.Succeeded)
+        {
+            foreach (var error in resultsy.Errors)
+            {
+                Console.WriteLine($"Error creating default admin user: {error.Description}");
+            }
+            foreach (var error in resultad.Errors)
             {
                 Console.WriteLine($"Error creating default admin user: {error.Description}");
             }
