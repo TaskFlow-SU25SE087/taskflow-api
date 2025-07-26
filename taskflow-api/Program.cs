@@ -265,7 +265,7 @@ using (var scope = app.Services.CreateScope())
         {
             Id = new Guid("00000000-0000-0000-0000-000000000000"),
             UserName = "system",
-            Email = "admin@taskflow.com",
+            Email = "system@taskflow.com",
             EmailConfirmed = true,
             FullName = "System",
             Role = UserRole.Admin,
@@ -284,17 +284,17 @@ using (var scope = app.Services.CreateScope())
             Role = UserRole.Admin,
             IsActive = true
         };
-        var resultad = await userManager.CreateAsync(system, "admin123456");
+        var resultad = await userManager.CreateAsync(admin, "admin123456");
 
         if (!resultsy.Succeeded || !resultad.Succeeded)
         {
             foreach (var error in resultsy.Errors)
             {
-                Console.WriteLine($"Error creating default admin user: {error.Description}");
+                Console.WriteLine($"Error creating default SYSTEM user: {error.Description}");
             }
             foreach (var error in resultad.Errors)
             {
-                Console.WriteLine($"Error creating default admin user: {error.Description}");
+                Console.WriteLine($"Error creating default ADMIN user: {error.Description}");
             }
         }
         else
