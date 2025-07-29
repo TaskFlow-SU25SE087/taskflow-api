@@ -6,6 +6,7 @@ using taskflow_api.TaskFlow.Infrastructure.Interfaces;
 using taskflow_api.TaskFlow.Infrastructure.Repository;
 using taskflow_api.TaskFlow.Shared.Helpers;
 using System.Text.Json;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -37,6 +38,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                 UpdatedAt = _timeProvider.Now
             };
             await _sprintMeetingLogsRepository.CreateMetting(sprintMeetingLog);
+        }
+
+        public async Task<List<SprintMeetingResponse>> GetAllSprintMetting(Guid projectId)
+        {
+            return await _sprintMeetingLogsRepository.GetAllSprintMetting(projectId);
         }
     }
 }

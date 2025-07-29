@@ -9,5 +9,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Common
         public string? Description { get; set; } = string.Empty;
         public TaskPriority Priority { get; set; } = TaskPriority.High;
         public string? Reason { get; set; } = string.Empty;
+        public int ItemVersion { get; set; } = 0;
     }
 }
