@@ -5,7 +5,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
     public class SprintMeetingLog
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         public Guid SprintId { get; set; }
         public Sprint Sprint { get; set; } = null!;

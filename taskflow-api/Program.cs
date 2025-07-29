@@ -47,6 +47,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
 builder.Services.AddHttpClient<IGitHubRepoService, GitHubRepoService>();
 builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
+builder.Services.AddScoped<ISprintMeetingLogsService, SprintMeetingLogsService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -71,6 +72,7 @@ builder.Services.AddScoped<IUserGitHubRepository, UserGitHubRepository>();
 builder.Services.AddScoped<ICommitScanIssueRepository, CommitScanIssueRepository>();
 builder.Services.AddScoped<IGitMemberRepository, GitMemberRepository>();
 builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
+builder.Services.AddScoped<ISprintMeetingLogsRepository, SprintMeetingLogsRepository>();
 
 //Signalr
 builder.Services.AddSignalR();
@@ -247,7 +249,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddMemoryCache();
-builder.WebHost.UseUrls("http://*:7029");
+builder.WebHost.UseUrls("https://*:7029");
 
 builder.Logging.AddConsole();
 var app = builder.Build();

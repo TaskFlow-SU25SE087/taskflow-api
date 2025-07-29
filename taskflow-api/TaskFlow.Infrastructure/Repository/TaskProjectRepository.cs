@@ -217,5 +217,17 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Where(t => t.IsActive)
                 .ToListAsync();
         }
+
+        public Task<List<TaskProject>> GetListTasksUnFinishBySprintsIdsAsync(Guid SprintID)
+        {
+            var lastBoardId = _context.Boards
+                .Where(b => b.ProjectId == SprintID && b.IsActive)
+                .OrderByDescending(b => b.Order)
+                .Select(b => b.Id)
+                .FirstOrDefault();
+            return _context.TaskProjects
+                .Where(t => t.SprintId == SprintID && t.IsActive && t.BoardId != lastBoardId)
+                .ToListAsync();
+        }
     }
 }

@@ -15,13 +15,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ISprintRepository _sprintRepository;
         private readonly ITaskProjectRepository _taskProjectRepository;
         private readonly AppTimeProvider _timeProvider;
+        private readonly ISprintMeetingLogsService _sprintMeetingLogs;
 
         public SprintService(ISprintRepository repository, ITaskProjectRepository taskProjectRepository,
-            AppTimeProvider timeProvider)
+            AppTimeProvider timeProvider, ISprintMeetingLogsService sprintMeetingLogs)
         {
             _sprintRepository = repository;
             _taskProjectRepository = taskProjectRepository;
             _timeProvider = timeProvider;
+            _sprintMeetingLogs = sprintMeetingLogs;
         }
 
         public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID)
@@ -51,30 +53,43 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
                 await _sprintRepository.UpdateSprintAsync(sprint);
             }
-            else if (status.Equals(SprintStatus.Completed))// complete sprint
-            {
+                else if (status.Equals(SprintStatus.Completed))// complete sprint
+                {
+                //create sprint meeting logs
+                await _sprintMeetingLogs.CreateSprintMetting(SpringId);
+
                 // new next sprint
-                var lastSprint = await _sprintRepository.GetLastSprint(sprint.ProjectId);
-                var newSprint = new Sprint
-                {
-                    Id = Guid.NewGuid(),
-                    ProjectId = sprint.ProjectId,
-                    Name = "Sprint " + (lastSprint == null ? 1 : lastSprint.Name.Split(' ').LastOrDefault() + 1),
-                    Description = "Next sprint after " + sprint.Name,
-                    StartDate = lastSprint!.EndDate,
-                    EndDate = _timeProvider.Now.AddDays(14), // Example: 2 weeks duration
-                    IsActive = true,
-                    Status = SprintStatus.NotStarted,
-                };
-                var lisktaskproject = await _taskProjectRepository.GetListTasksBySprintsIdsAsync(SpringId);
-                foreach (var task in lisktaskproject)
-                {
-                    task.SprintId = newSprint.Id;
-                    task.Note = task.Note + " " + DateTime.UtcNow + " End sprint: " + sprint.Name; 
+                var nextSprint = await _sprintRepository.GetNextSprint(sprint.ProjectId, sprint.EndDate);
+                    Sprint newSprint;
+                    if(nextSprint == null)
+                    {
+                    newSprint = new Sprint
+                    {
+                        ProjectId = sprint.ProjectId,
+                        Name = "Sprint " + _timeProvider.Now.ToString("ddMMyy"),
+                        Description = "Next sprint after " + sprint.Name,
+                        StartDate = sprint.EndDate, // kế tiếp
+                        EndDate = sprint.EndDate.AddDays(14),
+                        IsActive = true,
+                        Status = SprintStatus.NotStarted,
+                    };
+                    await _sprintRepository.CreateSprintAsync(newSprint);
+                    }
+                    else
+                    {
+                        newSprint = nextSprint;
+                    }
+                    // update current sprint
+                    var tasks = await _taskProjectRepository.GetListTasksUnFinishBySprintsIdsAsync(SpringId);
+                    foreach (var task in tasks)
+                    {
+                        task.SprintId = newSprint.Id;
+                        task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] End sprint: {sprint.Name}"+" ;";
+                    }
+                    await _taskProjectRepository.UpdateListTaskAsync(tasks);
+                    await _sprintRepository.UpdateSprintAsync(sprint);
+
                 }
-                await _taskProjectRepository.UpdateListTaskAsync(lisktaskproject);
-                await _sprintRepository.UpdateSprintAsync(sprint);
-            }
         }
 
         public async Task<bool> CreateSprint(Guid ProjectId, CreateSprintRequest request)

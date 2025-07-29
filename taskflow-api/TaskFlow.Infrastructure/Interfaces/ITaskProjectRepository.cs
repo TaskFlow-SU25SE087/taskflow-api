@@ -13,6 +13,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<List<ListTaskProjectNotSprint>> GetAllTaskNotSprint(Guid projectId);
         Task<List<TaskProject>> GetListTasksByIdsAsync (List<Guid> taskIds);
         Task<List<TaskProject>> GetListTasksBySprintsIdsAsync (Guid SprintID);
+        Task<List<TaskProject>> GetListTasksUnFinishBySprintsIdsAsync (Guid SprintID);
         Task<List<TaskProjectResponse>> GetListTaskBySprintIdAsync(Guid SprintID);
         Task<List<TaskProject>> GetAllActiveTasksAsync();
     }
