@@ -170,7 +170,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 TotalItems = totalItems,
                 TotalPages = (int)Math.Ceiling(totalItems / (double)pagingParams.PageSize),
                 PageNumber = pagingParams.PageNumber,
-                PageSize = pagingParams.PageSize
+                PageSize = pagingParams.PageSize,
+                HasMore = totalItems > (pagingParams.PageNumber * pagingParams.PageSize)
             };
             return result;
         }

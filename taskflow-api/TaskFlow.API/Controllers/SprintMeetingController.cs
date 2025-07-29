@@ -27,5 +27,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var meetings = await _service.GetAllSprintMetting(projectId);
             return ApiResponse<List<SprintMeetingResponse>>.Success(meetings);
         }
+
+        [HttpGet("list-task-update")]
+        public async Task<ApiResponse<Object>> ListMyUpdatableUnfinished(Guid projectId)
+        {
+            var projectMemberId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            var result = await _service.ListMyUpdatableUnfinished(projectId, projectMemberId, null);
+            return ApiResponse<Object>.Success(result);
+        }
     }
 }

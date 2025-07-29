@@ -7,5 +7,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task CreateMetting(SprintMeetingLog data);
         Task<List<SprintMeetingResponse>> GetAllSprintMetting(Guid projectId);
+        Task<List<SprintMeetingLog>> GetAllSprintMettingCanUpdate(Guid projectId, DateTime since);
     }
 }
