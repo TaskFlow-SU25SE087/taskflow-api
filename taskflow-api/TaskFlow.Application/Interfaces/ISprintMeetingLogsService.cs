@@ -12,5 +12,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<string> UpdateResonTask(Guid mettingID, Guid taskId, Guid projectMemberId, int itemVersion, string reason);
         Task UpdateNextPlan(Guid mettingID, string nextPlan);
         Task<SprintMettingDetailResponse> sprintMettingDetail(Guid mettingID);
+        Task<string> UpdateSprintMeeting(UpdateSprintMettingRequest request, Guid sprintmettingID);
     }
 }

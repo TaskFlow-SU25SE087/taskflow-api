@@ -10,6 +10,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using System.Collections.Generic;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -151,6 +152,64 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             //return unfinishedTasks;
             return "update reason succesfully";
+        }
+
+        public async Task<string> UpdateSprintMeeting(UpdateSprintMettingRequest request, Guid sprintmettingID)
+        {
+            //sprint meeting can update if it is created within 3 days
+            var threshold = _timeProvider.Now.AddDays(-3);
+            var sprintmeeting = await _sprintMeetingLogsRepository.GetSprintMettingByID(sprintmettingID);
+            if (sprintmeeting == null || sprintmeeting.CreatedAt < threshold)
+            {
+                throw new AppException(ErrorCode.SprintMeetingCannotUpdate);
+            }
+            //json deserialize completed tasks and unfinished tasks
+            var unfinishedTasks = JsonSerializer.Deserialize<List<UnfinishedTaskDto>>(sprintmeeting.UnfinishedTasksJson);
+            List<UnfinishedTaskDto> rq = new List<UnfinishedTaskDto>();
+            if (request.UnfinishedTasks != null)
+            {
+                foreach (var item in request.UnfinishedTasks)
+                {
+                    rq.Add(new UnfinishedTaskDto
+                    {
+                        Id = item.Id,
+                        Title = item.Title,
+                        Reason = item.Reason,
+                        Description = item.Description,
+                        ItemVersion = item.ItemVersion,
+                        Priority = item.Priority,
+                    });
+                }
+            }
+
+            // update unfinished tasks
+            foreach (var task in rq)
+            {
+                var existingTask = unfinishedTasks.FirstOrDefault(x => x.Id == task.Id);
+                if (existingTask != null && existingTask.ItemVersion == task.ItemVersion)
+                {
+                    if (existingTask.Reason != task.Reason)
+                    {
+                        existingTask.Title = task.Title;
+                        existingTask.Reason = task.Reason;
+                        existingTask.Description = task.Description;
+                        existingTask.ItemVersion = task.ItemVersion + 1;
+                        existingTask.Priority = task.Priority;
+                    }
+                }
+                else
+                {
+                    return "Someone has updated the reason of taskID: "+task.Id +" Do you want to overwrite it? New ItemVersion: " + existingTask.ItemVersion;
+                }
+            }
+            sprintmeeting.UnfinishedTasksJson = JsonSerializer.Serialize(unfinishedTasks);
+
+
+             //update next plan
+            sprintmeeting.NextPlan = request.NextPlan;
+            sprintmeeting.UpdatedAt = _timeProvider.Now;
+            await _sprintMeetingLogsRepository.UpdateSprintMeetingLog(sprintmeeting);
+            return "Update sprint meeting successfully";
         }
     }
 }

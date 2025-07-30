@@ -54,6 +54,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
+        [HttpPut("{sprintmettingID}")]
+        public async Task<ApiResponse<string>> UpdateSprintMeeting([FromRoute] Guid projectId, [FromRoute] Guid sprintmettingID, [FromBody] UpdateSprintMettingRequest request)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+            var resul = await _service.UpdateSprintMeeting(request, sprintmettingID);
+            return ApiResponse<string>.Success(resul);
+        }
+
         [HttpGet("{sprintmettingID}")]
         public async Task<ApiResponse<SprintMettingDetailResponse>> GetSprintMeetingDetail([FromRoute] Guid projectId, [FromRoute] Guid sprintmettingID)
         {
