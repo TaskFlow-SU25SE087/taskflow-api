@@ -12,8 +12,8 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    [Migration("20250729021318_add_sprint_metting_logs")]
-    partial class add_sprint_metting_logs
+    [Migration("20250730023150_fix_sprint_meeting_logs")]
+    partial class fix_sprint_meeting_logs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
