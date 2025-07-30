@@ -29,11 +29,20 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpGet("list-task-update")]
-        public async Task<ApiResponse<Object>> ListMyUpdatableUnfinished(Guid projectId)
+        public async Task<ApiResponse<List<UnfinishedTaskResponse>>> ListMyUpdatableUnfinished(Guid projectId)
         {
             var projectMemberId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
             var result = await _service.ListMyUpdatableUnfinished(projectId, projectMemberId, null);
-            return ApiResponse<Object>.Success(result);
+            return ApiResponse<List<UnfinishedTaskResponse>>.Success(result);
+        }
+
+        [HttpPatch("{sprintmettingID}")]
+        public async Task<ApiResponse<string>> UpdateResonTask([FromRoute]Guid sprintmettingID, [FromRoute] Guid projectId,
+            Guid taskId, int itemVersion, string reason)
+        {
+            var projectMemberId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            var result = await _service.UpdateResonTask(sprintmettingID, taskId, projectMemberId, itemVersion, reason);
+            return ApiResponse<string>.Success(result);
         }
     }
 }

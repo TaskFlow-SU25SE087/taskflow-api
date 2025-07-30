@@ -40,6 +40,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
+        public async Task<SprintMeetingLog?> GetSprintMettingByID(Guid mettingID)
+        {
+            return await _context.SprintMeetingLogs
+                .AsNoTracking()
+                .Include(x => x.Sprint)
+                .FirstOrDefaultAsync(x => x.Id == mettingID);
+        }
+
         public async Task<List<SprintMeetingLog>> GetAllSprintMettingCanUpdate(Guid projectId, DateTime since)
         {
             return await _context.SprintMeetingLogs
@@ -47,6 +55,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Include(x => x.Sprint)
                 .Where(x => x.Sprint.ProjectId == projectId && x.CreatedAt >= since)
                 .ToListAsync();
+        }
+
+        public async Task UpdateSprintMeetingLog(SprintMeetingLog sprintmeeting)
+        {
+            _context.SprintMeetingLogs.Update(sprintmeeting);
+            await _context.SaveChangesAsync();
         }
     }
 }

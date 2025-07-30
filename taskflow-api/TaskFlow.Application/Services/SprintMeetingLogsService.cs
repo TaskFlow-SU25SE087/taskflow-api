@@ -8,6 +8,8 @@ using taskflow_api.TaskFlow.Shared.Helpers;
 using System.Text.Json;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Shared.Exceptions;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -48,7 +50,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return await _sprintMeetingLogsRepository.GetAllSprintMetting(projectId);
         }
 
-        public async Task<Object> ListMyUpdatableUnfinished(Guid projectId, Guid projectMemberId, Guid? nextCursor)
+        public async Task<List<UnfinishedTaskResponse>> ListMyUpdatableUnfinished(Guid projectId, Guid projectMemberId, Guid? nextCursor)
         {
             //sprint meeting can update if it is created within 3 days
             var threshold = _timeProvider.Now.AddDays(-3);
@@ -73,6 +75,44 @@ namespace taskflow_api.TaskFlow.Application.Services
             // user to do task can update reson
             var result = await _taskAssigneeRepository.GetTaskCanUpdateSprintMeeting(ufsTask, projectMemberId);
             return result;
+        }
+
+        public async Task<string> UpdateResonTask(Guid mettingID, Guid taskId, Guid projectMemberId, int itemVersion, string reason)
+        {
+            //sprint meeting can update if it is created within 3 days
+            var threshold = _timeProvider.Now.AddDays(-3);
+            var sprintmeeting = await _sprintMeetingLogsRepository.GetSprintMettingByID(mettingID);
+            if (sprintmeeting == null || sprintmeeting.CreatedAt < threshold)
+            {
+                throw new AppException(ErrorCode.SprintMeetingCannotUpdate);
+            }
+            var unfinishedTasks = JsonSerializer.Deserialize<List<UnfinishedTaskResponse>>(sprintmeeting.UnfinishedTasksJson);
+            if (unfinishedTasks == null || !unfinishedTasks.Any(x => x.Id == taskId))
+            {
+                throw new AppException(ErrorCode.SprintMeetingTaskNotFound);
+            }
+            // update reason
+            var task = unfinishedTasks.First(x => x.Id == taskId);
+            if (task.ItemVersion != itemVersion)
+            {
+                return "Someone has updated the reason. Do you want to overwrite it? New ItemVersion: " + task.ItemVersion;
+            }
+            task.Reason = reason;
+            task.ItemVersion++;
+            // check if user is assignee of task
+            var taskAssignee = await _taskAssigneeRepository.GetTaskAssigneeByTaskIdAndUserIDAsync(taskId, projectMemberId);
+            if (taskAssignee == null)
+            {
+                throw new AppException(ErrorCode.Unauthorized);
+            }
+
+            // update sprint meeting log
+            sprintmeeting.UnfinishedTasksJson = JsonSerializer.Serialize(unfinishedTasks);
+            sprintmeeting.UpdatedAt = _timeProvider.Now;
+            await _sprintMeetingLogsRepository.UpdateSprintMeetingLog(sprintmeeting);
+
+            //return unfinishedTasks;
+            return "update reason succesfully";
         }
     }
 }
