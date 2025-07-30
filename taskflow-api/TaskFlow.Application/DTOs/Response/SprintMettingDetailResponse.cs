@@ -12,7 +12,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
 
         public string SprintName { get; set; }
 
-        public List<UnfinishedTaskResponse> UnfinishedTasks { get; set; } = new List<UnfinishedTaskResponse>();
+        public List<UnfinishedTaskDto> UnfinishedTasks { get; set; } = new List<UnfinishedTaskDto>();
         public List<TaskCompleteDTO> CompletedTasks { get; set; } = new List<TaskCompleteDTO>();
         public string NextPlan { get; set; } = string.Empty;
 

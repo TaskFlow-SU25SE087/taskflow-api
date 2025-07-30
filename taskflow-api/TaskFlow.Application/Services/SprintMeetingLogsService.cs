@@ -85,8 +85,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.SprintMeetingNotFound);
             }
+            //complete tasks
             var completedTasks = JsonSerializer.Deserialize<List<TaskCompleteDTO>>(sprintMeeting.CompletedTasksJson);
-            var unfinishedTasks = JsonSerializer.Deserialize<List<UnfinishedTaskResponse>>(sprintMeeting.UnfinishedTasksJson);
+
+
+            //unfinished tasks
+            var unfinishedTasks = JsonSerializer.Deserialize<List<UnfinishedTaskDto>>(sprintMeeting.UnfinishedTasksJson);
            
             return new SprintMettingDetailResponse
             {

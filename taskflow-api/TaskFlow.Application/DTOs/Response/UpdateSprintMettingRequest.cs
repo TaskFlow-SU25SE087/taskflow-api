@@ -4,7 +4,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
 {
     public class UpdateSprintMettingRequest
     {
-        public List<UnfinishedTaskResponse> UnfinishedTasks { get; set; } = new List<UnfinishedTaskResponse>();
+        public List<UnfinishedTaskDto> UnfinishedTasks { get; set; } = new List<UnfinishedTaskDto>();
         public string NextPlan { get; set; } = string.Empty;
     }
 }
