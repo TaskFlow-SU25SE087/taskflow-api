@@ -1,5 +1,6 @@
 ﻿using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -145,7 +146,7 @@ builder.Services.Configure<SonarQubeSetting>(
 builder.Services.Configure<RabbitMQSetting>(builder.Configuration.GetSection("RabbitMQ"));
 
 //GitHub login 
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+//builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 
 // Override default 400 validation error response to return custom ApiResponse format
@@ -253,7 +254,7 @@ var env = builder.Environment;
 var certPath = builder.Configuration["Kestrel:Certificates:Default:Path"];
 var certPassword = builder.Configuration["Kestrel:Certificates:Default:Password"];
 
-builder.WebHost.UseUrls("https://*:7029");
+//builder.WebHost.UseUrls("https://*:7029");
 //builder.WebHost.ConfigureKestrel(options =>
 //{
 //    if (env.IsDevelopment())
@@ -285,6 +286,11 @@ builder.WebHost.UseUrls("https://*:7029");
 
 builder.Logging.AddConsole();
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 //create account admin if not exists
 using (var scope = app.Services.CreateScope())
