@@ -249,7 +249,38 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddMemoryCache();
-builder.WebHost.UseUrls("https://*:7029");
+var env = builder.Environment;
+var certPath = builder.Configuration["Kestrel:Certificates:Default:Path"];
+var certPassword = builder.Configuration["Kestrel:Certificates:Default:Password"];
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    if (env.IsDevelopment())
+    {
+        try
+        {
+            options.ListenLocalhost(7029, lo => lo.UseHttps());
+        }
+        catch
+        {
+            options.ListenLocalhost(5080);
+            Console.WriteLine("[Dev] No dev-certs found. Serving HTTP on http://localhost:5080");
+        }
+    }
+    else
+    {
+        if (!string.IsNullOrWhiteSpace(certPath))
+        {
+            options.ListenAnyIP(7029, lo => lo.UseHttps(certPath, certPassword)); // HTTPS
+        }
+        else
+        {
+            options.ListenAnyIP(8080); // fallback HTTP
+            Console.WriteLine("[Prod] No PFX configured. Serving HTTP on :8080. Set Kestrel:Certificates:Default:* to enable HTTPS.");
+        }
+    }
+});
+
 
 builder.Logging.AddConsole();
 var app = builder.Build();
