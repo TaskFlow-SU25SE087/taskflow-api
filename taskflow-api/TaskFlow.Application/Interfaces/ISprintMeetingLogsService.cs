@@ -10,5 +10,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<List<SprintMeetingResponse>> GetAllSprintMetting(Guid projectId);
         Task<List<UnfinishedTaskResponse>> ListMyUpdatableUnfinished(Guid projectId, Guid projectMemberId, Guid? nextCursor);
         Task<string> UpdateResonTask(Guid mettingID, Guid taskId, Guid projectMemberId, int itemVersion, string reason);
+        Task UpdateNextPlan(Guid mettingID, string nextPlan);
     }
 }

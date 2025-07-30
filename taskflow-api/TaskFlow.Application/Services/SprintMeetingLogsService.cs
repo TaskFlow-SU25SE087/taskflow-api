@@ -77,6 +77,21 @@ namespace taskflow_api.TaskFlow.Application.Services
             return result;
         }
 
+        public Task UpdateNextPlan(Guid mettingID, string nextPlan)
+        {
+            //sprint meeting can update if it is created within 3 days
+            var threshold = _timeProvider.Now.AddDays(-3);
+            var sprintmeeting = _sprintMeetingLogsRepository.GetSprintMettingByID(mettingID);
+            if (sprintmeeting == null || sprintmeeting.Result.CreatedAt < threshold)
+            {
+                throw new AppException(ErrorCode.SprintMeetingCannotUpdate);
+            }
+            // update next plan
+            sprintmeeting.Result.NextPlan = nextPlan;
+            sprintmeeting.Result.UpdatedAt = _timeProvider.Now;
+            return _sprintMeetingLogsRepository.UpdateSprintMeetingLog(sprintmeeting.Result);
+        }
+
         public async Task<string> UpdateResonTask(Guid mettingID, Guid taskId, Guid projectMemberId, int itemVersion, string reason)
         {
             //sprint meeting can update if it is created within 3 days
