@@ -38,7 +38,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPatch("{sprintmettingID}")]
-        public async Task<ApiResponse<string>> UpdateResonTask([FromRoute]Guid sprintmettingID, [FromRoute] Guid projectId,
+        public async Task<ApiResponse<string>> UpdateResonTask([FromRoute] Guid sprintmettingID, [FromRoute] Guid projectId,
             Guid taskId, int itemVersion, string reason)
         {
             var projectMemberId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
@@ -52,6 +52,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             await _service.UpdateNextPlan(sprintmettingID, nextPlan);
             return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpGet("{sprintmettingID}")]
+        public async Task<ApiResponse<SprintMettingDetailResponse>> GetSprintMeetingDetail([FromRoute] Guid projectId, [FromRoute] Guid sprintmettingID)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            var result = await _service.sprintMettingDetail(sprintmettingID);
+            return ApiResponse<SprintMettingDetailResponse>.Success(result);
         }
     }
 }

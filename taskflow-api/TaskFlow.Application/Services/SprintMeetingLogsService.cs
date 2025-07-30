@@ -77,6 +77,29 @@ namespace taskflow_api.TaskFlow.Application.Services
             return result;
         }
 
+        public async Task<SprintMettingDetailResponse> sprintMettingDetail(Guid mettingID)
+        {
+            var sprintMeeting = await _sprintMeetingLogsRepository.GetSprintMettingByID(mettingID);
+            if (sprintMeeting == null)
+            {
+                throw new AppException(ErrorCode.SprintMeetingNotFound);
+            }
+            var completedTasks = JsonSerializer.Deserialize<List<TaskCompleteDTO>>(sprintMeeting.CompletedTasksJson);
+            var unfinishedTasks = JsonSerializer.Deserialize<List<UnfinishedTaskResponse>>(sprintMeeting.UnfinishedTasksJson);
+           
+            return new SprintMettingDetailResponse
+            {
+                Id = sprintMeeting.Id,
+                SprintId = sprintMeeting.SprintId,
+                SprintName = sprintMeeting.Sprint.Name,
+                CompletedTasks = completedTasks,
+                UnfinishedTasks = unfinishedTasks,
+                NextPlan = sprintMeeting.NextPlan,
+                CreatedAt = sprintMeeting.CreatedAt,
+                UpdatedAt = sprintMeeting.UpdatedAt
+            };
+        }
+
         public Task UpdateNextPlan(Guid mettingID, string nextPlan)
         {
             //sprint meeting can update if it is created within 3 days
