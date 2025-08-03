@@ -35,7 +35,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Name = request.Name,
                 Description = request.Description,
                 Order = Order,
-                
+                Type = BoardType.InProgress,
                 IsActive = true
             };
             await _boardRepository.CreateBoardsAsync(board);
@@ -91,6 +91,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             //Update the board
             board!.Name = request.Name;
             board.Description = request.Description;
+            
+            // Update board type if provided
+            if (request.Type.HasValue)
+            {
+                board.Type = request.Type.Value;
+            }
 
             await _boardRepository.UpdateBoard(board);
             return true;

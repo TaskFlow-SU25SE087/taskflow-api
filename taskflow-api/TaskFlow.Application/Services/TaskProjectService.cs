@@ -180,6 +180,35 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         }
 
+        public async Task<List<TaskProjectResponse>> GetTasksByBoardType(Guid projectId, BoardType boardType)
+        {
+            var board = await _boardRepository.GetBoardByTypeAsync(projectId, boardType);
+            if (board == null)
+            {
+                return new List<TaskProjectResponse>();
+            }
+
+            var tasks = await _taskProjectRepository.GetTasksByBoardIdAsync(board.Id);
+            return tasks;
+        }
+
+        public async Task<bool> IsTaskCompleted(Guid taskId)
+        {
+            var task = await _taskProjectRepository.GetTaskByIdAsync(taskId);
+            if (task == null)
+            {
+                return false;
+            }
+
+            if (!task.BoardId.HasValue)
+            {
+                return false;
+            }
+
+            var board = await _boardRepository.GetBoardByIdAsync(task.BoardId.Value);
+            return board?.Type == BoardType.Done;
+        }
+
         public Task<List<ListTaskProjectNotSprint>> GettAllTaskNotSprint(Guid ProjectId)
         {
             return _taskProjectRepository.GetAllTaskNotSprint(ProjectId);
@@ -241,6 +270,14 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
                 // save file urls to the task
                 task!.CompletionAttachmentUrlsList = urls;
+                
+                // Move task to Done board automatically when completion is submitted
+                var doneBoard = await _boardRepository.GetBoardByTypeAsync(Project, BoardType.Done);
+                if (doneBoard != null)
+                {
+                    task.BoardId = doneBoard.Id;
+                }
+                
                 await _taskProjectRepository.UpdateTaskAsync(task);
             }
         }

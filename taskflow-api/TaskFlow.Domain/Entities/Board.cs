@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
@@ -13,6 +14,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string? Description { get; set; } = string.Empty;
         public int Order { get; set; } = 0;
         public bool IsActive { get; set; } = false;
+        public BoardType Type { get; set; } = BoardType.Custom;
         public List<TaskProject> TaskProject { get; set; } = new List<TaskProject>();
     }
 }

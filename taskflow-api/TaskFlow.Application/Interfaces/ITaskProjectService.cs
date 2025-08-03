@@ -1,5 +1,6 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
@@ -18,5 +19,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task SubmitTaskCompletion(Guid Project, Guid taskId, CompleteTaskRequest request);
         Task<List<ListTaskProjectNotSprint>> GettAllTaskNotSprint(Guid ProjectId);
         Task ChangeBoard(Guid BoardId, Guid TaskId);
+        Task<List<TaskProjectResponse>> GetTasksByBoardType(Guid projectId, BoardType boardType);
+        Task<bool> IsTaskCompleted(Guid taskId);
     }
 }

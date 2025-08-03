@@ -122,10 +122,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     ProjectId = projectId,
-                    Name = "Not Started",
+                    Name = "Todo",
                     Description = "Tasks that have not been started yet.",
                     Order = Order,
-                    IsActive = true
+                    IsActive = true,
+                    Type = BoardType.Todo
                 },
                  new Board
                 {
@@ -134,16 +135,18 @@ namespace taskflow_api.TaskFlow.Application.Services
                     Name = "In Progress",
                     Description = "Tasks that are currently in progress.",
                     Order = ++Order,
-                    IsActive = true
+                    IsActive = true,
+                    Type = BoardType.InProgress
                 },
                   new Board
                 {
                     Id = Guid.NewGuid(),
                     ProjectId = projectId,
-                    Name = "Completed",
+                    Name = "Done",
                     Description = "Tasks that have been completed.",
                     Order = ++Order,
-                    IsActive = true
+                    IsActive = true,
+                    Type = BoardType.Done
                 },
             };
             await _boardRepository.CreateListBoardsAsync(defaultBoards);
