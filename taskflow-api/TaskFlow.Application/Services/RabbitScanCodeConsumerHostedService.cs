@@ -77,7 +77,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                         var scanStart = DateTime.UtcNow;
                         var result = await codeScanService.ScanCommit(
                             extractPath, 
-                            $"taskflow-{commit.ProjectPartId}",
+                            $"taskflow-{commit.ProjectPartId}-{commit.CommitId}",
                             job.Language,
                             job.Framework
                             );
