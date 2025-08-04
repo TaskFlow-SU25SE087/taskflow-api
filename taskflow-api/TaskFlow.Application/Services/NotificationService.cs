@@ -7,6 +7,7 @@ using taskflow_api.TaskFlow.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using taskflow_api.TaskFlow.API.Hubs;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -17,19 +18,22 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly INotificationRepository _notificationRepository;
         private readonly IHubContext<TaskHub> _hubContext;
         private readonly IProjectRepository _projectRepository;
+        private readonly ILogger<NotificationService> _logger;
 
         public NotificationService(
             IMailService mailService,
             IProjectMemberRepository projectMemberRepository,
             INotificationRepository notificationRepository,
             IHubContext<TaskHub> hubContext,
-            IProjectRepository projectRepository)
+            IProjectRepository projectRepository,
+            ILogger<NotificationService> logger)
         {
             _mailService = mailService;
             _projectMemberRepository = projectMemberRepository;
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
             _projectRepository = projectRepository;
+            _logger = logger;
         }
 
         public async Task NotifyTaskUpdateAsync(Guid userId, Guid projectId, Guid taskId, string message)
@@ -38,12 +42,18 @@ namespace taskflow_api.TaskFlow.Application.Services
             var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
             if (member != null && member.User != null && !string.IsNullOrEmpty(member.User.Email))
             {
+                _logger.LogInformation("Sending task update email to {Email} for user {UserId}", member.User.Email, userId);
                 await _mailService.SendTaskUpdateEmailAsync(
                     member.User.Email,
                     member.User.FullName ?? member.User.UserName ?? "User",
                     "Task Update",
                     message
                 );
+            }
+            else
+            {
+                _logger.LogWarning("Could not send email notification for user {UserId}. Member: {MemberNull}, User: {UserNull}, Email: {Email}", 
+                    userId, member == null, member?.User == null, member?.User?.Email);
             }
 
             // In-app notification (database)
@@ -81,12 +91,17 @@ namespace taskflow_api.TaskFlow.Application.Services
                 // Email notification
                 if (!string.IsNullOrEmpty(member.Email))
                 {
+                    _logger.LogInformation("Sending project member change email to {Email} for member {MemberId}", member.Email, member.Id);
                     await _mailService.SendProjectMemberChangeEmailAsync(
                         member.Email,
                         !string.IsNullOrEmpty(member.FullName) ? member.FullName : member.Email,
                         projectName,
                         message
                     );
+                }
+                else
+                {
+                    _logger.LogWarning("Could not send project member change email for member {MemberId}. Email is null or empty.", member.Id);
                 }
 
                 // In-app notification (database)
@@ -118,15 +133,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             Guid taskId,
             string oldBoardName,
             string newBoardName,
-            List<Guid> userIds)
+            List<Guid> projectMemberIds)
         {
             string message = $"Task has moved from board '{oldBoardName}' to '{newBoardName}'.";
-            foreach (var userId in userIds)
+            foreach (var projectMemberId in projectMemberIds)
             {
                 // Email notification
-                var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(userId);
+                var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
                 if (member != null && member.User != null && !string.IsNullOrEmpty(member.User.Email))
                 {
+                    _logger.LogInformation("Sending task board change email to {Email} for project member {ProjectMemberId}", member.User.Email, projectMemberId);
                     await _mailService.SendTaskUpdateEmailAsync(
                         member.User.Email,
                         member.User.FullName ?? member.User.UserName ?? "User",
@@ -134,22 +150,27 @@ namespace taskflow_api.TaskFlow.Application.Services
                         message
                     );
                 }
+                else
+                {
+                    _logger.LogWarning("Could not send task board change email for project member {ProjectMemberId}. Member: {MemberNull}, User: {UserNull}, Email: {Email}", 
+                        projectMemberId, member == null, member?.User == null, member?.User?.Email);
+                }
 
                 // In-app notification (database)
-                var notification = new Notification
-                {
-                    UserId = member?.UserId ?? userId,
-                    ProjectId = projectId,
-                    TaskId = taskId,
-                    Message = message,
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await _notificationRepository.AddNotificationAsync(notification);
-
-                // SignalR notification (send to user)
                 if (member != null)
                 {
+                    var notification = new Notification
+                    {
+                        UserId = member.UserId,
+                        ProjectId = projectId,
+                        TaskId = taskId,
+                        Message = message,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _notificationRepository.AddNotificationAsync(notification);
+
+                    // SignalR notification (send to user)
                     await _hubContext.Clients.User(member.UserId.ToString()).SendAsync("ReceiveNotification", new
                     {
                         notification.Id,

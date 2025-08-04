@@ -29,6 +29,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<ProjectMember?> FindMemberInProject(Guid projectId, Guid userId)
         {
             return await _context.ProjectMembers
+                .Include(pm => pm.User)
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && 
                 pm.UserId == userId);
         }
@@ -36,6 +37,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<ProjectMember?> FindMemberInProjectByProjectMemberID(Guid ProjectMemberId)
         {
             return await _context.ProjectMembers
+                .Include(pm => pm.User)
                 .FirstOrDefaultAsync(pm => pm.Id == ProjectMemberId && 
                 pm.IsActive);
         }
