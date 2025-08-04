@@ -100,7 +100,28 @@ namespace taskflow_api.TaskFlow.API.Controllers
         public async Task<ApiResponse<bool>> AddTagToTask(
             [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromRoute] Guid tagId)
         {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
             await _context.AddTagForTask(taskId, tagId);
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpDelete("{taskId}/tags/{tagId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> RemoveTagFromTask(
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromRoute] Guid tagId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            await _context.RemoveTagFromTask(taskId, tagId);
             return ApiResponse<bool>.Success(true);
         }
 

@@ -73,6 +73,28 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _taskTagRepository.AddTaskTagAsync(newTaskTag);
         }
 
+        public async Task RemoveTagFromTask(Guid TaskId, Guid TagId)
+        {
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId)
+              ?? throw new AppException(ErrorCode.TaskNotFound);
+
+            var tag = await _tagRepository.GetTagByIdAsync(TagId)
+               ?? throw new AppException(ErrorCode.TagNotFound);
+
+            if (task.ProjectId != tag.ProjectId)
+            {
+                throw new AppException(ErrorCode.NoPermission);
+            }
+
+            var existingTaskTag = await _taskTagRepository.GetTaskTagAsync(TaskId, TagId);
+            if (existingTaskTag == null)
+            {
+                throw new AppException(ErrorCode.TagNotFound);
+            }
+
+            await _taskTagRepository.RemoveTaskTagAsync(TaskId, TagId);
+        }
+
         public async Task AddTask(AddTaskRequest request, Guid ProjectId)
         {
             var BoardId = _boardRepository.GetIdBoardOrderFirtsAsync(ProjectId);
