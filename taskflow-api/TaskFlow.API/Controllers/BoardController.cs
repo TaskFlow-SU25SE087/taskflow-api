@@ -92,5 +92,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.ListBoardAsync(projectId);
             return ApiResponse<List<BoardResponse>>.Success(result);
         }
+
+        [HttpGet("types")]
+        [Authorize]
+        public ApiResponse<List<string>> GetBoardTypes()
+        {
+            var boardTypes = Enum.GetValues(typeof(BoardType))
+                .Cast<BoardType>()
+                .Select(bt => bt.ToString())
+                .ToList();
+            return ApiResponse<List<string>>.Success(boardTypes);
+        }
     }
 }

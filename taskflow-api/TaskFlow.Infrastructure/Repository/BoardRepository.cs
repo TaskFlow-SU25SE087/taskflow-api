@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -42,6 +43,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .FirstOrDefaultAsync(b => b.Id == id && b.IsActive);
         }
 
+        public async Task<Board?> GetBoardByTypeAsync(Guid projectId, BoardType type)
+        {
+            return await _context.Boards
+                .FirstOrDefaultAsync(b => b.ProjectId == projectId && b.Type == type && b.IsActive);
+        }
+
         public async Task<List<Board>?> GetBoardsAfterOrderAsync(int order)
         {
             var listBoard = await _context.Boards
@@ -79,7 +86,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     ProjectId = b.ProjectId,
                     Name = b.Name,
                     Description = b.Description,
-                    Order = b.Order
+                    Order = b.Order,
+                    Type = b.Type
                 })
                 .ToListAsync();
             return boards;

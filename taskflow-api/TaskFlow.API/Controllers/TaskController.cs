@@ -130,6 +130,43 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<List<ListTaskProjectNotSprint>>.Success(result);
         }
 
+        [HttpGet("board-type/{boardType}")]
+        [Authorize]
+        public async Task<ApiResponse<List<TaskProjectResponse>>> GetTasksByBoardType(
+            [FromRoute] Guid projectId, [FromRoute] string boardType)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<List<TaskProjectResponse>>.Error(9002, "Unauthorized access");
+            }
+
+            if (!Enum.TryParse<BoardType>(boardType, true, out var boardTypeEnum))
+            {
+                return ApiResponse<List<TaskProjectResponse>>.Error(400, "Invalid board type");
+            }
+
+            var result = await _context.GetTasksByBoardType(projectId, boardTypeEnum);
+            return ApiResponse<List<TaskProjectResponse>>.Success(result);
+        }
+
+        [HttpGet("{taskId}/is-completed")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> IsTaskCompleted(
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.IsTaskCompleted(taskId);
+            return ApiResponse<bool>.Success(result);
+        }
+
         [HttpPost("{taskId}/status/board/{boardId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> ChangeBoard(

@@ -145,9 +145,9 @@ builder.Services.AddSingleton(s =>
 });
 
 //SonarQube
-builder.Services.AddHostedService<RabbitScanCodeConsumerHostedService>();
-builder.Services.Configure<SonarQubeSetting>(
-    builder.Configuration.GetSection("SonarQube"));
+//builder.Services.AddHostedService<RabbitScanCodeConsumerHostedService>();
+//builder.Services.Configure<SonarQubeSetting>(
+//    builder.Configuration.GetSection("SonarQube"));
 
 //RabbitMQ
 builder.Services.Configure<RabbitMQSetting>(builder.Configuration.GetSection("RabbitMQ"));

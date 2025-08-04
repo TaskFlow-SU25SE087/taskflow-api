@@ -211,10 +211,80 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.TaskProjects.Update(task);
             await _context.SaveChangesAsync();
         }
-    public Task<List<TaskProject>> GetAllActiveTasksAsync()
+            public Task<List<TaskProject>> GetAllActiveTasksAsync()
         {
             return _context.TaskProjects
                 .Where(t => t.IsActive)
+                .ToListAsync();
+        }
+
+        public async Task<List<TaskProjectResponse>> GetTasksByBoardIdAsync(Guid boardId)
+        {
+            return await _context.TaskProjects
+                .Where(t => t.BoardId == boardId && t.IsActive)
+                .Select(t => new TaskProjectResponse
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Priority = t.Priority,
+                    CreatedAt = t.CreatedAt,
+                    UpdatedAt = t.UpdatedAt,
+                    Deadline = t.Deadline,
+                    SprintId = t.SprintId ?? Guid.Empty,
+                    SprintName = t.Sprint != null ? t.Sprint.Name : string.Empty,
+                    AttachmentUrl = t.AttachmentUrl,
+                    CompletionAttachmentUrl = t.CompletionAttachmentUrls,
+                    BoardId = t.BoardId ?? Guid.Empty,
+                    Status = t.Board != null ? t.Board.Name : string.Empty,
+                    TaskAssignees = (
+                        from ta in _context.TaskAssignees
+                        join pm in _context.ProjectMembers on ta.ImplementerId equals pm.Id
+                        join u in _context.Users on pm.UserId equals u.Id
+                        where ta.RefId == t.Id && ta.Type == RefType.Task && ta.IsActive
+                        select new TaskAssigneeResponse
+                        {
+                            ProjectMemberId = pm.Id,
+                            Executor = u.FullName,
+                            Avatar = u.Avatar,
+                            Role = pm.Role,
+                        }
+                    ).ToList(),
+                    Tags = t.TaskTags
+                        .Where(tt => tt.Tag != null)
+                        .Select(tt => new TaskTagResponse
+                        {
+                            Name = tt.Tag.Name,
+                            Description = tt.Tag.Description,
+                            Color = tt.Tag.Color
+                        }).ToList(),
+                    Commnets = t.TaskComments
+                        .Select(c => new CommnetResponse
+                        {
+                            Commenter = c.UserComment.User.FullName,
+                            Avatar = c.UserComment.User.Avatar!,
+                            Content = c.Content,
+                            AttachmentUrls = c.AttachmentUrlsList,
+                            LastUpdate = c.LastUpdatedAt
+                        }).ToList(),
+                    Issues = t.Issues
+                        .Where(i => i.IsActive)
+                        .Select(i => new IssueTaskResponse
+                        {
+                            Id = i.Id,
+                            Title = i.Title,
+                            Description = i.Description,
+                            Priority = i.Priority,
+                            Type = i.Type,
+                            Status = i.Status,
+                            CreatedAt = i.CreatedAt,
+                            UpdatedAt = i.UpdatedAt,
+                            IssueAttachmentUrls = i.IssueAttachmentUrlsList,
+                            Explanation = i.Explanation,
+                            Example = i.Example
+                        })
+                        .ToList()
+                })
                 .ToListAsync();
         }
 
