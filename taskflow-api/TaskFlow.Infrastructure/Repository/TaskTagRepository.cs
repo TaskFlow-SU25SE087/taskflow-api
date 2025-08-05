@@ -23,5 +23,15 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return await _context.FindAsync<TaskTag>(taskId, tagId);
         }
+
+        public async Task RemoveTaskTagAsync(Guid taskId, Guid tagId)
+        {
+            var taskTag = await _context.FindAsync<TaskTag>(taskId, tagId);
+            if (taskTag != null)
+            {
+                _context.TaskTags.Remove(taskTag);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

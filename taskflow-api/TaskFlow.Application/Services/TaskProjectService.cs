@@ -73,6 +73,28 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _taskTagRepository.AddTaskTagAsync(newTaskTag);
         }
 
+        public async Task RemoveTagFromTask(Guid TaskId, Guid TagId)
+        {
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId)
+              ?? throw new AppException(ErrorCode.TaskNotFound);
+
+            var tag = await _tagRepository.GetTagByIdAsync(TagId)
+               ?? throw new AppException(ErrorCode.TagNotFound);
+
+            if (task.ProjectId != tag.ProjectId)
+            {
+                throw new AppException(ErrorCode.NoPermission);
+            }
+
+            var existingTaskTag = await _taskTagRepository.GetTaskTagAsync(TaskId, TagId);
+            if (existingTaskTag == null)
+            {
+                throw new AppException(ErrorCode.TagNotFound);
+            }
+
+            await _taskTagRepository.RemoveTaskTagAsync(TaskId, TagId);
+        }
+
         public async Task AddTask(AddTaskRequest request, Guid ProjectId)
         {
             var BoardId = _boardRepository.GetIdBoardOrderFirtsAsync(ProjectId);
@@ -356,6 +378,116 @@ namespace taskflow_api.TaskFlow.Application.Services
                                             ? reason
                                             : defaultNote + ": " + reason;
             await _taskAssigneeRepository.UpdateAsync(taskAssignee);
+        }
+
+        public async Task<BurndownChartResponse> GetBurndownChart(Guid projectId, Guid sprintId)
+        {
+            // Get sprint information
+            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
+            if (sprint == null)
+            {
+                throw new AppException(ErrorCode.SprintNotFound);
+            }
+
+            if (sprint.ProjectId != projectId)
+            {
+                throw new AppException(ErrorCode.NoPermission);
+            }
+
+            // Get all tasks in the sprint
+            var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(sprintId);
+            
+            // Calculate effort points by priority
+            var priorityEfforts = new List<PriorityEffortData>();
+            var totalEffortPoints = 0;
+            var completedEffortPoints = 0;
+
+            foreach (TaskPriority priority in Enum.GetValues(typeof(TaskPriority)))
+            {
+                var priorityTasks = tasks.Where(t => t.Priority == priority).ToList();
+                var priorityTotalPoints = priorityTasks.Count * GetEffortPointsByPriority(priority);
+                var priorityCompletedPoints = priorityTasks.Where(t => IsTaskCompleted(t)).Count() * GetEffortPointsByPriority(priority);
+
+                priorityEfforts.Add(new PriorityEffortData
+                {
+                    Priority = priority,
+                    PriorityName = priority.ToString(),
+                    TotalEffortPoints = priorityTotalPoints,
+                    CompletedEffortPoints = priorityCompletedPoints,
+                    RemainingEffortPoints = priorityTotalPoints - priorityCompletedPoints,
+                    CompletionPercentage = priorityTotalPoints > 0 ? (double)priorityCompletedPoints / priorityTotalPoints * 100 : 0
+                });
+
+                totalEffortPoints += priorityTotalPoints;
+                completedEffortPoints += priorityCompletedPoints;
+            }
+
+            // Calculate daily progress
+            var dailyProgress = new List<DailyProgressData>();
+            var idealBurndown = new List<DailyProgressData>();
+            var totalDays = (sprint.EndDate - sprint.StartDate).Days + 1;
+            var dailyIdealBurn = totalEffortPoints / (double)totalDays;
+
+            for (int i = 0; i <= totalDays; i++)
+            {
+                var currentDate = sprint.StartDate.AddDays(i);
+                
+                // Calculate cumulative completed tasks up to this date
+                var completedTasksUpToDate = tasks.Where(t => 
+                    IsTaskCompleted(t) && 
+                    t.UpdatedAt.Date <= currentDate.Date).ToList();
+                
+                var completedPointsUpToDate = completedTasksUpToDate.Sum(t => GetEffortPointsByPriority(t.Priority));
+                var remainingPoints = Math.Max(0, totalEffortPoints - completedPointsUpToDate);
+
+                dailyProgress.Add(new DailyProgressData
+                {
+                    Date = currentDate,
+                    RemainingEffortPoints = remainingPoints,
+                    CompletedEffortPoints = completedPointsUpToDate,
+                    TotalEffortPoints = totalEffortPoints
+                });
+
+                // Ideal burndown line (linear decrease)
+                var idealRemaining = Math.Max(0, totalEffortPoints - (dailyIdealBurn * i));
+                idealBurndown.Add(new DailyProgressData
+                {
+                    Date = currentDate,
+                    RemainingEffortPoints = (int)idealRemaining,
+                    CompletedEffortPoints = (int)(totalEffortPoints - idealRemaining),
+                    TotalEffortPoints = totalEffortPoints
+                });
+            }
+
+            return new BurndownChartResponse
+            {
+                SprintId = sprint.Id,
+                SprintName = sprint.Name,
+                StartDate = sprint.StartDate,
+                EndDate = sprint.EndDate,
+                TotalDays = totalDays,
+                PriorityEfforts = priorityEfforts,
+                DailyProgress = dailyProgress,
+                IdealBurndown = idealBurndown
+            };
+        }
+
+        private int GetEffortPointsByPriority(TaskPriority priority)
+        {
+            return priority switch
+            {
+                TaskPriority.Low => 1,
+                TaskPriority.Medium => 3,
+                TaskPriority.High => 5,
+                TaskPriority.Urgent => 8,
+                _ => 1
+            };
+        }
+
+        private bool IsTaskCompleted(TaskProject task)
+        {
+            // Task is completed only when it has board type Done
+            return task.Board != null && task.Board.Type == BoardType.Done;
         }
     }
 }
