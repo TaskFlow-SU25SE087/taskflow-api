@@ -21,7 +21,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             //check dates
             var LatestTermEndDate = await _termRepository.GetLatestTermEndDateAsync();
-            if (request.StartDate >= request.EndDate || request.StartDate < LatestTermEndDate)
+            if (request.StartDate >= request.EndDate || (LatestTermEndDate.HasValue && request.StartDate < LatestTermEndDate.Value))
             {
                throw new AppException(ErrorCode.InvalidTermDates);
             }
