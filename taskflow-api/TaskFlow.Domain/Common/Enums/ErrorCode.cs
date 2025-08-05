@@ -83,5 +83,6 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail SprintMeetingTaskNotFound = new(9013, "Sprint meeting task not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail SprintMeetingTaskItemVersionNotMatch = new(9014, "Sprint meeting task item version does not match", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail SprintMeetingNotFound = new(9015, "Sprint meeting not found", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail SprintNotFound = new(9016, "Sprint not found", StatusCodes.Status404NotFound);
     }
 }

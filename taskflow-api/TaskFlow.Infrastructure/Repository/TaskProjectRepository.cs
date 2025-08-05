@@ -299,5 +299,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Where(t => t.SprintId == SprintID && t.IsActive && t.BoardId != lastBoardId)
                 .ToListAsync();
         }
+
+        public async Task<List<TaskProject>> GetTasksBySprintIdAsync(Guid sprintId)
+        {
+            return await _context.TaskProjects
+                .Where(t => t.SprintId == sprintId && t.IsActive)
+                .Include(t => t.Board)
+                .Include(t => t.Sprint)
+                .ToListAsync();
+        }
     }
 }
