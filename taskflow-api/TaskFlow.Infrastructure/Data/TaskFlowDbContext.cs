@@ -35,6 +35,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<CommitScanIssue> CommitScanIssues { get; set; } = null!;
         public DbSet<GitMember> GitMembers { get; set; } = null!;
         public DbSet<SprintMeetingLog> SprintMeetingLogs { get; set; } = null!;
+        public DbSet<ProcessingFile> ProcessingFiles { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -242,6 +243,15 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
                 .WithMany(pm => pm.Issues)
                 .HasForeignKey(i => i.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //LogProject
+            modelBuilder.Entity<LogProject>()
+                .Property(l => l.ActionType)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<LogProject>()
+                .Property(l => l.FieldChanged)
+                .HasConversion<string>();
         }
     }
 

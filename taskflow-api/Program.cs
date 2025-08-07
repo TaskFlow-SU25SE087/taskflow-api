@@ -49,6 +49,7 @@ builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
 builder.Services.AddHttpClient<IGitHubRepoService, GitHubRepoService>();
 builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
 builder.Services.AddScoped<ISprintMeetingLogsService, SprintMeetingLogsService>();
+builder.Services.AddScoped<ILogProjectService, LogProjectService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -74,6 +75,7 @@ builder.Services.AddScoped<ICommitScanIssueRepository, CommitScanIssueRepository
 builder.Services.AddScoped<IGitMemberRepository, GitMemberRepository>();
 builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
 builder.Services.AddScoped<ISprintMeetingLogsRepository, SprintMeetingLogsRepository>();
+builder.Services.AddScoped<ILogProjectRepository, LogProjectRepository>();
 
 //Signalr
 builder.Services.AddSignalR();
