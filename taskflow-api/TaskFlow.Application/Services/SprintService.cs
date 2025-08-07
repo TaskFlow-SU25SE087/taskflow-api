@@ -153,5 +153,65 @@ namespace taskflow_api.TaskFlow.Application.Services
             return true;
         }
 
+        public async Task<SprintSummaryReportResponse?> GetSprintSummaryReport(Guid ProjectId, Guid SprintId)
+        {
+            // Get sprint information
+            var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
+            if (sprint == null || sprint.ProjectId != ProjectId)
+            {
+                return null;
+            }
+
+            // Get all tasks in the sprint with board information
+            var sprintTasks = await _sprintRepository.GetSprintTasksWithBoardInfo(SprintId, ProjectId);
+
+            var report = new SprintSummaryReportResponse
+            {
+                Id = sprint.Id,
+                Name = sprint.Name,
+                Description = sprint.Description,
+                StartDate = sprint.StartDate,
+                EndDate = sprint.EndDate,
+                Status = sprint.Status,
+                TotalTasksPlanned = sprintTasks.Count,
+                TasksCompleted = sprintTasks.Count(t => t.BoardType == BoardType.Done),
+                TasksInProgress = sprintTasks.Count(t => t.BoardType == BoardType.InProgress),
+                TasksNotStarted = sprintTasks.Count(t => t.BoardType == BoardType.Todo),
+                CarryoverTasks = sprintTasks.Count(t => t.BoardType != BoardType.Done)
+            };
+
+            // Get completed tasks
+            report.CompletedTasks = sprintTasks
+                .Where(t => t.BoardType == BoardType.Done)
+                .Select(t => new TaskSummaryItem
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Priority = t.Priority,
+                    Deadline = t.Deadline,
+                    Status = t.BoardName,
+                    Assignees = t.Assignees
+                })
+                .ToList();
+
+            // Get carryover tasks (unfinished tasks)
+            report.CarryoverTasksList = sprintTasks
+                .Where(t => t.BoardType != BoardType.Done)
+                .Select(t => new TaskSummaryItem
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Priority = t.Priority,
+                    Deadline = t.Deadline,
+                    Status = t.BoardName,
+                    Assignees = t.Assignees
+                })
+                .ToList();
+
+            return report;
+        }
+
     }
 }

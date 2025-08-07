@@ -128,6 +128,28 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<SprintTaskWithBoardInfo>> GetSprintTasksWithBoardInfo(Guid sprintId, Guid projectId)
+        {
+            return await _context.TaskProjects
+                .Where(tp => tp.SprintId == sprintId && tp.IsActive)
+                .Select(tp => new SprintTaskWithBoardInfo
+                {
+                    Id = tp.Id,
+                    Title = tp.Title,
+                    Description = tp.Description,
+                    Priority = tp.Priority,
+                    Deadline = tp.Deadline,
+                    BoardId = tp.BoardId,
+                    BoardName = tp.Board != null ? tp.Board.Name : "No Board",
+                    BoardType = tp.Board != null ? tp.Board.Type : BoardType.Custom,
+                    Assignees = tp.TaskAssignees
+                        .Where(ta => ta.IsActive)
+                        .Select(ta => ta.ProjectMember.User.FullName)
+                        .ToList()
+                })
+                .ToListAsync();
+        }
+
         public async Task UpdateSprintAsync(Sprint sprint)
         {
             _context.Sprints.Update(sprint);

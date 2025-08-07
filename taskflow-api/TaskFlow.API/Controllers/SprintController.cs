@@ -104,5 +104,25 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.GetCurrentSprint(projectId);
             return ApiResponse<SprintResponse?>.Success(result);
         }
+
+        [HttpGet("{sprintId}/summary")]
+        [Authorize]
+        public async Task<ApiResponse<SprintSummaryReportResponse?>> GetSprintSummaryReport(
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<SprintSummaryReportResponse?>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.GetSprintSummaryReport(projectId, sprintId);
+            if (result == null)
+            {
+                return ApiResponse<SprintSummaryReportResponse?>.Error(404, "Sprint not found");
+            }
+
+            return ApiResponse<SprintSummaryReportResponse?>.Success(result);
+        }
     }
 }
