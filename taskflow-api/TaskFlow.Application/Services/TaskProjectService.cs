@@ -122,7 +122,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var UserId = httpContext?.User.FindFirst("id")?.Value;
             //check user is in project
             var UserAssign = await _projectMemberRepository.FindMemberInProject(ProjectId, Guid.Parse(UserId!));
-            if (UserAssign == null || request.ImplementerId == null)
+            if (UserAssign == null)
             {
                 throw new AppException(ErrorCode.UserNotInProject);
             }
@@ -132,6 +132,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.TaskAlreadyAssigned);
             }
+
+            // Get task information for notification
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId);
+            if (task == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+
+            // Get assigner information for notification
+            var assignerName = UserAssign.User?.FullName ?? UserAssign.User?.UserName ?? "Project Member";
 
             var newTaskAginee = new TaskAssignee
             {
@@ -143,6 +153,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                 CreatedAt = _timeProvider.Now
             };
             await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
+
+            // Send notification to the assigned user
+            await _notificationService.NotifyTaskAssignmentAsync(
+                request.ImplementerId,
+                ProjectId,
+                TaskId,
+                task.Title,
+                assignerName
+            );
         }
 
         public async Task ChangeBoard(Guid BoardId, Guid TaskId)
@@ -353,6 +372,16 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.TaskAlreadyAssigned);
             }
 
+            // Get task information for notification
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId);
+            if (task == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+
+            // Get user information for notification
+            var userName = member.User?.FullName ?? member.User?.UserName ?? "User";
+
             var newTaskAginee = new TaskAssignee
             {
                 CreatedAt = _timeProvider.Now,
@@ -363,6 +392,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                 IsActive = true
             };
             await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
+
+            // Send notification to the user who accepted the task
+            await _notificationService.NotifyTaskAssignmentAsync(
+                member.Id,
+                ProjectId,
+                TaskId,
+                task.Title,
+                userName
+            );
         }
 
         private async Task UpdateTaskAssignmentStatus(Guid taskAssigneeId, string reason, string defaultNote)

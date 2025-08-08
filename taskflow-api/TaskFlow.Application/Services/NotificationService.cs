@@ -128,6 +128,55 @@ namespace taskflow_api.TaskFlow.Application.Services
                 });
             }
         }
+
+        public async Task NotifyTaskAssignmentAsync(Guid userId, Guid projectId, Guid taskId, string taskTitle, string assignerName)
+        {
+            string message = $"You have been assigned to task '{taskTitle}' by {assignerName}.";
+            
+            // Email notification
+            var member = await _projectMemberRepository.FindMemberInProject(projectId, userId);
+            if (member != null && member.User != null && !string.IsNullOrEmpty(member.User.Email))
+            {
+                _logger.LogInformation("Sending task assignment email to {Email} for user {UserId}", member.User.Email, userId);
+                await _mailService.SendTaskUpdateEmailAsync(
+                    member.User.Email,
+                    member.User.FullName ?? member.User.UserName ?? "User",
+                    "Task Assignment",
+                    message
+                );
+            }
+            else
+            {
+                _logger.LogWarning("Could not send task assignment email for user {UserId}. Member: {MemberNull}, User: {UserNull}, Email: {Email}", 
+                    userId, member == null, member?.User == null, member?.User?.Email);
+            }
+
+            // In-app notification (database)
+            var notification = new Notification
+            {
+                UserId = userId,
+                ProjectId = projectId,
+                TaskId = taskId,
+                Message = message,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _notificationRepository.AddNotificationAsync(notification);
+
+            // SignalR notification (send to user)
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
+            {
+                notification.Id,
+                notification.UserId,
+                notification.ProjectId,
+                notification.TaskId,
+                notification.Message,
+                notification.IsRead,
+                notification.CreatedAt,
+                Type = "TaskAssignment"
+            });
+        }
+
     public async Task NotifyTaskBoardChangeAsync(
             Guid projectId,
             Guid taskId,
