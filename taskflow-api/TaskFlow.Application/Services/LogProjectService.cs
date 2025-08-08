@@ -36,6 +36,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 ProjectMemberId = projectMemberId,
                 ProjectId = projectId,
+                ActionType = TypeLog.CreateProject,
                 Description = member!.User.FullName + " created project",
                 CreatedAt = _timeProvider.Now,
             };
