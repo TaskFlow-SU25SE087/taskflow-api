@@ -2,5 +2,6 @@
 {
     public enum TypeLog
     {
+        CreateProject = 1,
     }
 }

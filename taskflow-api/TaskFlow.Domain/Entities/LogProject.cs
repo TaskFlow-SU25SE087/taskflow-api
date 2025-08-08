@@ -4,13 +4,12 @@ using taskflow_api.TaskFlow.Domain.Common.Enums;
 namespace taskflow_api.TaskFlow.Domain.Entities
 {
     public class LogProject
-
-
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
         [Required]
         public Guid ProjectMemberId { get; set; }
+        public ProjectMember ProjectMember { get; set; } = null!;
 
         [Required]
         public Guid ProjectId { get; set; }
@@ -26,6 +25,6 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string? NewValue { get; set; } = string.Empty;
         public string? Description { get; set; } = string.Empty;
 
-        public DateTime Created_at { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }
