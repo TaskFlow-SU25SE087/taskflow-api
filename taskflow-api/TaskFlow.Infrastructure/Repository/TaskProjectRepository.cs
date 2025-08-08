@@ -308,5 +308,23 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Include(t => t.Sprint)
                 .ToListAsync();
         }
+
+        public async Task<List<TaskProject>> GetTasksWithDetailsAsync(Guid projectId)
+        {
+            return await _context.TaskProjects
+                .Where(t => t.ProjectId == projectId && t.IsActive)
+                .Include(t => t.Board)
+                .Include(t => t.Sprint)
+                .Include(t => t.TaskAssignees)
+                    .ThenInclude(ta => ta.ProjectMember)
+                        .ThenInclude(pm => pm.User)
+                .Include(t => t.TaskTags)
+                    .ThenInclude(tt => tt.Tag)
+                .Include(t => t.TaskComments)
+                    .ThenInclude(tc => tc.UserComment)
+                        .ThenInclude(uc => uc.User)
+                .Include(t => t.Issues)
+                .ToListAsync();
+        }
     }
 }
