@@ -49,6 +49,7 @@ builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
 builder.Services.AddHttpClient<IGitHubRepoService, GitHubRepoService>();
 builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
 builder.Services.AddScoped<ISprintMeetingLogsService, SprintMeetingLogsService>();
+builder.Services.AddScoped<ILogProjectService, LogProjectService>();
 builder.Services.AddScoped<ITeamActivityReportService, TeamActivityReportService>();
 
 //Repository
@@ -75,10 +76,18 @@ builder.Services.AddScoped<ICommitScanIssueRepository, CommitScanIssueRepository
 builder.Services.AddScoped<IGitMemberRepository, GitMemberRepository>();
 builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
 builder.Services.AddScoped<ISprintMeetingLogsRepository, SprintMeetingLogsRepository>();
+builder.Services.AddScoped<ILogProjectRepository, LogProjectRepository>();
 
 //Signalr
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 
 // Mapper
@@ -255,35 +264,7 @@ var env = builder.Environment;
 var certPath = builder.Configuration["Kestrel:Certificates:Default:Path"];
 var certPassword = builder.Configuration["Kestrel:Certificates:Default:Password"];
 
-//builder.WebHost.UseUrls("https://*:7029");
-//builder.WebHost.ConfigureKestrel(options =>
-//{
-//    if (env.IsDevelopment())
-//    {
-//        try
-//        {
-//            options.ListenLocalhost(7029, lo => lo.UseHttps());
-//        }
-//        catch
-//        {
-//            options.ListenLocalhost(5080);
-//            Console.WriteLine("[Dev] No dev-certs found. Serving HTTP on http://localhost:5080");
-//        }
-//    }
-//    else
-//    {
-//        if (!string.IsNullOrWhiteSpace(certPath))
-//        {
-//            options.ListenAnyIP(7029, lo => lo.UseHttps(certPath, certPassword)); // HTTPS
-//        }
-//        else
-//        {
-//            options.ListenAnyIP(8080); // fallback HTTP
-//            Console.WriteLine("[Prod] No PFX configured. Serving HTTP on :8080. Set Kestrel:Certificates:Default:* to enable HTTPS.");
-//        }
-//    }
-//});
-
+builder.WebHost.UseUrls("http://*:7029");
 
 builder.Logging.AddConsole();
 var app = builder.Build();

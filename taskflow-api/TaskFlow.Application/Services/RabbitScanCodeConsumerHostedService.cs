@@ -76,8 +76,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                         //scan code by SonarQube
                         var scanStart = DateTime.UtcNow;
                         var result = await codeScanService.ScanCommit(
-                            extractPath, 
-                            $"taskflow-{commit.ProjectPartId}",
+                            extractPath,
+                            $"taskflow-{commit.ProjectPartId}-{commit.CommitId}",
                             job.Language,
                             job.Framework
                             );
@@ -188,35 +188,35 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 {
                                     //save result 
                                     var scanIssue = new CommitScanIssue
-                                {
-                                    CommitRecordId = commit.Id,
-                                    Rule = i.Rule,
-                                    Severity = i.Severity,
-                                    Message = i.Message,
-                                    FilePath = cleanFilePath,
-                                    Line = i.Line,
-                                    LineContent = lineContent,
-                                    CreatedAt = _timeProvider.Now,
+                                    {
+                                        CommitRecordId = commit.Id,
+                                        Rule = i.Rule,
+                                        Severity = i.Severity,
+                                        Message = i.Message,
+                                        FilePath = cleanFilePath,
+                                        Line = i.Line,
+                                        LineContent = lineContent,
+                                        CreatedAt = _timeProvider.Now,
                                         BlamedGitEmail = blamedEmail,
-                                    BlamedGitName = blamedName
+                                        BlamedGitName = blamedName
                                     };
-                                await commitScanIssueRepo.CreateAsync(scanIssue);
+                                    await commitScanIssueRepo.CreateAsync(scanIssue);
 
-                                //create task issue
-                                var projectMemberRepo = scope.ServiceProvider.GetRequiredService<IProjectMemberRepository>();
-                                var idSystem = await projectMemberRepo.GetSystemMemberId(commit.ProjectPart.ProjectId);
+                                    //create task issue
+                                    var projectMemberRepo = scope.ServiceProvider.GetRequiredService<IProjectMemberRepository>();
+                                    var idSystem = await projectMemberRepo.GetSystemMemberId(commit.ProjectPart.ProjectId);
                                     var issue = new Issue
-                                {
-                                    ProjectId = commit.ProjectPart.ProjectId,
-                                    Title = $"{i.Severity}: {i.Message}",
-                                    Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
-                                    Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
-                                    Type = TypeIssue.Improvement,
-                                    CreatedBy = idSystem,
-                                    IsActive = true,
-                                    CreatedAt = _timeProvider.Now,
+                                    {
+                                        ProjectId = commit.ProjectPart.ProjectId,
+                                        Title = $"{i.Severity}: {i.Message}",
+                                        Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
+                                        Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
+                                        Type = TypeIssue.Improvement,
+                                        CreatedBy = idSystem,
+                                        IsActive = true,
+                                        CreatedAt = _timeProvider.Now,
                                     };
-                                await issueRepo.CreateTaskIssueAsync(issue);
+                                    await issueRepo.CreateTaskIssueAsync(issue);
 
                                     //get user to do issue
                                     var userRepo = scope.ServiceProvider

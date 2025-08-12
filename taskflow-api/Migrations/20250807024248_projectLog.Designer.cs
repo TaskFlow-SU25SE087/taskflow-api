@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250807024248_projectLog")]
+    partial class projectLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -307,7 +310,7 @@ namespace taskflow_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created_at")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
@@ -337,8 +340,6 @@ namespace taskflow_api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("ProjectMemberId");
 
                     b.HasIndex("SprintId");
 
@@ -840,8 +841,6 @@ namespace taskflow_api.Migrations
                     b.ToTable("Terms");
                 });
 
-
-
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1145,12 +1144,6 @@ namespace taskflow_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", "ProjectMember")
-                        .WithMany()
-                        .HasForeignKey("ProjectMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Sprint", "Sprint")
                         .WithMany()
                         .HasForeignKey("SprintId");
@@ -1160,8 +1153,6 @@ namespace taskflow_api.Migrations
                         .HasForeignKey("TaskProjectID");
 
                     b.Navigation("Project");
-
-                    b.Navigation("ProjectMember");
 
                     b.Navigation("Sprint");
 
@@ -1340,8 +1331,6 @@ namespace taskflow_api.Migrations
 
                     b.Navigation("Task");
                 });
-
-
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.User", b =>
                 {

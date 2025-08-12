@@ -30,13 +30,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITagRepository _TagRepository;
         private readonly ITaskTagRepository _taskTagRepository;
         private readonly AppTimeProvider _timeProvider;
+        private readonly ILogProjectService _logService;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
             IProjectMemberRepository projectMember, IBoardRepository boardRepository,
             IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository,
             ISprintRepository springRepository, ITagRepository TagRepository, ITaskTagRepository taskTagRepository,
-            AppTimeProvider timeProvider)
+            AppTimeProvider timeProvider, ILogProjectService logService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -51,6 +52,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _TagRepository = TagRepository;
             _taskTagRepository = taskTagRepository;
             _timeProvider = timeProvider;
+            _logService = logService;
         }
 
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
@@ -91,6 +93,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 HasJoinedBefore = true,
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
+            await _logService.LogCreateProject(projectId, projectMember.Id);
             var UserSystem = new ProjectMember
             {
                 UserId = Guid.Parse("00000000-0000-0000-0000-000000000002"), // System user ID
@@ -103,7 +106,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var newSprint = new Sprint
             {
                 ProjectId = projectId,
-                Name = "Sprint 1",
+                Name = "Sprint " + _timeProvider.Now.ToString("ddMMyy"),
                 Description = "First sprint of the project",
                 StartDate = _timeProvider.Now,
                 EndDate = _timeProvider.Now.AddDays(14), // Default 2 weeks sprint
