@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
@@ -12,5 +13,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<TaskAssignee?> GetTaskAssigneeByTaskIdAndUserIDAsync(Guid taskId, Guid projectmemberId);
         Task UpdateAsync(TaskAssignee taskAssignee);
         Task<List<TaskAssignee>> taskAssigneesAsync(Guid taskId);
+        Task<List<UnfinishedTaskResponse>> GetTaskCanUpdateSprintMeeting(List<UnfinishedTaskResponse> ufsTask, Guid projectMemberId);
     }
 }

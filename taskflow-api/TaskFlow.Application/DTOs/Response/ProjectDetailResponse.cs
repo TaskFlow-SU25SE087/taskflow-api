@@ -23,6 +23,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string? Description { get; set; }
         public int Order { get; set; }
         public bool IsActive { get; set; }
+        public BoardType Type { get; set; }
         public List<TaskDetailResponse> Tasks { get; set; } = new();
     }
 

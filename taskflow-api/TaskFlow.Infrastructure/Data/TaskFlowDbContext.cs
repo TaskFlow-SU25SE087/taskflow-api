@@ -34,6 +34,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Data
         public DbSet<UserGitHubToken> UserGitHubTokens { get; set; } = null!;
         public DbSet<CommitScanIssue> CommitScanIssues { get; set; } = null!;
         public DbSet<GitMember> GitMembers { get; set; } = null!;
+        public DbSet<SprintMeetingLog> SprintMeetingLogs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

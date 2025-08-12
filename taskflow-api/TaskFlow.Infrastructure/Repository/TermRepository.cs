@@ -37,7 +37,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
-        public async Task<DateTime> GetLatestTermEndDateAsync()
+        public async Task<DateTime?> GetLatestTermEndDateAsync()
         {
             return await _context.Terms
                 .Where(t => t.IsActive)

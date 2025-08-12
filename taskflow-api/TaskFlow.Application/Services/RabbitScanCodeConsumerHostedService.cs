@@ -234,11 +234,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                                         //Create TaskAssignee for the issue
                                         var taskAssigneeRepo = scope.ServiceProvider
                                             .GetRequiredService<ITaskAssigneeRepository>();
+                                        var assigner = await projectMemberRepo.FindMemberInProject(
+                                            commit.ProjectPart.ProjectId, new Guid("00000000-0000-0000-0000-000000000002"));
                                         var taskAssignee = new TaskAssignee
                                         {
                                             RefId = issue.Id,
                                             Type = RefType.Issue,
-                                            AssignerId = Guid.Empty,
+                                            AssignerId = assigner!.Id,
                                             ImplementerId = member.ProjectMemberId ?? null,
                                             CreatedAt = _timeProvider.Now,
                                         };

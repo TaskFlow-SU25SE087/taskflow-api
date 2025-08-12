@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using taskflow_api.TaskFlow.Infrastructure.Data;
 namespace taskflow_api.Migrations
 {
     [DbContext(typeof(TaskFlowDbContext))]
-    partial class TaskFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250803113619_AddBoardType")]
+    partial class AddBoardType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -798,8 +801,6 @@ namespace taskflow_api.Migrations
                     b.ToTable("Terms");
                 });
 
-
-
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1284,8 +1285,6 @@ namespace taskflow_api.Migrations
 
                     b.Navigation("Task");
                 });
-
-
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.User", b =>
                 {

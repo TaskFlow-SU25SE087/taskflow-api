@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.DTOs.Response
@@ -10,5 +11,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public int Order { get; set; }
+        public BoardType Type { get; set; }
     }
 }
