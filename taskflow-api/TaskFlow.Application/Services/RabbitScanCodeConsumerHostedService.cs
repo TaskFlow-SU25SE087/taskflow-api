@@ -57,8 +57,15 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                _logger.LogInformation("Received message from RabbitMQ: {Message}", message);
 
                 var job = JsonSerializer.Deserialize<CommitJobMessage>(message);
+                if (job == null)
+                {
+                    _logger.LogWarning("Message deserialization returned null");
+                    channel.BasicAck(ea.DeliveryTag, false);
+                    return;
+                }
 
                 using var scope = _serviceProvider.CreateScope();
                 var commitRepo = scope.ServiceProvider.GetRequiredService<ICommitRecordRepository>();
@@ -69,18 +76,30 @@ namespace taskflow_api.TaskFlow.Application.Services
                 if (job != null)
                 {
                     var commit = await commitRepo.GetById(job.CommitRecordId);
+                    if (commit == null)
+                    {
+                        _logger.LogWarning("Commit not found for id {CommitId}", job.CommitRecordId);
+                        channel.BasicAck(ea.DeliveryTag, false);
+                        return;
+                    }
                     if (commit != null)
                     {
+                        _logger.LogInformation("Starting download commit source...");
                         var extractPath = await repoService
                         .DownloadCommitSourceAsync(job.RepoFullName, job.CommitId, job.AccessToken);
+                        _logger.LogInformation("Download commit source done at path: {ExtractPath}", extractPath);
                         //scan code by SonarQube
                         var scanStart = DateTime.UtcNow;
+                        _logger.LogInformation("Starting code scan for commit {CommitId} in project {ProjectPartId}",
+                            commit.CommitId, commit.ProjectPartId);
+                        _logger.LogInformation("Starting SonarQube scan...");
                         var result = await codeScanService.ScanCommit(
                             extractPath,
                             $"taskflow-{commit.ProjectPartId}-{commit.CommitId}",
                             job.Language,
                             job.Framework
                             );
+                        _logger.LogInformation("SonarQube scan finished. Success: {Success}", result.Success);
                         var scanEnd = DateTime.UtcNow;
                         commit.ScanDuration = scanEnd - scanStart;
 
@@ -274,7 +293,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             channel.BasicConsume(queue: _settings.ScanCommitQueue, autoAck: false, consumer: consumer);
             _logger.LogInformation("RabbitMQ consumer started and listening for messages.");
-            return Task.CompletedTask;
+            return Task.Delay(Timeout.Infinite, stoppingToken);
         }
     }
 }
