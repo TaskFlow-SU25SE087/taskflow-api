@@ -69,21 +69,15 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpGet("verify-join")]
         public async Task<IActionResult> VerifyJoinProjectRedirect([FromQuery] string token)
         {
-            try
+
+            bool result = await _context.VerifyJoinProject(token);
+            if (result)
             {
-                bool result = await _context.VerifyJoinProject(token);
-                if (result)
-                {
-                    return Redirect($"{_appSetting.FrontEndBaseUrl}/projects");
-                }
-                else
-                {
-                    return Redirect($"{_appSetting.FrontEndBaseUrl}/auth/verify-falied");
-                }
+                return Redirect($"{_appSetting.FrontEndBaseUrl}/projects");
             }
-            catch(AppException ex)
+            else
             {
-                return Redirect($"{_appSetting.FrontEndBaseUrl}/error");
+                return Redirect($"{_appSetting.FrontEndBaseUrl}/auth/verify-falied");
             }
 
         }
