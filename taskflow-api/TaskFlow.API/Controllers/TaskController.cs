@@ -214,5 +214,35 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var result = await _context.GetBurndownChart(projectId, sprintId);
             return ApiResponse<BurndownChartResponse>.Success(result);
         }
+
+        /// <summary>
+        /// Get comprehensive task completion report for a project
+        /// </summary>
+        /// <param name="projectId">Required: The ID of the project to get the report for</param>
+        /// <param name="request">Optional: Filter parameters to narrow down the results</param>
+        /// <remarks>
+        /// This endpoint returns a complete task completion report for the specified project.
+        /// Only the projectId is required - all other parameters are optional filters.
+        /// 
+        /// Example usage:
+        /// - Basic: GET /projects/{projectId}/tasks/completion-report
+        /// - With filters: GET /projects/{projectId}/tasks/completion-report?sprintId=123&status=InProgress
+        /// </remarks>
+        /// <returns>Task completion summary with detailed task information</returns>
+        [HttpGet("completion-report")]
+        [Authorize]
+        public async Task<ApiResponse<TaskCompletionSummaryResponse>> GetTaskCompletionReport(
+            [FromRoute] Guid projectId, [FromQuery] TaskCompletionReportRequest request)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<TaskCompletionSummaryResponse>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.GetTaskCompletionReport(projectId, request);
+            return ApiResponse<TaskCompletionSummaryResponse>.Success(result);
+        }
     }
 }

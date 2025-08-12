@@ -840,6 +840,8 @@ namespace taskflow_api.Migrations
                     b.ToTable("Terms");
                 });
 
+
+
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1338,6 +1340,8 @@ namespace taskflow_api.Migrations
 
                     b.Navigation("Task");
                 });
+
+
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.User", b =>
                 {

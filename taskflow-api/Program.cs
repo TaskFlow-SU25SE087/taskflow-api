@@ -50,6 +50,7 @@ builder.Services.AddHttpClient<IGitHubRepoService, GitHubRepoService>();
 builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
 builder.Services.AddScoped<ISprintMeetingLogsService, SprintMeetingLogsService>();
 builder.Services.AddScoped<ILogProjectService, LogProjectService>();
+builder.Services.AddScoped<ITeamActivityReportService, TeamActivityReportService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();

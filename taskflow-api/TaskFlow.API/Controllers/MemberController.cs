@@ -79,7 +79,6 @@ namespace taskflow_api.TaskFlow.API.Controllers
             {
                 return Redirect($"{_appSetting.FrontEndBaseUrl}/auth/verify-falied");
             }
-
         }
 
         [HttpGet("list")]

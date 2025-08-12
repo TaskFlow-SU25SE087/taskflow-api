@@ -527,5 +527,116 @@ namespace taskflow_api.TaskFlow.Application.Services
             // Task is completed only when it has board type Done
             return task.Board != null && task.Board.Type == BoardType.Done;
         }
+
+        public async Task<TaskCompletionSummaryResponse> GetTaskCompletionReport(Guid projectId, TaskCompletionReportRequest request)
+        {
+            // Get all tasks for the project with related data
+            var tasks = await _taskProjectRepository.GetTasksWithDetailsAsync(projectId);
+
+            // Apply filters
+            var filteredTasks = tasks.Where(t => 
+                (!request.SprintId.HasValue || t.SprintId == request.SprintId) &&
+                (!request.Status.HasValue || t.Board?.Type == request.Status) &&
+                (!request.Priority.HasValue || t.Priority == request.Priority) &&
+                (!request.StartDate.HasValue || t.CreatedAt >= request.StartDate) &&
+                (!request.EndDate.HasValue || t.CreatedAt <= request.EndDate) &&
+                (!request.IsOverdue.HasValue || (request.IsOverdue.Value ? DateTime.UtcNow > t.Deadline : DateTime.UtcNow <= t.Deadline)) &&
+                (request.IncludeCompleted || t.Board?.Type != BoardType.Done) &&
+                (request.IncludeInProgress || t.Board?.Type != BoardType.InProgress) &&
+                (request.IncludeTodo || t.Board?.Type != BoardType.Todo)
+            ).ToList();
+
+            // Filter by assignee if specified
+            if (request.AssigneeId.HasValue)
+            {
+                filteredTasks = filteredTasks.Where(t => 
+                    t.TaskAssignees.Any(ta => ta.ImplementerId == request.AssigneeId.Value)
+                ).ToList();
+            }
+
+            var reportTasks = new List<TaskCompletionReportResponse>();
+            var now = DateTime.UtcNow;
+
+            foreach (var task in filteredTasks)
+            {
+                var isOverdue = now > task.Deadline && task.Board?.Type != BoardType.Done;
+                var completedAt = task.Board?.Type == BoardType.Done ? task.UpdatedAt : (DateTime?)null;
+                
+                // Calculate time spent (simplified - using time from creation to completion or current time)
+                TimeSpan? timeSpent = null;
+                if (task.Board?.Type == BoardType.Done)
+                {
+                    timeSpent = task.UpdatedAt - task.CreatedAt;
+                }
+                else if (task.Board?.Type == BoardType.InProgress)
+                {
+                    timeSpent = now - task.CreatedAt;
+                }
+
+                var assignees = new List<TaskAssigneeReportResponse>();
+                foreach (var assignee in task.TaskAssignees)
+                {
+                    if (assignee.ProjectMember != null)
+                    {
+                        assignees.Add(new TaskAssigneeReportResponse
+                        {
+                            ProjectMemberId = assignee.ProjectMember.Id,
+                            AssigneeName = assignee.ProjectMember.User?.FullName ?? "Unknown",
+                            AssigneeAvatar = assignee.ProjectMember.User?.Avatar,
+                            Role = assignee.ProjectMember.Role,
+                            AssignedAt = assignee.CreatedAt,
+                            CompletedAt = completedAt,
+                            TimeSpent = timeSpent
+                        });
+                    }
+                }
+
+                var tags = task.TaskTags.Select(tt => tt.Tag?.Name ?? "").Where(t => !string.IsNullOrEmpty(t)).ToList();
+
+                reportTasks.Add(new TaskCompletionReportResponse
+                {
+                    TaskId = task.Id,
+                    TaskTitle = task.Title,
+                    TaskDescription = task.Description,
+                    Priority = task.Priority,
+                    CreatedAt = task.CreatedAt,
+                    Deadline = task.Deadline,
+                    CompletedAt = completedAt,
+                    IsOverdue = isOverdue,
+                    TimeSpent = timeSpent,
+                    Status = task.Board?.Type.ToString() ?? "Unknown",
+                    Assignees = assignees,
+                    SprintName = task.Sprint?.Name,
+                    BoardName = task.Board?.Name,
+                    Tags = tags
+                });
+            }
+
+            // Calculate summary statistics
+            var totalTasks = reportTasks.Count;
+            var todoTasks = reportTasks.Count(t => t.Status == BoardType.Todo.ToString());
+            var inProgressTasks = reportTasks.Count(t => t.Status == BoardType.InProgress.ToString());
+            var completedTasks = reportTasks.Count(t => t.Status == BoardType.Done.ToString());
+            var overdueTasks = reportTasks.Count(t => t.IsOverdue);
+            var completionRate = totalTasks > 0 ? (double)completedTasks / totalTasks * 100 : 0;
+            
+            var totalTimeSpent = TimeSpan.Zero;
+            foreach (var task in reportTasks.Where(t => t.TimeSpent.HasValue))
+            {
+                totalTimeSpent += task.TimeSpent.Value;
+            }
+
+            return new TaskCompletionSummaryResponse
+            {
+                TotalTasks = totalTasks,
+                TodoTasks = todoTasks,
+                InProgressTasks = inProgressTasks,
+                CompletedTasks = completedTasks,
+                OverdueTasks = overdueTasks,
+                CompletionRate = completionRate,
+                TotalTimeSpent = totalTimeSpent,
+                Tasks = reportTasks
+            };
+        }
     }
 }
