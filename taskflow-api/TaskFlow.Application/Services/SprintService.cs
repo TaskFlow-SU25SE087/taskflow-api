@@ -53,16 +53,16 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
                 await _sprintRepository.UpdateSprintAsync(sprint);
             }
-                else if (status.Equals(SprintStatus.Completed))// complete sprint
-                {
+            else if (status.Equals(SprintStatus.Completed))// complete sprint
+            {
                 //create sprint meeting logs
                 await _sprintMeetingLogs.CreateSprintMetting(SpringId);
 
                 // new next sprint
                 var nextSprint = await _sprintRepository.GetNextSprint(sprint.ProjectId, sprint.EndDate);
-                    Sprint newSprint;
-                    if(nextSprint == null)
-                    {
+                Sprint newSprint;
+                if (nextSprint == null)
+                {
                     newSprint = new Sprint
                     {
                         ProjectId = sprint.ProjectId,
@@ -74,22 +74,22 @@ namespace taskflow_api.TaskFlow.Application.Services
                         Status = SprintStatus.NotStarted,
                     };
                     await _sprintRepository.CreateSprintAsync(newSprint);
-                    }
-                    else
-                    {
-                        newSprint = nextSprint;
-                    }
-                    // update current sprint
-                    var tasks = await _taskProjectRepository.GetListTasksUnFinishBySprintsIdsAsync(SpringId);
-                    foreach (var task in tasks)
-                    {
-                        task.SprintId = newSprint.Id;
-                        task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] End sprint: {sprint.Name}"+" ;";
-                    }
-                    await _taskProjectRepository.UpdateListTaskAsync(tasks);
-                    await _sprintRepository.UpdateSprintAsync(sprint);
-
                 }
+                else
+                {
+                    newSprint = nextSprint;
+                }
+                // update current sprint
+                var tasks = await _taskProjectRepository.GetListTasksUnFinishBySprintsIdsAsync(SpringId, sprint.ProjectId);
+                foreach (var task in tasks)
+                {
+                    task.SprintId = newSprint.Id;
+                    task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] End sprint: {sprint.Name}" + " ;";
+                }
+                await _taskProjectRepository.UpdateListTaskAsync(tasks);
+                await _sprintRepository.UpdateSprintAsync(sprint);
+
+            }
         }
 
         public async Task<bool> CreateSprint(Guid ProjectId, CreateSprintRequest request)
@@ -125,7 +125,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<List<TaskProjectResponse>> GetTaskInSprints(Guid ProjectId, Guid SprintId)
         {
-            return await _taskProjectRepository.GetListTaskBySprintIdAsync(SprintId); 
+            return await _taskProjectRepository.GetListTaskBySprintIdAsync(SprintId);
         }
 
         public async Task<List<SprintResponse>> ListPrints(Guid ProjectId)

@@ -288,10 +288,10 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
-        public Task<List<TaskProject>> GetListTasksUnFinishBySprintsIdsAsync(Guid SprintID)
+        public Task<List<TaskProject>> GetListTasksUnFinishBySprintsIdsAsync(Guid SprintID, Guid ProjectId)
         {
             var lastBoardId = _context.Boards
-                .Where(b => b.ProjectId == SprintID && b.IsActive)
+                .Where(b => b.ProjectId == ProjectId && b.IsActive)
                 .OrderByDescending(b => b.Order)
                 .Select(b => b.Id)
                 .FirstOrDefault();
