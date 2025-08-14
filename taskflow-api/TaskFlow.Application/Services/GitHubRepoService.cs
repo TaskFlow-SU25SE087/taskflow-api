@@ -52,8 +52,13 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
         {
+            // Create a temporary folder to clone the repository
             var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
+
+            // Build the GitHub clone URL with the access token
             var cloneUrl = $"https://{accessToken}:x-oauth-basic@github.com/{repoFullName}.git";
+
+            // Clone the repository (full clone required for git blame)
             var cloneProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -74,6 +79,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (cloneProcess.ExitCode != 0)
                 throw new Exception($"git clone failed:\n{cloneError}");
 
+            // Checkout the specific commit
             var checkoutProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -87,7 +93,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CreateNoWindow = true,
                 }
             };
-
             checkoutProcess.Start();
             string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
             string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
@@ -96,6 +101,25 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (checkoutProcess.ExitCode != 0)
                 throw new Exception($"git checkout failed:\n{checkoutError}");
 
+            // Remove all tracked files from the index temporarily
+            // This ensures that after reset only files from the target commit remain
+            var resetIndexProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "ls-files -z | xargs -0 git rm --cached",
+                    WorkingDirectory = extractPath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
+            resetIndexProcess.Start();
+            await resetIndexProcess.WaitForExitAsync();
+
+            // Reset the repository to the specific commit (hard reset)
             var resetProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -112,6 +136,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             resetProcess.Start();
             await resetProcess.WaitForExitAsync();
 
+            // Remove untracked files and directories, leaving only commit files
             var cleanProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -130,6 +155,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             return extractPath;
         }
+
 
         public async Task<bool> CreateWebhook(string repoUrl, string token, string webhookUrl)
         {

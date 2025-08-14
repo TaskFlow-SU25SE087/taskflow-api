@@ -202,7 +202,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     Pusher = pusher ?? "unknown",
                     CommitMessage = message,
                     CommitUrl = $"https://github.com/{repoFullName}/commit/{commitId}",
-                    PushedAt = timestamp ?? DateTime.UtcNow,
+                    PushedAt = _timeProvider.Now,
                     Status = StatusCommit.Checking,
                     ExpectedFinishAt = _timeProvider.UtcNow.AddMinutes(10),
                 };
