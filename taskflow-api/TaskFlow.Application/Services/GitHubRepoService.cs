@@ -53,10 +53,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
         {
             var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
-
             var cloneUrl = $"https://{accessToken}:x-oauth-basic@github.com/{repoFullName}.git";
-
-            //clone .git and repo git 
             var cloneProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -77,7 +74,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (cloneProcess.ExitCode != 0)
                 throw new Exception($"git clone failed:\n{cloneError}");
 
-            //checkout commit
             var checkoutProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -91,6 +87,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CreateNoWindow = true,
                 }
             };
+
             checkoutProcess.Start();
             string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
             string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
@@ -98,6 +95,38 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             if (checkoutProcess.ExitCode != 0)
                 throw new Exception($"git checkout failed:\n{checkoutError}");
+
+            var resetProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = $"reset --hard {commitId}",
+                    WorkingDirectory = extractPath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
+            resetProcess.Start();
+            await resetProcess.WaitForExitAsync();
+
+            var cleanProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "clean -fdx",
+                    WorkingDirectory = extractPath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
+            cleanProcess.Start();
+            await cleanProcess.WaitForExitAsync();
 
             return extractPath;
         }
