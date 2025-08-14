@@ -131,25 +131,55 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken)
         {
-            var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
-            var zipPath = Path.Combine(extractPath, "src.zip");
-
-            Directory.CreateDirectory(extractPath);
+            // Create a temporary root folder and path for the downloaded zip
+            var extractRoot = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
+            var zipPath = Path.Combine(extractRoot, "src.zip");
+            Directory.CreateDirectory(extractRoot);
 
             using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TaskflowDownloader"); 
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TaskflowDownloader");
             httpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("token", accessToken);
 
+            // Build GitHub API URL for the specific commit zipball
             var url = $"https://api.github.com/repos/{repoFullName}/zipball/{commitId}";
-            var zipBytes = await httpClient.GetByteArrayAsync(url);
 
+            // Download the zipball and ensure the request succeeded
+            using var response = await httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to download commit {commitId} from {repoFullName}. Status: {response.StatusCode}");
+            }
+
+            var zipBytes = await response.Content.ReadAsByteArrayAsync();
             await File.WriteAllBytesAsync(zipPath, zipBytes);
 
-            ZipFile.ExtractToDirectory(zipPath, extractPath, true);
-
+            // Extract zip contents
+            ZipFile.ExtractToDirectory(zipPath, extractRoot, true);
             File.Delete(zipPath);
 
+            // GitHub zipballs always contain a single top-level folder: jump into it
+            var subDirs = Directory.GetDirectories(extractRoot);
+            string extractPath = (subDirs.Length == 1) ? subDirs[0] : extractRoot;
+
+            // Verify there are source files matching the expected extensions
+            var sourceFiles = Directory.EnumerateFiles(extractPath, "*.*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
+                            f.EndsWith(".java", StringComparison.OrdinalIgnoreCase) ||
+                            f.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ||
+                            f.EndsWith(".ts", StringComparison.OrdinalIgnoreCase) ||
+                            f.EndsWith(".py", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            Console.WriteLine($"[DownloadCommitSourceAsync] Downloaded {sourceFiles.Count} source files:");
+            foreach (var file in sourceFiles)
+            {
+                Console.WriteLine($" - {file}");
+            }
+            if (!sourceFiles.Any())
+            {
+                throw new AppException(ErrorCode.SourceEmpty);
+            }
             return extractPath;
         }
 
