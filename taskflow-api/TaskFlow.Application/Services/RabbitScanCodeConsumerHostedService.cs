@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Runtime;
 using System.Text;
 using System.Text.Json;
@@ -124,8 +125,20 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     .GetRequiredService<ITaskIssueRepository>();
                             //get quality gate status
                             var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
-                            commit.QualityGateStatus = qgStatus;
+                            int retry = 0;
+                            int maxRetry = 50;
+                            int delayMs = 10000;
+                            while (retry < maxRetry)
+                            {
+                                 qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
+                                if (qgStatus != "NONE")
+                                    break;
 
+                                _logger.LogInformation("Quality Gate status is NONE, waiting {Delay}s before retry #{Retry}", delayMs / 1000, retry + 1);
+                                await Task.Delay(delayMs);
+                                retry++;
+                            }
+                            commit.QualityGateStatus = qgStatus;
                             // save quality gate status
                             var metrics = await sonarService.GetProjectMeasuresAsync(result.ProjectKey);
 
