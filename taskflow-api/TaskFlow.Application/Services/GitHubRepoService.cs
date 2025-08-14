@@ -144,7 +144,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             // Build GitHub API URL for the specific commit zipball
             var url = $"https://api.github.com/repos/{repoFullName}/zipball/{commitId}";
 
-            // Download the zipball and ensure the request succeeded
+            // Download the zipball
             using var response = await httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
@@ -162,24 +162,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             var subDirs = Directory.GetDirectories(extractRoot);
             string extractPath = (subDirs.Length == 1) ? subDirs[0] : extractRoot;
 
-            // Verify there are source files matching the expected extensions
-            var sourceFiles = Directory.EnumerateFiles(extractPath, "*.*", SearchOption.AllDirectories)
-                .Where(f => f.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".java", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".ts", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".py", StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            // Get ALL files, no filtering
+            var allFiles = Directory.EnumerateFiles(extractPath, "*.*", SearchOption.AllDirectories).ToList();
 
-            Console.WriteLine($"[DownloadCommitSourceAsync] Downloaded {sourceFiles.Count} source files:");
-            foreach (var file in sourceFiles)
+            Console.WriteLine($"[DownloadCommitSourceAsync] Downloaded {allFiles.Count} files:");
+            foreach (var file in allFiles)
             {
                 Console.WriteLine($" - {file}");
             }
-            if (!sourceFiles.Any())
+
+            if (!allFiles.Any())
             {
                 throw new AppException(ErrorCode.SourceEmpty);
             }
+
             return extractPath;
         }
 
