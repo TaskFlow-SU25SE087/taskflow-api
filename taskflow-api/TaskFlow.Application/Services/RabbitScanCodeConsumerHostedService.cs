@@ -86,7 +86,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     {
                         _logger.LogInformation("Starting download commit source...");
                         var extractPath = await repoService
-                        .DownloadCommitSourceAsync(job.RepoFullName, job.CommitId, job.AccessToken);
+                        .CloneRepoAndCheckoutAsync(job.RepoFullName, job.CommitId, job.AccessToken);
                         _logger.LogInformation("Download commit source done at path: {ExtractPath}", extractPath);
                         //scan code by SonarQube
                         var scanStart = DateTime.UtcNow;
