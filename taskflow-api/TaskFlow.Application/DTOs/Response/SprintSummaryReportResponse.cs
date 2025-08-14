@@ -32,7 +32,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; } = string.Empty;
         public TaskPriority Priority { get; set; }
-        public DateTime Deadline { get; set; }
+        public DateTime? Deadline { get; set; }
         public string Status { get; set; } = string.Empty;
         public List<string> Assignees { get; set; } = new List<string>();
     }

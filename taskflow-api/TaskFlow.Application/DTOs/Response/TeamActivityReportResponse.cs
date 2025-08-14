@@ -58,9 +58,9 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public BoardType Status { get; set; }
         public DateTime AssignedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
-        public DateTime Deadline { get; set; }
+        public DateTime? Deadline { get; set; }
         public bool IsOverdue { get; set; }
-        public string? SprintName { get; set; }
+        public string? SprintName { get; set; } = string.Empty;
     }
 
     public class CommentActivityDetail

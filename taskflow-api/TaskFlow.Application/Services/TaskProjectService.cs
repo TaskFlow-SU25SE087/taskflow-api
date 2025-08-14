@@ -105,6 +105,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 BoardId = BoardId.Result,
                 Description = request.Description,
                 Priority = request.Priority,
+                Deadline = request.Deadline,
                 IsActive = true,
                 CreatedAt = _timeProvider.Now,
             };
@@ -333,6 +334,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.Title = request.Title;
             taskUpdate.Description = request.Description;
             taskUpdate.Priority = request.Priority;
+            taskUpdate.Deadline = request.Deadline;
             taskUpdate.UpdatedAt = _timeProvider.Now;
 
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
@@ -540,7 +542,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 (!request.Priority.HasValue || t.Priority == request.Priority) &&
                 (!request.StartDate.HasValue || t.CreatedAt >= request.StartDate) &&
                 (!request.EndDate.HasValue || t.CreatedAt <= request.EndDate) &&
-                (!request.IsOverdue.HasValue || (request.IsOverdue.Value ? DateTime.UtcNow > t.Deadline : DateTime.UtcNow <= t.Deadline)) &&
+                (!request.IsOverdue.HasValue || (request.IsOverdue.Value ? (t.Deadline.HasValue && DateTime.UtcNow > t.Deadline.Value) : (t.Deadline.HasValue && DateTime.UtcNow <= t.Deadline.Value))) &&
                 (request.IncludeCompleted || t.Board?.Type != BoardType.Done) &&
                 (request.IncludeInProgress || t.Board?.Type != BoardType.InProgress) &&
                 (request.IncludeTodo || t.Board?.Type != BoardType.Todo)
@@ -559,7 +561,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             foreach (var task in filteredTasks)
             {
-                var isOverdue = now > task.Deadline && task.Board?.Type != BoardType.Done;
+                var isOverdue = task.Deadline.HasValue && now > task.Deadline.Value && task.Board?.Type != BoardType.Done;
                 var completedAt = task.Board?.Type == BoardType.Done ? task.UpdatedAt : (DateTime?)null;
                 
                 // Calculate time spent (simplified - using time from creation to completion or current time)

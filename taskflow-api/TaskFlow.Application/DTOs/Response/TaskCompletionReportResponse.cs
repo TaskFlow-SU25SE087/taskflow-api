@@ -6,10 +6,10 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
     {
         public Guid TaskId { get; set; }
         public string TaskTitle { get; set; } = string.Empty;
-        public string? TaskDescription { get; set; }
+        public string? TaskDescription { get; set; } = string.Empty;
         public TaskPriority Priority { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime Deadline { get; set; }
+        public DateTime? Deadline { get; set; }
         public DateTime? CompletedAt { get; set; }
         public bool IsOverdue { get; set; }
         public TimeSpan? TimeSpent { get; set; }

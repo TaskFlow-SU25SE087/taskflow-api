@@ -12,5 +12,6 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
         public string? Description { get; set; } = string.Empty;
         [Required(ErrorMessage = "Board ID cannot be empty")]
         public TaskPriority Priority { get; set; }
+        public DateTime? Deadline { get; set; }
     }
 }

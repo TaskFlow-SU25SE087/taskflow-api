@@ -34,7 +34,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
                 : CompletionAttachmentUrls.Split('|').ToList();
             set => CompletionAttachmentUrls = string.Join('|', value);
         }
-        public DateTime Deadline { get; set; } = DateTime.UtcNow.AddDays(7);
+        public DateTime? Deadline { get; set; }
         public bool IsActive { get; set; } = false;
         public bool Deadline70Notified { get; set; } = false;
         public bool DeadlineExpiredNotified { get; set; } = false;

@@ -226,7 +226,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
 
                 // Check if overdue
-                if (task.Deadline < now && task.Board?.Type != BoardType.Done)
+                if (task.Deadline.HasValue && task.Deadline.Value < now && task.Board?.Type != BoardType.Done)
                 {
                     stats.TotalOverdue++;
                 }
@@ -275,7 +275,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     AssignedAt = assignment.CreatedAt,
                     CompletedAt = task.Board?.Type == BoardType.Done ? task.UpdatedAt : null,
                     Deadline = task.Deadline,
-                    IsOverdue = task.Deadline < now && task.Board?.Type != BoardType.Done,
+                    IsOverdue = task.Deadline.HasValue && task.Deadline.Value < now && task.Board?.Type != BoardType.Done,
                     SprintName = task.Sprint?.Name
                 });
             }
