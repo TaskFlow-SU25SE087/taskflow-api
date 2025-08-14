@@ -147,7 +147,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             sonar.host.url={_sonarSetting.HostUrl}
             sonar.login={_sonarSetting.Token}
             sonar.sourceEncoding=UTF-8
-            sonar.exclusions=**/bin/**,**/obj/**,**/node_modules/**,**/dist/**,**/build/**");
+            sonar.exclusions=**/bin/**,**/obj/**,**/node_modules/**,**/dist/**,**/build/**
+            sonar.inclusions=**/*.java,**/*.cs,**/*.js,**/*.ts
+            sonar.java.binaries=none
+            ");
 
             var process = new ProcessStartInfo
             {

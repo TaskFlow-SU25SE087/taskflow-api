@@ -68,7 +68,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                         ProjectId = sprint.ProjectId,
                         Name = "Sprint " + _timeProvider.Now.ToString("ddMMyy"),
                         Description = "Next sprint after " + sprint.Name,
-                        StartDate = sprint.EndDate, // kế tiếp
+                        StartDate = sprint.EndDate,
                         EndDate = sprint.EndDate.AddDays(14),
                         IsActive = true,
                         Status = SprintStatus.NotStarted,

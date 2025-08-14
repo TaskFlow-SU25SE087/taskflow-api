@@ -132,73 +132,23 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken)
         {
             var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
+            var zipPath = Path.Combine(extractPath, "src.zip");
 
-            var cloneUrl = $"https://{accessToken}:x-oauth-basic@github.com/{repoFullName}.git";
+            Directory.CreateDirectory(extractPath);
 
-            //clone .git and repo git 
-            var cloneProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    Arguments = $"clone --no-checkout --depth 1 \"{cloneUrl}\" \"{extractPath}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-            cloneProcess.Start();
-            string cloneOutput = await cloneProcess.StandardOutput.ReadToEndAsync();
-            string cloneError = await cloneProcess.StandardError.ReadToEndAsync();
-            await cloneProcess.WaitForExitAsync();
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TaskflowDownloader"); 
+            httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("token", accessToken);
 
-            if (cloneProcess.ExitCode != 0)
-                throw new Exception($"git clone failed:\n{cloneError}");
+            var url = $"https://api.github.com/repos/{repoFullName}/zipball/{commitId}";
+            var zipBytes = await httpClient.GetByteArrayAsync(url);
 
-            var fetchProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    Arguments = $"fetch origin {commitId}",
-                    WorkingDirectory = extractPath,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
+            await File.WriteAllBytesAsync(zipPath, zipBytes);
 
-            fetchProcess.Start();
-            string fetchOutput = await fetchProcess.StandardOutput.ReadToEndAsync();
-            string fetchError = await fetchProcess.StandardError.ReadToEndAsync();
-            await fetchProcess.WaitForExitAsync();
+            ZipFile.ExtractToDirectory(zipPath, extractPath, true);
 
-            if (fetchProcess.ExitCode != 0)
-                throw new Exception($"git fetch failed:\n{fetchError}");
-
-            //checkout commit
-            var checkoutProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    Arguments = $"checkout {commitId}",
-                    WorkingDirectory = extractPath,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-            checkoutProcess.Start();
-            string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
-            string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
-            await checkoutProcess.WaitForExitAsync();
-
-            if (checkoutProcess.ExitCode != 0)
-                throw new Exception($"git checkout failed:\n{checkoutError}");
+            File.Delete(zipPath);
 
             return extractPath;
         }
