@@ -97,7 +97,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .FirstOrDefaultAsync();
 
             return await _context.TaskProjects
-                .Where(tp => tp.SprintId == sprintId && tp.BoardId == lastBoardId && tp.IsActive)
+                .Include(tp => tp.Board)
+                .Where(tp => tp.SprintId == sprintId && tp.Board.Type == BoardType.Done && tp.IsActive)
                 .Select(tp => new TaskCompleteDTO
                 {
                     Id = tp.Id,
@@ -117,7 +118,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .FirstOrDefaultAsync();
 
             return await _context.TaskProjects
-                .Where(tp => tp.SprintId == sprintId && tp.BoardId != lastBoardId && tp.IsActive)
+                .Include(tp => tp.Board)
+                .Where(tp => tp.SprintId == sprintId && tp.Board!.Type != BoardType.Done && tp.IsActive)
                 .Select(tp => new UnfinishedTaskDto
                 {
                     Id = tp.Id,

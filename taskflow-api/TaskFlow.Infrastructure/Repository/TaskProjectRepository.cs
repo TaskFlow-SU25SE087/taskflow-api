@@ -296,7 +296,8 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .Select(b => b.Id)
                 .FirstOrDefault();
             return _context.TaskProjects
-                .Where(t => t.SprintId == SprintID && t.IsActive && t.BoardId != lastBoardId)
+                .Include(t => t.Board)
+                .Where(t => t.SprintId == SprintID && t.IsActive && t.Board.Type != BoardType.Done)
                 .ToListAsync();
         }
 
