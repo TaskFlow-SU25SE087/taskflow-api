@@ -207,5 +207,40 @@ namespace taskflow_api.TaskFlow.Application.Services
             return _mapper.Map<ProjectResponse>(project);
         }
 
+        public async Task<bool> DeleteProject(Guid projectId)
+        {
+            // Get current user ID from context
+            var userIdStr = _httpContextAccessor.HttpContext?.User.FindFirst("id")?.Value;
+            if (string.IsNullOrEmpty(userIdStr))
+            {
+                throw new AppException(ErrorCode.Unauthorized);
+            }
+            var userId = Guid.Parse(userIdStr);
+
+            // Check if project exists
+            var project = await _projectRepository.GetProjectByIdAsync(projectId);
+            if (project == null)
+            {
+                throw new AppException(ErrorCode.ProjectNotFound);
+            }
+
+            // Check if user is project leader
+            var projectMember = project.Members.FirstOrDefault(m => m.UserId == userId && m.IsActive);
+            if (projectMember == null || projectMember.Role != ProjectRole.Leader)
+            {
+                throw new AppException(ErrorCode.Unauthorized);
+            }
+
+            // Delete the project (set as inactive)
+            var result = await _projectRepository.DeleteProjectAsync(projectId);
+            if (result)
+            {
+                // Log the project deletion
+                await _logService.LogDeleteProject(projectId, projectMember.Id);
+            }
+
+            return result;
+        }
+
     }
 }

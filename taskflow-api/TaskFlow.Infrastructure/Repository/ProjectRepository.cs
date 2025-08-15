@@ -97,5 +97,21 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.Projects.Update(data);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> DeleteProjectAsync(Guid projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+            if (project == null)
+            {
+                return false;
+            }
+
+            // Set project as inactive instead of hard delete
+            project.IsActive = false;
+            project.LastUpdate = DateTime.UtcNow;
+            
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

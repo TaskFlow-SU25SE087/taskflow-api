@@ -61,5 +61,19 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var project = await _context.GetProject(projectid);
             return ApiResponse<ProjectDetailResponse>.Success(project);
         }
+
+        [HttpDelete("{projectId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> DeleteProject([FromRoute] Guid projectId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            
+            var result = await _context.DeleteProject(projectId);
+            return ApiResponse<bool>.Success(result);
+        }
     }
 }

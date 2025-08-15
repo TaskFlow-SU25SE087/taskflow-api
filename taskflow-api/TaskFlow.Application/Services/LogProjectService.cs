@@ -42,5 +42,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
             await _logProjectRepository.CreateLogProject(log);
         }
+
+        public async Task LogDeleteProject(Guid projectId, Guid projectMemberId)
+        {
+            var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
+            var log = new LogProject
+            {
+                ProjectMemberId = projectMemberId,
+                ProjectId = projectId,
+                ActionType = TypeLog.DeleteProject,
+                Description = member!.User.FullName + " deleted project",
+                CreatedAt = _timeProvider.Now,
+            };
+            await _logProjectRepository.CreateLogProject(log);
+        }
     }
 }
