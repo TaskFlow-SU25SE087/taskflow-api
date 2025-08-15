@@ -137,7 +137,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<bool> UpdateSprint(Guid ProjectId, Guid SprintId, UpdateSprintRequest request)
         {
             var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
-            if (sprint == null || sprint.ProjectId != ProjectId)
+            if (sprint == null || sprint.ProjectId != ProjectId || sprint.Status != SprintStatus.Completed)
             {
                 // Sprint not found or Project mismatch
                 throw new AppException(ErrorCode.CannotUpdateSprint);
