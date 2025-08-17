@@ -12,6 +12,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task UpdateProject(Project data);
         IQueryable<Project> GetProjectsByUserIdAsync(Guid userId);
         Task<List<ProjectsResponse>> GetListProjectResponseByUserAsync(Guid userId);
+        Task<List<ProjectsResponse>> GetAllProjectsAsync();
         Task<bool> DeleteProjectAsync(Guid projectId);
     }
 }

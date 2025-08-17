@@ -113,5 +113,21 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<List<ProjectsResponse>> GetAllProjectsAsync()
+        {
+            return await _context.Projects
+                .Where(p => p.IsActive)
+                .Select(p => new ProjectsResponse
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    LastUpdate = p.LastUpdate,
+                    Role = null // No specific role for admin view
+                })
+                .OrderByDescending(p => p.LastUpdate)
+                .ToListAsync();
+        }
     }
 }
