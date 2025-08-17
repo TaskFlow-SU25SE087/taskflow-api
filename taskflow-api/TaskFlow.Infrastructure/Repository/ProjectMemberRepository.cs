@@ -63,6 +63,25 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
+        public Task<List<TeamMemberResponse>> GetDetailedTeamMembersAsync(Guid projectId)
+        {
+            return _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId && pm.IsActive && pm.Role != ProjectRole.System)
+                .Select(pm => new TeamMemberResponse
+                {
+                    Id = pm.Id,
+                    UserId = pm.UserId,
+                    FullName = pm.User.FullName,
+                    Email = pm.User.Email!,
+                    Avatar = pm.User.Avatar!,
+                    StudentId = pm.User.StudentId,
+                    Role = pm.Role,
+                    IsActive = pm.IsActive,
+                    HasJoinedBefore = pm.HasJoinedBefore
+                })
+                .ToListAsync();
+        }
+
         public async Task<ProjectMemberResponse?> GetMeInProjectAsync(Guid projectId, Guid projectMemberId)
         {
             return await _context.ProjectMembers
