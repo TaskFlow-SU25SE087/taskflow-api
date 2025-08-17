@@ -13,6 +13,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         IQueryable<Project> GetProjectsByUserIdAsync(Guid userId);
         Task<List<ProjectsResponse>> GetListProjectResponseByUserAsync(Guid userId);
         Task<List<ProjectsResponse>> GetAllProjectsAsync();
+        Task<List<ProjectsResponse>> GetProjectsByTermAsync(Guid termId);
         Task<bool> DeleteProjectAsync(Guid projectId);
     }
 }

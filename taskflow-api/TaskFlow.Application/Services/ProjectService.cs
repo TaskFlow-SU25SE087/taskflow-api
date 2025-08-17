@@ -202,6 +202,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             return projects;
         }
 
+        public async Task<List<ProjectsResponse>> GetProjectsByTermForAdmin(Guid termId)
+        {
+            var projects = await _projectRepository.GetProjectsByTermAsync(termId);
+            if (projects == null)
+            {
+                throw new AppException(ErrorCode.NoProjectsFound);
+            }
+            return projects;
+        }
+
         public async Task<ProjectResponse> UpdateProject(UpdateProjectRequest request)
         {
             var project = await _projectRepository.GetProjectByIdAsync(request.ProjectId);

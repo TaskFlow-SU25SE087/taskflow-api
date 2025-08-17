@@ -118,13 +118,41 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return await _context.Projects
                 .Where(p => p.IsActive)
+                .Include(p => p.Term)
                 .Select(p => new ProjectsResponse
                 {
                     Id = p.Id,
                     Title = p.Title,
                     Description = p.Description,
                     LastUpdate = p.LastUpdate,
-                    Role = null // No specific role for admin view
+                    Role = null, // No specific role for admin view
+                    Semester = p.Semester,
+                    TermId = p.TermId,
+                    TermName = p.Term.Season + " " + p.Term.Year,
+                    CreatedAt = p.CreatedAt,
+                    IsActive = p.IsActive
+                })
+                .OrderByDescending(p => p.LastUpdate)
+                .ToListAsync();
+        }
+
+        public async Task<List<ProjectsResponse>> GetProjectsByTermAsync(Guid termId)
+        {
+            return await _context.Projects
+                .Where(p => p.IsActive && p.TermId == termId)
+                .Include(p => p.Term)
+                .Select(p => new ProjectsResponse
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    LastUpdate = p.LastUpdate,
+                    Role = null, // No specific role for admin view
+                    Semester = p.Semester,
+                    TermId = p.TermId,
+                    TermName = p.Term.Season + " " + p.Term.Year,
+                    CreatedAt = p.CreatedAt,
+                    IsActive = p.IsActive
                 })
                 .OrderByDescending(p => p.LastUpdate)
                 .ToListAsync();

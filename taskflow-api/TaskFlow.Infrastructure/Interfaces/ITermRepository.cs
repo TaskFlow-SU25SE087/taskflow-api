@@ -10,6 +10,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task UpdateTermAsync(Term data);
         Task<Term?> GetTermByIdAsync(Guid termId);
         Task<List<Term>> GetAllTermsAsync(int page, int pageSize);
+        Task<List<Term>> GetAllActiveTermsAsync();
         Task DeleteTermAsync(Guid termId);
     }
 }

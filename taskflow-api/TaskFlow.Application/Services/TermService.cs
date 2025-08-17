@@ -60,6 +60,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             return terms;
         }
 
+        public async Task<List<Term>> GetAllTermsForAdmin()
+        {
+            var terms = await _termRepository.GetAllActiveTermsAsync();
+            if (terms == null || !terms.Any())
+            {
+                throw new AppException(ErrorCode.TermNotFound);
+            }
+            return terms;
+        }
+
         public Task<Term?> GetTermById(Guid id)
         {
             var term = _termRepository.GetTermByIdAsync(id);

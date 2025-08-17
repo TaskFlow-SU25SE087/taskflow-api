@@ -63,6 +63,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<List<ProjectsResponse>>.Success(projects);
         }
 
+        [HttpGet("admin/term/{termId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ApiResponse<List<ProjectsResponse>>> GetProjectsByTerm([FromRoute] Guid termId)
+        {
+            var projects = await _context.GetProjectsByTermForAdmin(termId);
+            return ApiResponse<List<ProjectsResponse>>.Success(projects);
+        }
+
         [HttpGet("{projectid}")]
         public async Task<ApiResponse<ProjectDetailResponse>> GetProject(Guid projectid)
         {

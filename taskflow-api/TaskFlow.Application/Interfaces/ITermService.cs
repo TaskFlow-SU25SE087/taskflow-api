@@ -6,6 +6,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     public interface ITermService
     {
         Task<List<Term>> GetListTerm(int page);
+        Task<List<Term>> GetAllTermsForAdmin();
         Task CreateTerm(CreateTerm request);
         Task<Term?> GetTermById(Guid id);
         Task UpdateTerm(Guid termId, UpdateTerm request);

@@ -13,6 +13,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<ProjectDetailResponse> GetProject(Guid ProjectId);
         Task<List<ProjectsResponse>> ListProjectResponse();
         Task<List<ProjectsResponse>> GetAllProjectsForAdmin();
+        Task<List<ProjectsResponse>> GetProjectsByTermForAdmin(Guid termId);
         Task<bool> DeleteProject(Guid projectId);
     }
 }

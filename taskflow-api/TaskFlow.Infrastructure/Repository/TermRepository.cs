@@ -37,6 +37,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
+        public Task<List<Term>> GetAllActiveTermsAsync()
+        {
+            return _context.Terms
+                .Where(t => t.IsActive)
+                .OrderByDescending(t => t.StartDate)
+                .ToListAsync();
+        }
+
         public async Task<DateTime?> GetLatestTermEndDateAsync()
         {
             return await _context.Terms

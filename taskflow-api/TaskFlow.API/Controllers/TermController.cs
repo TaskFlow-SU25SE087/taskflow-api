@@ -29,6 +29,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<List<Term>>.Success(terms);
         }
 
+        [HttpGet("all")]
+        public async Task<ApiResponse<List<Term>>> GetAllTerms()
+        {
+            var terms = await _termService.GetAllTermsForAdmin();
+            return ApiResponse<List<Term>>.Success(terms);
+        }
+
         [HttpPost]
         public async Task<ApiResponse<string>> CreateTerm(CreateTerm request)
         {

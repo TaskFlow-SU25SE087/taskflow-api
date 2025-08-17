@@ -10,5 +10,10 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string Description { get; set; } = string.Empty;
         public DateTime LastUpdate { get; set; }
         public ProjectRole? Role { get; set; }
+        public string? Semester { get; set; }
+        public Guid? TermId { get; set; }
+        public string? TermName { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public bool? IsActive { get; set; }
     }
 }
