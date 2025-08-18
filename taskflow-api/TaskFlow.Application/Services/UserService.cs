@@ -176,6 +176,48 @@ namespace taskflow_api.TaskFlow.Application.Services
             return result;
         }
 
+        public async Task<PagedResult<UserAdminResponse>> GetUsersByTerm(Guid termId, int page)
+        {
+            var pagingParams = new PagingParams
+            {
+                PageNumber = page,
+                PageSize = 5
+            };
+
+            var usersQuery = _userManager.Users
+                .AsNoTracking()
+                .Where(u => u.Role != UserRole.Admin && u.TermId == termId);
+
+            var totalItems = await usersQuery.CountAsync();
+            var items = await _mapper.ProjectTo<UserAdminResponse>(usersQuery)
+                .OrderByDescending(u => u.IsActive)
+                .ThenByDescending(u => u.TermYear)
+                .ThenByDescending(u =>
+                                    u.TermSeason == "Fall" ? 3 :
+                                    u.TermSeason == "Summer" ? 2 :
+                                    u.TermSeason == "Spring" ? 1 : 4)
+                .ThenBy(u => u.FullName)
+                .Skip(pagingParams.Skip)
+                .Take(pagingParams.PageSize)
+                .ToListAsync();
+
+            if (!items.Any())
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+
+            var result = new PagedResult<UserAdminResponse>
+            {
+                Items = items,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pagingParams.PageSize),
+                PageNumber = pagingParams.PageNumber,
+                PageSize = pagingParams.PageSize,
+                HasMore = totalItems > (pagingParams.PageNumber * pagingParams.PageSize)
+            };
+            return result;
+        }
+
         public async Task<TokenModel> Login(LoginRequest model)
         {
             var user = await _userManager.Users
