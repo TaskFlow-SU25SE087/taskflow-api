@@ -13,8 +13,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
         public string? Description { get; set; } = string.Empty;
         [Required(ErrorMessage = "Priority cannot null")]
         public TaskPriority Priority { get; set; } = TaskPriority.High;
-        [Required(ErrorMessage = "Deadline cannot null")]
-        public DateTime Deadline { get; set; }
+        public DateTime? Deadline { get; set; }
         public IFormFile? File { get; set; }
     }
 }

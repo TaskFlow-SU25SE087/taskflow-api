@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Runtime;
 using System.Text;
 using System.Text.Json;
@@ -57,8 +58,15 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                _logger.LogInformation("Received message from RabbitMQ: {Message}", message);
 
                 var job = JsonSerializer.Deserialize<CommitJobMessage>(message);
+                if (job == null)
+                {
+                    _logger.LogWarning("Message deserialization returned null");
+                    channel.BasicAck(ea.DeliveryTag, false);
+                    return;
+                }
 
                 using var scope = _serviceProvider.CreateScope();
                 var commitRepo = scope.ServiceProvider.GetRequiredService<ICommitRecordRepository>();
@@ -69,18 +77,30 @@ namespace taskflow_api.TaskFlow.Application.Services
                 if (job != null)
                 {
                     var commit = await commitRepo.GetById(job.CommitRecordId);
+                    if (commit == null)
+                    {
+                        _logger.LogWarning("Commit not found for id {CommitId}", job.CommitRecordId);
+                        channel.BasicAck(ea.DeliveryTag, false);
+                        return;
+                    }
                     if (commit != null)
                     {
+                        _logger.LogInformation("Starting download commit source...");
                         var extractPath = await repoService
-                        .DownloadCommitSourceAsync(job.RepoFullName, job.CommitId, job.AccessToken);
+                        .CloneRepoAndCheckoutAsync(job.RepoFullName, job.CommitId, job.AccessToken);
+                        _logger.LogInformation("Download commit source done at path: {ExtractPath}", extractPath);
                         //scan code by SonarQube
                         var scanStart = DateTime.UtcNow;
+                        _logger.LogInformation("Starting code scan for commit {CommitId} in project {ProjectPartId}",
+                            commit.CommitId, commit.ProjectPartId);
+                        _logger.LogInformation("Starting SonarQube scan...");
                         var result = await codeScanService.ScanCommit(
-                            extractPath, 
-                            $"taskflow-{commit.ProjectPartId}",
+                            extractPath,
+                            $"taskflow-{commit.ProjectPartId}-{commit.CommitId}",
                             job.Language,
                             job.Framework
                             );
+                        _logger.LogInformation("SonarQube scan finished. Success: {Success}", result.Success);
                         var scanEnd = DateTime.UtcNow;
                         commit.ScanDuration = scanEnd - scanStart;
 
@@ -105,8 +125,20 @@ namespace taskflow_api.TaskFlow.Application.Services
                                     .GetRequiredService<ITaskIssueRepository>();
                             //get quality gate status
                             var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
-                            commit.QualityGateStatus = qgStatus;
+                            int retry = 0;
+                            int maxRetry = 50;
+                            int delayMs = 10000;
+                            while (retry < maxRetry)
+                            {
+                                 qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
+                                if (qgStatus != "NONE")
+                                    break;
 
+                                _logger.LogInformation("Quality Gate status is NONE, waiting {Delay}s before retry #{Retry}", delayMs / 1000, retry + 1);
+                                await Task.Delay(delayMs);
+                                retry++;
+                            }
+                            commit.QualityGateStatus = qgStatus;
                             // save quality gate status
                             var metrics = await sonarService.GetProjectMeasuresAsync(result.ProjectKey);
 
@@ -188,35 +220,35 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 {
                                     //save result 
                                     var scanIssue = new CommitScanIssue
-                                {
-                                    CommitRecordId = commit.Id,
-                                    Rule = i.Rule,
-                                    Severity = i.Severity,
-                                    Message = i.Message,
-                                    FilePath = cleanFilePath,
-                                    Line = i.Line,
-                                    LineContent = lineContent,
-                                    CreatedAt = _timeProvider.Now,
+                                    {
+                                        CommitRecordId = commit.Id,
+                                        Rule = i.Rule,
+                                        Severity = i.Severity,
+                                        Message = i.Message,
+                                        FilePath = cleanFilePath,
+                                        Line = i.Line,
+                                        LineContent = lineContent,
+                                        CreatedAt = _timeProvider.Now,
                                         BlamedGitEmail = blamedEmail,
-                                    BlamedGitName = blamedName
+                                        BlamedGitName = blamedName
                                     };
-                                await commitScanIssueRepo.CreateAsync(scanIssue);
+                                    await commitScanIssueRepo.CreateAsync(scanIssue);
 
-                                //create task issue
-                                var projectMemberRepo = scope.ServiceProvider.GetRequiredService<IProjectMemberRepository>();
-                                var idSystem = await projectMemberRepo.GetSystemMemberId(commit.ProjectPart.ProjectId);
+                                    //create task issue
+                                    var projectMemberRepo = scope.ServiceProvider.GetRequiredService<IProjectMemberRepository>();
+                                    var idSystem = await projectMemberRepo.GetSystemMemberId(commit.ProjectPart.ProjectId);
                                     var issue = new Issue
-                                {
-                                    ProjectId = commit.ProjectPart.ProjectId,
-                                    Title = $"{i.Severity}: {i.Message}",
-                                    Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
-                                    Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
-                                    Type = TypeIssue.Improvement,
-                                    CreatedBy = idSystem,
-                                    IsActive = true,
-                                    CreatedAt = _timeProvider.Now,
+                                    {
+                                        ProjectId = commit.ProjectPart.ProjectId,
+                                        Title = $"{i.Severity}: {i.Message}",
+                                        Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
+                                        Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
+                                        Type = TypeIssue.Improvement,
+                                        CreatedBy = idSystem,
+                                        IsActive = true,
+                                        CreatedAt = _timeProvider.Now,
                                     };
-                                await issueRepo.CreateTaskIssueAsync(issue);
+                                    await issueRepo.CreateTaskIssueAsync(issue);
 
                                     //get user to do issue
                                     var userRepo = scope.ServiceProvider
@@ -234,11 +266,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                                         //Create TaskAssignee for the issue
                                         var taskAssigneeRepo = scope.ServiceProvider
                                             .GetRequiredService<ITaskAssigneeRepository>();
+                                        var assigner = await projectMemberRepo.FindMemberInProject(
+                                            commit.ProjectPart.ProjectId, new Guid("00000000-0000-0000-0000-000000000002"));
                                         var taskAssignee = new TaskAssignee
                                         {
                                             RefId = issue.Id,
                                             Type = RefType.Issue,
-                                            AssignerId = Guid.Empty,
+                                            AssignerId = assigner!.Id,
                                             ImplementerId = member.ProjectMemberId ?? null,
                                             CreatedAt = _timeProvider.Now,
                                         };
@@ -272,7 +306,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             channel.BasicConsume(queue: _settings.ScanCommitQueue, autoAck: false, consumer: consumer);
             _logger.LogInformation("RabbitMQ consumer started and listening for messages.");
-            return Task.CompletedTask;
+            return Task.Delay(Timeout.Infinite, stoppingToken);
         }
     }
 }

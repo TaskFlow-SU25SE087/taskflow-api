@@ -4,7 +4,8 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         Task NotifyTaskUpdateAsync(Guid userId, Guid projectId, Guid taskId, string message);
         Task NotifyProjectMemberChangeAsync(Guid projectId, string message);
-        Task NotifyTaskBoardChangeAsync(Guid projectId, Guid taskId, string oldBoardName, string newBoardName, List<Guid> userIds);
+        Task NotifyTaskBoardChangeAsync(Guid projectId, Guid taskId, string oldBoardName, string newBoardName, List<Guid> projectMemberIds);
+        Task NotifyTaskAssignmentAsync(Guid userId, Guid projectId, Guid taskId, string taskTitle, string assignerName);
         Task<List<taskflow_api.TaskFlow.Domain.Entities.Notification>> GetUserNotificationsAsync(Guid userId);
         Task MarkAsReadAsync(Guid notificationId);
         Task DeleteAllReadAsync(Guid userId);

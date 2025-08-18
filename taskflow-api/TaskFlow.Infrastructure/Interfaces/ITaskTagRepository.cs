@@ -7,5 +7,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task AddTaskTagAsync(TaskTag taskTag);
         Task<TaskTag> GetTaskTagAsync(Guid taskId, Guid tagId);
+        Task RemoveTaskTagAsync(Guid taskId, Guid tagId);
     }
 }

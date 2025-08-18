@@ -12,5 +12,8 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
          Task<ProjectResponse> UpdateProject(UpdateProjectRequest request);
         Task<ProjectDetailResponse> GetProject(Guid ProjectId);
         Task<List<ProjectsResponse>> ListProjectResponse();
+        Task<List<ProjectsResponse>> GetAllProjectsForAdmin();
+        Task<List<ProjectsResponse>> GetProjectsByTermForAdmin(Guid termId);
+        Task<bool> DeleteProject(Guid projectId);
     }
 }

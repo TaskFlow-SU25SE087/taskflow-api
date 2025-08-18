@@ -15,13 +15,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ISprintRepository _sprintRepository;
         private readonly ITaskProjectRepository _taskProjectRepository;
         private readonly AppTimeProvider _timeProvider;
+        private readonly ISprintMeetingLogsService _sprintMeetingLogs;
 
         public SprintService(ISprintRepository repository, ITaskProjectRepository taskProjectRepository,
-            AppTimeProvider timeProvider)
+            AppTimeProvider timeProvider, ISprintMeetingLogsService sprintMeetingLogs)
         {
             _sprintRepository = repository;
             _taskProjectRepository = taskProjectRepository;
             _timeProvider = timeProvider;
+            _sprintMeetingLogs = sprintMeetingLogs;
         }
 
         public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID)
@@ -53,27 +55,40 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             else if (status.Equals(SprintStatus.Completed))// complete sprint
             {
+                //create sprint meeting logs
+                await _sprintMeetingLogs.CreateSprintMetting(SpringId);
+
                 // new next sprint
-                var lastSprint = await _sprintRepository.GetLastSprint(sprint.ProjectId);
-                var newSprint = new Sprint
+                var nextSprint = await _sprintRepository.GetNextSprint(sprint.ProjectId, sprint.EndDate);
+                Sprint newSprint;
+                if (nextSprint == null)
                 {
-                    Id = Guid.NewGuid(),
-                    ProjectId = sprint.ProjectId,
-                    Name = "Sprint " + (lastSprint == null ? 1 : lastSprint.Name.Split(' ').LastOrDefault() + 1),
-                    Description = "Next sprint after " + sprint.Name,
-                    StartDate = lastSprint!.EndDate,
-                    EndDate = _timeProvider.Now.AddDays(14), // Example: 2 weeks duration
-                    IsActive = true,
-                    Status = SprintStatus.NotStarted,
-                };
-                var lisktaskproject = await _taskProjectRepository.GetListTasksBySprintsIdsAsync(SpringId);
-                foreach (var task in lisktaskproject)
+                    newSprint = new Sprint
+                    {
+                        ProjectId = sprint.ProjectId,
+                        Name = "Sprint " + _timeProvider.Now.ToString("ddMMyy"),
+                        Description = "Next sprint after " + sprint.Name,
+                        StartDate = sprint.EndDate,
+                        EndDate = sprint.EndDate.AddDays(14),
+                        IsActive = true,
+                        Status = SprintStatus.NotStarted,
+                    };
+                    await _sprintRepository.CreateSprintAsync(newSprint);
+                }
+                else
+                {
+                    newSprint = nextSprint;
+                }
+                // update current sprint
+                var tasks = await _taskProjectRepository.GetListTasksUnFinishBySprintsIdsAsync(SpringId, sprint.ProjectId);
+                foreach (var task in tasks)
                 {
                     task.SprintId = newSprint.Id;
-                    task.Note = task.Note + " " + DateTime.UtcNow + " End sprint: " + sprint.Name; 
+                    task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] End sprint: {sprint.Name}" + " ;";
                 }
-                await _taskProjectRepository.UpdateListTaskAsync(lisktaskproject);
+                await _taskProjectRepository.UpdateListTaskAsync(tasks);
                 await _sprintRepository.UpdateSprintAsync(sprint);
+
             }
         }
 
@@ -110,7 +125,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<List<TaskProjectResponse>> GetTaskInSprints(Guid ProjectId, Guid SprintId)
         {
-            return await _taskProjectRepository.GetListTaskBySprintIdAsync(SprintId); 
+            return await _taskProjectRepository.GetListTaskBySprintIdAsync(SprintId);
         }
 
         public async Task<List<SprintResponse>> ListPrints(Guid ProjectId)
@@ -122,7 +137,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<bool> UpdateSprint(Guid ProjectId, Guid SprintId, UpdateSprintRequest request)
         {
             var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
-            if (sprint == null || sprint.ProjectId != ProjectId)
+            if (sprint == null || sprint.ProjectId != ProjectId || sprint.Status != SprintStatus.Completed)
             {
                 // Sprint not found or Project mismatch
                 throw new AppException(ErrorCode.CannotUpdateSprint);
@@ -136,6 +151,66 @@ namespace taskflow_api.TaskFlow.Application.Services
             sprint.Status = request.Status;
             await _sprintRepository.UpdateSprintAsync(sprint);
             return true;
+        }
+
+        public async Task<SprintSummaryReportResponse?> GetSprintSummaryReport(Guid ProjectId, Guid SprintId)
+        {
+            // Get sprint information
+            var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
+            if (sprint == null || sprint.ProjectId != ProjectId)
+            {
+                return null;
+            }
+
+            // Get all tasks in the sprint with board information
+            var sprintTasks = await _sprintRepository.GetSprintTasksWithBoardInfo(SprintId, ProjectId);
+
+            var report = new SprintSummaryReportResponse
+            {
+                Id = sprint.Id,
+                Name = sprint.Name,
+                Description = sprint.Description,
+                StartDate = sprint.StartDate,
+                EndDate = sprint.EndDate,
+                Status = sprint.Status,
+                TotalTasksPlanned = sprintTasks.Count,
+                TasksCompleted = sprintTasks.Count(t => t.BoardType == BoardType.Done),
+                TasksInProgress = sprintTasks.Count(t => t.BoardType == BoardType.InProgress),
+                TasksNotStarted = sprintTasks.Count(t => t.BoardType == BoardType.Todo),
+                CarryoverTasks = sprintTasks.Count(t => t.BoardType != BoardType.Done)
+            };
+
+            // Get completed tasks
+            report.CompletedTasks = sprintTasks
+                .Where(t => t.BoardType == BoardType.Done)
+                .Select(t => new TaskSummaryItem
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Priority = t.Priority,
+                    Deadline = t.Deadline,
+                    Status = t.BoardName,
+                    Assignees = t.Assignees
+                })
+                .ToList();
+
+            // Get carryover tasks (unfinished tasks)
+            report.CarryoverTasksList = sprintTasks
+                .Where(t => t.BoardType != BoardType.Done)
+                .Select(t => new TaskSummaryItem
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Priority = t.Priority,
+                    Deadline = t.Deadline,
+                    Status = t.BoardName,
+                    Assignees = t.Assignees
+                })
+                .ToList();
+
+            return report;
         }
 
     }

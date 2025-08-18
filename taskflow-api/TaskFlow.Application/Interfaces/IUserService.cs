@@ -11,6 +11,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<TokenModel> Login(LoginRequest model);
         Task<UserResponse> AddUserName(AddProfileUser model);
         Task<PagedResult<UserAdminResponse>> GetAllUser(int Page);
+        Task<PagedResult<UserAdminResponse>> GetUsersByTerm(Guid termId, int page);
         Task<UserAdminResponse> BanUser(Guid userId);
         Task<UserAdminResponse> UnBanUser(Guid userId);
         Task<UserResponse> GetUserById(Guid userId);

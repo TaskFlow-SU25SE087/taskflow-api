@@ -29,6 +29,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<ProjectMember?> FindMemberInProject(Guid projectId, Guid userId)
         {
             return await _context.ProjectMembers
+                .Include(pm => pm.User)
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && 
                 pm.UserId == userId);
         }
@@ -36,6 +37,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task<ProjectMember?> FindMemberInProjectByProjectMemberID(Guid ProjectMemberId)
         {
             return await _context.ProjectMembers
+                .Include(pm => pm.User)
                 .FirstOrDefaultAsync(pm => pm.Id == ProjectMemberId && 
                 pm.IsActive);
         }
@@ -57,6 +59,25 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     Avatar = pm.User.Avatar!,
                     Email = pm.User.Email!,
                     Role = pm.Role,
+                })
+                .ToListAsync();
+        }
+
+        public Task<List<TeamMemberResponse>> GetDetailedTeamMembersAsync(Guid projectId)
+        {
+            return _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId && pm.IsActive && pm.Role != ProjectRole.System)
+                .Select(pm => new TeamMemberResponse
+                {
+                    Id = pm.Id,
+                    UserId = pm.UserId,
+                    FullName = pm.User.FullName,
+                    Email = pm.User.Email!,
+                    Avatar = pm.User.Avatar!,
+                    StudentId = pm.User.StudentId,
+                    Role = pm.Role,
+                    IsActive = pm.IsActive,
+                    HasJoinedBefore = pm.HasJoinedBefore
                 })
                 .ToListAsync();
         }

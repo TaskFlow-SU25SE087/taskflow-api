@@ -93,7 +93,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var systemUser = new ProjectMember
             {
                 Id = Guid.NewGuid(),
-                UserId = Guid.Parse("00000000-0000-0000-0000-000000000001"), // System user ID
+                UserId = Guid.Parse("00000000-0000-0000-0000-000000000002"), // System user ID
                 ProjectId = ProjectId,
                 Role = ProjectRole.System,
                 IsActive = true,

@@ -21,7 +21,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             //check dates
             var LatestTermEndDate = await _termRepository.GetLatestTermEndDateAsync();
-            if (request.StartDate >= request.EndDate || request.StartDate < LatestTermEndDate)
+            if (request.StartDate >= request.EndDate || (LatestTermEndDate.HasValue && request.StartDate < LatestTermEndDate.Value))
             {
                throw new AppException(ErrorCode.InvalidTermDates);
             }
@@ -53,6 +53,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             var PageSize = 10;
             // Define your page size
             var terms = await _termRepository.GetAllTermsAsync(page, PageSize);
+            if (terms == null || !terms.Any())
+            {
+                throw new AppException(ErrorCode.TermNotFound);
+            }
+            return terms;
+        }
+
+        public async Task<List<Term>> GetAllTermsForAdmin()
+        {
+            var terms = await _termRepository.GetAllActiveTermsAsync();
             if (terms == null || !terms.Any())
             {
                 throw new AppException(ErrorCode.TermNotFound);

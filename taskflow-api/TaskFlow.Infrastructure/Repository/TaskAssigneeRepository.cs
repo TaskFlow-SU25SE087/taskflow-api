@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
@@ -48,6 +49,17 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 && x.ImplementerId == projectmemberId
                 && x.Type == RefType.Task
                 && x.IsActive);
+        }
+
+        public async Task<List<UnfinishedTaskResponse>> GetTaskCanUpdateSprintMeeting(List<UnfinishedTaskResponse> ufsTask, Guid projectMemberId)
+        {
+            var taskAssignees = await _context.TaskAssignees
+                .Where(x => x.ImplementerId == projectMemberId
+                && x.Type == RefType.Task
+                && x.IsActive)
+                .ToListAsync();
+            var unfinishedTasks = ufsTask.Where(task => taskAssignees.Any(ta => ta.RefId == task.Id)).ToList();
+            return unfinishedTasks;
         }
 
         public async Task<bool> IsTaskAssigneeExistsAsync(Guid taskId, Guid assignerId)

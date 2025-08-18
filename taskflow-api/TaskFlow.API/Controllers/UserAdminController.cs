@@ -26,6 +26,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<PagedResult<UserAdminResponse>>.Success(users);
         }
 
+        [HttpGet("term/{termId}")]
+        public async Task<ApiResponse<PagedResult<UserAdminResponse>>> GetUsersByTerm([FromRoute] Guid termId, [FromQuery] int page = 1)
+        {
+            var users = await _userService.GetUsersByTerm(termId, page);
+            return ApiResponse<PagedResult<UserAdminResponse>>.Success(users);
+        }
+
         [HttpPatch("{userId}/ban")]
         public async Task<ApiResponse<UserAdminResponse>> BanUser(Guid userId)
         {

@@ -15,9 +15,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context = context;
         }
 
-        public Task<bool> checkDuplicateResult(Guid projectPartId, string message, string lineContent, string blamedEmail, string blamedName, string cleanFilePath)
+        public async Task<bool> checkDuplicateResult(Guid projectPartId, string message, string lineContent, string blamedEmail, string blamedName, string cleanFilePath)
         {
-            return _context.CommitRecords
+            return await _context.CommitRecords
                 .Where(c => c.ProjectPartId == projectPartId)
                 .SelectMany(c => c.CommitScanIssues)
                 .AnyAsync(i =>
@@ -25,7 +25,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     i.LineContent == lineContent &&
                     i.BlamedGitEmail == blamedEmail &&
                     i.BlamedGitName == blamedName &&
-                    i.FilePath == cleanFilePath);
+                    i.FilePath == cleanFilePath ||
+                    i.BlamedGitName == "" ||
+                    i.BlamedGitEmail == "");
         }
 
         public Task<int> CountCommitByProjectPart(Guid projectPart)

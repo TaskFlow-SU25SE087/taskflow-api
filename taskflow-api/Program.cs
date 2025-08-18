@@ -1,5 +1,6 @@
 ﻿using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -47,6 +48,10 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProjectPartService, ProjectPartService>();
 builder.Services.AddHttpClient<IGitHubRepoService, GitHubRepoService>();
 builder.Services.AddScoped<ICodeScanService, SonarScannerService>();
+builder.Services.AddScoped<ISprintMeetingLogsService, SprintMeetingLogsService>();
+builder.Services.AddScoped<ILogProjectService, LogProjectService>();
+builder.Services.AddScoped<ITeamActivityReportService, TeamActivityReportService>();
+builder.Services.AddScoped<ITeamService, TeamService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -71,10 +76,19 @@ builder.Services.AddScoped<IUserGitHubRepository, UserGitHubRepository>();
 builder.Services.AddScoped<ICommitScanIssueRepository, CommitScanIssueRepository>();
 builder.Services.AddScoped<IGitMemberRepository, GitMemberRepository>();
 builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
+builder.Services.AddScoped<ISprintMeetingLogsRepository, SprintMeetingLogsRepository>();
+builder.Services.AddScoped<ILogProjectRepository, LogProjectRepository>();
 
 //Signalr
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 
 // Mapper
@@ -143,7 +157,7 @@ builder.Services.Configure<SonarQubeSetting>(
 builder.Services.Configure<RabbitMQSetting>(builder.Configuration.GetSection("RabbitMQ"));
 
 //GitHub login 
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+//builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 
 // Override default 400 validation error response to return custom ApiResponse format
@@ -247,9 +261,19 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddMemoryCache();
+var env = builder.Environment;
+var certPath = builder.Configuration["Kestrel:Certificates:Default:Path"];
+var certPassword = builder.Configuration["Kestrel:Certificates:Default:Password"];
+
+builder.WebHost.UseUrls("http://*:7029");
 
 builder.Logging.AddConsole();
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 //create account admin if not exists
 using (var scope = app.Services.CreateScope())
@@ -259,22 +283,41 @@ using (var scope = app.Services.CreateScope())
 
     if (!userManager.Users.Any())
     {
-        var defaulAdmin = new User
+        // Create a default system user if no users exist
+        var system = new User
         {
-            UserName = "admin",
-            Email = "admin@taskflow.com",
+            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+            UserName = "system",
+            Email = "system@taskflow.com",
             EmailConfirmed = true,
             FullName = "System",
             Role = UserRole.Admin,
             IsActive = true
         };
-        var result = await userManager.CreateAsync(defaulAdmin, "admin123456");
+        var resultsy = await userManager.CreateAsync(system, "system123456");
 
-        if (!result.Succeeded)
+        // Create a default admin user if no users exist
+        var admin = new User
         {
-            foreach (var error in result.Errors)
+            Id = new Guid("00000000-0000-0000-0000-000000000001"),
+            UserName = "admin",
+            Email = "admin@taskflow.com",
+            EmailConfirmed = true,
+            FullName = "Admin",
+            Role = UserRole.Admin,
+            IsActive = true
+        };
+        var resultad = await userManager.CreateAsync(admin, "admin123456");
+
+        if (!resultsy.Succeeded || !resultad.Succeeded)
+        {
+            foreach (var error in resultsy.Errors)
             {
-                Console.WriteLine($"Error creating default admin user: {error.Description}");
+                Console.WriteLine($"Error creating default SYSTEM user: {error.Description}");
+            }
+            foreach (var error in resultad.Errors)
+            {
+                Console.WriteLine($"Error creating default ADMIN user: {error.Description}");
             }
         }
         else
@@ -288,16 +331,14 @@ using (var scope = app.Services.CreateScope())
     app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
+//swager
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskFlow API V1");
         c.RoutePrefix = "swagger"; // Set Swagger UI at the app's root
     });
-}
-
 
 //app.UseHttpsRedirection();
 

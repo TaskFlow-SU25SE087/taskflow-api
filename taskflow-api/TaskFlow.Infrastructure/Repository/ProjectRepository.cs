@@ -97,5 +97,65 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.Projects.Update(data);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> DeleteProjectAsync(Guid projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+            if (project == null)
+            {
+                return false;
+            }
+
+            // Set project as inactive instead of hard delete
+            project.IsActive = false;
+            project.LastUpdate = DateTime.UtcNow;
+            
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<List<ProjectsResponse>> GetAllProjectsAsync()
+        {
+            return await _context.Projects
+                .Where(p => p.IsActive)
+                .Include(p => p.Term)
+                .Select(p => new ProjectsResponse
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    LastUpdate = p.LastUpdate,
+                    Role = null, // No specific role for admin view
+                    Semester = p.Semester,
+                    TermId = p.TermId,
+                    TermName = p.Term.Season + " " + p.Term.Year,
+                    CreatedAt = p.CreatedAt,
+                    IsActive = p.IsActive
+                })
+                .OrderByDescending(p => p.LastUpdate)
+                .ToListAsync();
+        }
+
+        public async Task<List<ProjectsResponse>> GetProjectsByTermAsync(Guid termId)
+        {
+            return await _context.Projects
+                .Where(p => p.IsActive && p.TermId == termId)
+                .Include(p => p.Term)
+                .Select(p => new ProjectsResponse
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    LastUpdate = p.LastUpdate,
+                    Role = null, // No specific role for admin view
+                    Semester = p.Semester,
+                    TermId = p.TermId,
+                    TermName = p.Term.Season + " " + p.Term.Year,
+                    CreatedAt = p.CreatedAt,
+                    IsActive = p.IsActive
+                })
+                .OrderByDescending(p => p.LastUpdate)
+                .ToListAsync();
+        }
     }
 }

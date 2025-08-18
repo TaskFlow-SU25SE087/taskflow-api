@@ -44,11 +44,14 @@ namespace taskflow_api.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Boards", (string)null);
+                    b.ToTable("Boards");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.CommitRecord", b =>
@@ -139,7 +142,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("ProjectPartId");
 
-                    b.ToTable("CommitRecords", (string)null);
+                    b.ToTable("CommitRecords");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.CommitScanIssue", b =>
@@ -186,7 +189,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("CommitRecordId");
 
-                    b.ToTable("CommitScanIssues", (string)null);
+                    b.ToTable("CommitScanIssues");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.GitMember", b =>
@@ -230,7 +233,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("ProjectPartId");
 
-                    b.ToTable("GitMembers", (string)null);
+                    b.ToTable("GitMembers");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Issue", b =>
@@ -270,7 +273,7 @@ namespace taskflow_api.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("TaskProjectID")
+                    b.Property<Guid?>("TaskProjectId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Title")
@@ -285,11 +288,13 @@ namespace taskflow_api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedBy");
+
                     b.HasIndex("ProjectId");
 
-                    b.HasIndex("TaskProjectID");
+                    b.HasIndex("TaskProjectId");
 
-                    b.ToTable("Issues", (string)null);
+                    b.ToTable("Issues");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.LogProject", b =>
@@ -298,14 +303,24 @@ namespace taskflow_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("Assigner")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("NewBoard")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("OldBoard")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FieldChanged")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uniqueidentifier");
@@ -313,23 +328,23 @@ namespace taskflow_api.Migrations
                     b.Property<Guid>("ProjectMemberId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TaskProjectID")
+                    b.Property<Guid?>("SprintId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid?>("TaskProjectID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("ProjectMemberId");
+
+                    b.HasIndex("SprintId");
+
                     b.HasIndex("TaskProjectID");
 
-                    b.ToTable("LogProjects", (string)null);
+                    b.ToTable("LogProjects");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Notification", b =>
@@ -359,7 +374,39 @@ namespace taskflow_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.ProcessingFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UrlFile")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("statusFile")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProcessingFiles");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Project", b =>
@@ -396,7 +443,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("TermId");
 
-                    b.ToTable("Projects", (string)null);
+                    b.ToTable("Projects");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", b =>
@@ -426,7 +473,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProjectMembers", (string)null);
+                    b.ToTable("ProjectMembers");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.ProjectPart", b =>
@@ -466,7 +513,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("UserGitHubTokenId");
 
-                    b.ToTable("ProjectParts", (string)null);
+                    b.ToTable("ProjectParts");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.RefeshToken", b =>
@@ -502,7 +549,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefeshTokens", (string)null);
+                    b.ToTable("RefeshTokens");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Sprint", b =>
@@ -537,7 +584,41 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Sprints", (string)null);
+                    b.ToTable("Sprints");
+                });
+
+            modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.SprintMeetingLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CompletedTasksJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NextPlan")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SprintId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UnfinishedTasksJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SprintId");
+
+                    b.ToTable("SprintMeetingLogs");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Tag", b =>
@@ -569,7 +650,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Tags", (string)null);
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.TaskAssignee", b =>
@@ -616,7 +697,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("TaskProjectId");
 
-                    b.ToTable("TaskAssignees", (string)null);
+                    b.ToTable("TaskAssignees");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.TaskComment", b =>
@@ -650,7 +731,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskComments", (string)null);
+                    b.ToTable("TaskComments");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.TaskProject", b =>
@@ -671,7 +752,7 @@ namespace taskflow_api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("Deadline")
+                    b.Property<DateTime?>("Deadline")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("Deadline70Notified")
@@ -714,7 +795,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("SprintId");
 
-                    b.ToTable("TaskProjects", (string)null);
+                    b.ToTable("TaskProjects");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.TaskTag", b =>
@@ -729,7 +810,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("TaskTags", (string)null);
+                    b.ToTable("TaskTags");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Term", b =>
@@ -756,7 +837,7 @@ namespace taskflow_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Terms", (string)null);
+                    b.ToTable("Terms");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.User", b =>
@@ -858,7 +939,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserAppeals", (string)null);
+                    b.ToTable("UserAppeals");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.UserBans", b =>
@@ -883,7 +964,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserBans", (string)null);
+                    b.ToTable("UserBans");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.UserGitHubToken", b =>
@@ -909,7 +990,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserGitHubTokens", (string)null);
+                    b.ToTable("UserGitHubTokens");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.UserReports", b =>
@@ -935,7 +1016,7 @@ namespace taskflow_api.Migrations
 
                     b.HasIndex("UserReportId");
 
-                    b.ToTable("UserReports", (string)null);
+                    b.ToTable("UserReports");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.VerifyToken", b =>
@@ -974,7 +1055,7 @@ namespace taskflow_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VerifyTokens", (string)null);
+                    b.ToTable("VerifyTokens");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Board", b =>
@@ -1030,6 +1111,12 @@ namespace taskflow_api.Migrations
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Issue", b =>
                 {
+                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", "CreatedByMember")
+                        .WithMany("Issues")
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
@@ -1038,8 +1125,10 @@ namespace taskflow_api.Migrations
 
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.TaskProject", "TaskProject")
                         .WithMany("Issues")
-                        .HasForeignKey("TaskProjectID")
+                        .HasForeignKey("TaskProjectId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByMember");
 
                     b.Navigation("Project");
 
@@ -1054,11 +1143,25 @@ namespace taskflow_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", "ProjectMember")
+                        .WithMany()
+                        .HasForeignKey("ProjectMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Sprint", "Sprint")
+                        .WithMany()
+                        .HasForeignKey("SprintId");
+
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.TaskProject", "TaskProject")
                         .WithMany()
                         .HasForeignKey("TaskProjectID");
 
                     b.Navigation("Project");
+
+                    b.Navigation("ProjectMember");
+
+                    b.Navigation("Sprint");
 
                     b.Navigation("TaskProject");
                 });
@@ -1131,6 +1234,17 @@ namespace taskflow_api.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.SprintMeetingLog", b =>
+                {
+                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Sprint", "Sprint")
+                        .WithMany()
+                        .HasForeignKey("SprintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sprint");
                 });
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.Tag", b =>
@@ -1316,6 +1430,8 @@ namespace taskflow_api.Migrations
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.ProjectMember", b =>
                 {
                     b.Navigation("GitMembers");
+
+                    b.Navigation("Issues");
 
                     b.Navigation("TaskComments");
 

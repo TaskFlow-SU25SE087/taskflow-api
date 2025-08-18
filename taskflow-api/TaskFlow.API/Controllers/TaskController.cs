@@ -100,7 +100,28 @@ namespace taskflow_api.TaskFlow.API.Controllers
         public async Task<ApiResponse<bool>> AddTagToTask(
             [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromRoute] Guid tagId)
         {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
             await _context.AddTagForTask(taskId, tagId);
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpDelete("{taskId}/tags/{tagId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> RemoveTagFromTask(
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromRoute] Guid tagId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            await _context.RemoveTagFromTask(taskId, tagId);
             return ApiResponse<bool>.Success(true);
         }
 
@@ -130,6 +151,43 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<List<ListTaskProjectNotSprint>>.Success(result);
         }
 
+        [HttpGet("board-type/{boardType}")]
+        [Authorize]
+        public async Task<ApiResponse<List<TaskProjectResponse>>> GetTasksByBoardType(
+            [FromRoute] Guid projectId, [FromRoute] string boardType)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<List<TaskProjectResponse>>.Error(9002, "Unauthorized access");
+            }
+
+            if (!Enum.TryParse<BoardType>(boardType, true, out var boardTypeEnum))
+            {
+                return ApiResponse<List<TaskProjectResponse>>.Error(400, "Invalid board type");
+            }
+
+            var result = await _context.GetTasksByBoardType(projectId, boardTypeEnum);
+            return ApiResponse<List<TaskProjectResponse>>.Success(result);
+        }
+
+        [HttpGet("{taskId}/is-completed")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> IsTaskCompleted(
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.IsTaskCompleted(taskId);
+            return ApiResponse<bool>.Success(result);
+        }
+
         [HttpPost("{taskId}/status/board/{boardId}")]
         [Authorize]
         public async Task<ApiResponse<bool>> ChangeBoard(
@@ -139,6 +197,52 @@ namespace taskflow_api.TaskFlow.API.Controllers
                 projectId, ProjectRole.Leader, ProjectRole.Member);
             await _context.ChangeBoard(boardId, taskId);
             return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpGet("burndown-chart/{sprintId}")]
+        [Authorize]
+        public async Task<ApiResponse<BurndownChartResponse>> GetBurndownChart(
+            [FromRoute] Guid projectId, [FromRoute] Guid sprintId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<BurndownChartResponse>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.GetBurndownChart(projectId, sprintId);
+            return ApiResponse<BurndownChartResponse>.Success(result);
+        }
+
+        /// <summary>
+        /// Get comprehensive task completion report for a project
+        /// </summary>
+        /// <param name="projectId">Required: The ID of the project to get the report for</param>
+        /// <param name="request">Optional: Filter parameters to narrow down the results</param>
+        /// <remarks>
+        /// This endpoint returns a complete task completion report for the specified project.
+        /// Only the projectId is required - all other parameters are optional filters.
+        /// 
+        /// Example usage:
+        /// - Basic: GET /projects/{projectId}/tasks/completion-report
+        /// - With filters: GET /projects/{projectId}/tasks/completion-report?sprintId=123&status=InProgress
+        /// </remarks>
+        /// <returns>Task completion summary with detailed task information</returns>
+        [HttpGet("completion-report")]
+        [Authorize]
+        public async Task<ApiResponse<TaskCompletionSummaryResponse>> GetTaskCompletionReport(
+            [FromRoute] Guid projectId, [FromQuery] TaskCompletionReportRequest request)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<TaskCompletionSummaryResponse>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.GetTaskCompletionReport(projectId, request);
+            return ApiResponse<TaskCompletionSummaryResponse>.Success(result);
         }
     }
 }

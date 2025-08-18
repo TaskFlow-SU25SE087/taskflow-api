@@ -30,13 +30,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITagRepository _TagRepository;
         private readonly ITaskTagRepository _taskTagRepository;
         private readonly AppTimeProvider _timeProvider;
+        private readonly ILogProjectService _logService;
 
         public ProjectService(UserManager<User> userManager, SignInManager<User> signInManager,
             IHttpContextAccessor httpContextAccessor, IProjectRepository projectRepository,
             IProjectMemberRepository projectMember, IBoardRepository boardRepository,
             IMailService mailService, IMapper mapper, IVerifyTokenRopository verifyTokenRopository,
             ISprintRepository springRepository, ITagRepository TagRepository, ITaskTagRepository taskTagRepository,
-            AppTimeProvider timeProvider)
+            AppTimeProvider timeProvider, ILogProjectService logService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -51,6 +52,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _TagRepository = TagRepository;
             _taskTagRepository = taskTagRepository;
             _timeProvider = timeProvider;
+            _logService = logService;
         }
 
         public async Task<ProjectResponse> CreateProject(CreateProjectRequest request)
@@ -91,9 +93,10 @@ namespace taskflow_api.TaskFlow.Application.Services
                 HasJoinedBefore = true,
             };
             await _projectMemberRepository.CreateProjectMemeberAsync(projectMember);
+            await _logService.LogCreateProject(projectId, projectMember.Id);
             var UserSystem = new ProjectMember
             {
-                UserId = Guid.Parse("00000000-0000-0000-0000-000000000001"), // System user ID
+                UserId = Guid.Parse("00000000-0000-0000-0000-000000000002"), // System user ID
                 ProjectId = projectId,
                 Role = ProjectRole.System,
                 IsActive = true,
@@ -103,7 +106,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var newSprint = new Sprint
             {
                 ProjectId = projectId,
-                Name = "Sprint 1",
+                Name = "Sprint " + _timeProvider.Now.ToString("ddMMyy"),
                 Description = "First sprint of the project",
                 StartDate = _timeProvider.Now,
                 EndDate = _timeProvider.Now.AddDays(14), // Default 2 weeks sprint
@@ -122,10 +125,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     ProjectId = projectId,
-                    Name = "Not Started",
+                    Name = "Todo",
                     Description = "Tasks that have not been started yet.",
                     Order = Order,
-                    IsActive = true
+                    IsActive = true,
+                    Type = BoardType.Todo
                 },
                  new Board
                 {
@@ -134,16 +138,18 @@ namespace taskflow_api.TaskFlow.Application.Services
                     Name = "In Progress",
                     Description = "Tasks that are currently in progress.",
                     Order = ++Order,
-                    IsActive = true
+                    IsActive = true,
+                    Type = BoardType.InProgress
                 },
                   new Board
                 {
                     Id = Guid.NewGuid(),
                     ProjectId = projectId,
-                    Name = "Completed",
+                    Name = "Done",
                     Description = "Tasks that have been completed.",
                     Order = ++Order,
-                    IsActive = true
+                    IsActive = true,
+                    Type = BoardType.Done
                 },
             };
             await _boardRepository.CreateListBoardsAsync(defaultBoards);
@@ -186,6 +192,26 @@ namespace taskflow_api.TaskFlow.Application.Services
             return projectsQuery;
         }
 
+        public async Task<List<ProjectsResponse>> GetAllProjectsForAdmin()
+        {
+            var projects = await _projectRepository.GetAllProjectsAsync();
+            if (projects == null)
+            {
+                throw new AppException(ErrorCode.NoProjectsFound);
+            }
+            return projects;
+        }
+
+        public async Task<List<ProjectsResponse>> GetProjectsByTermForAdmin(Guid termId)
+        {
+            var projects = await _projectRepository.GetProjectsByTermAsync(termId);
+            if (projects == null)
+            {
+                throw new AppException(ErrorCode.NoProjectsFound);
+            }
+            return projects;
+        }
+
         public async Task<ProjectResponse> UpdateProject(UpdateProjectRequest request)
         {
             var project = await _projectRepository.GetProjectByIdAsync(request.ProjectId);
@@ -199,6 +225,41 @@ namespace taskflow_api.TaskFlow.Application.Services
             project!.LastUpdate = _timeProvider.Now;
             await _projectRepository.UpdateProject(project);
             return _mapper.Map<ProjectResponse>(project);
+        }
+
+        public async Task<bool> DeleteProject(Guid projectId)
+        {
+            // Get current user ID from context
+            var userIdStr = _httpContextAccessor.HttpContext?.User.FindFirst("id")?.Value;
+            if (string.IsNullOrEmpty(userIdStr))
+            {
+                throw new AppException(ErrorCode.Unauthorized);
+            }
+            var userId = Guid.Parse(userIdStr);
+
+            // Check if project exists
+            var project = await _projectRepository.GetProjectByIdAsync(projectId);
+            if (project == null)
+            {
+                throw new AppException(ErrorCode.ProjectNotFound);
+            }
+
+            // Check if user is project leader
+            var projectMember = project.Members.FirstOrDefault(m => m.UserId == userId && m.IsActive);
+            if (projectMember == null || projectMember.Role != ProjectRole.Leader)
+            {
+                throw new AppException(ErrorCode.Unauthorized);
+            }
+
+            // Delete the project (set as inactive)
+            var result = await _projectRepository.DeleteProjectAsync(projectId);
+            if (result)
+            {
+                // Log the project deletion
+                await _logService.LogDeleteProject(projectId, projectMember.Id);
+            }
+
+            return result;
         }
 
     }

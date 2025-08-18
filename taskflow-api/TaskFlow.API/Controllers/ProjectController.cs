@@ -55,11 +55,41 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<List<ProjectsResponse>>.Success(projects);
         }
 
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ApiResponse<List<ProjectsResponse>>> GetAllProjects()
+        {
+            var projects = await _context.GetAllProjectsForAdmin();
+            return ApiResponse<List<ProjectsResponse>>.Success(projects);
+        }
+
+        [HttpGet("admin/term/{termId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ApiResponse<List<ProjectsResponse>>> GetProjectsByTerm([FromRoute] Guid termId)
+        {
+            var projects = await _context.GetProjectsByTermForAdmin(termId);
+            return ApiResponse<List<ProjectsResponse>>.Success(projects);
+        }
+
         [HttpGet("{projectid}")]
         public async Task<ApiResponse<ProjectDetailResponse>> GetProject(Guid projectid)
         {
             var project = await _context.GetProject(projectid);
             return ApiResponse<ProjectDetailResponse>.Success(project);
+        }
+
+        [HttpDelete("{projectId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> DeleteProject([FromRoute] Guid projectId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            
+            var result = await _context.DeleteProject(projectId);
+            return ApiResponse<bool>.Success(result);
         }
     }
 }

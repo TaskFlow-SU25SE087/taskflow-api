@@ -170,7 +170,50 @@ namespace taskflow_api.TaskFlow.Application.Services
                 TotalItems = totalItems,
                 TotalPages = (int)Math.Ceiling(totalItems / (double)pagingParams.PageSize),
                 PageNumber = pagingParams.PageNumber,
-                PageSize = pagingParams.PageSize
+                PageSize = pagingParams.PageSize,
+                HasMore = totalItems > (pagingParams.PageNumber * pagingParams.PageSize)
+            };
+            return result;
+        }
+
+        public async Task<PagedResult<UserAdminResponse>> GetUsersByTerm(Guid termId, int page)
+        {
+            var pagingParams = new PagingParams
+            {
+                PageNumber = page,
+                PageSize = 5
+            };
+
+            var usersQuery = _userManager.Users
+                .AsNoTracking()
+                .Where(u => u.Role != UserRole.Admin && u.TermId == termId);
+
+            var totalItems = await usersQuery.CountAsync();
+            var items = await _mapper.ProjectTo<UserAdminResponse>(usersQuery)
+                .OrderByDescending(u => u.IsActive)
+                .ThenByDescending(u => u.TermYear)
+                .ThenByDescending(u =>
+                                    u.TermSeason == "Fall" ? 3 :
+                                    u.TermSeason == "Summer" ? 2 :
+                                    u.TermSeason == "Spring" ? 1 : 4)
+                .ThenBy(u => u.FullName)
+                .Skip(pagingParams.Skip)
+                .Take(pagingParams.PageSize)
+                .ToListAsync();
+
+            if (!items.Any())
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+
+            var result = new PagedResult<UserAdminResponse>
+            {
+                Items = items,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pagingParams.PageSize),
+                PageNumber = pagingParams.PageNumber,
+                PageSize = pagingParams.PageSize,
+                HasMore = totalItems > (pagingParams.PageNumber * pagingParams.PageSize)
             };
             return result;
         }
@@ -517,7 +560,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await file.File.CopyToAsync(stream);
                 using (var package = new ExcelPackage(stream))
                 {
+                    if (package.Workbook.Worksheets.Count == 0)
+                        throw new AppException(new ErrorDetail(9998, "Excel file contains no worksheets", StatusCodes.Status400BadRequest));
+
                     var worksheet = package.Workbook.Worksheets[0];
+                    if (worksheet.Dimension == null)
+                        throw new AppException(new ErrorDetail(9997, "Excel worksheet is empty", StatusCodes.Status400BadRequest));
+
                     int rowCount = worksheet.Dimension.Rows;
 
                     // Collect all emails from Excel
@@ -536,83 +585,111 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                     for (int row = 2; row <= rowCount; row++)
                     {
-                        var studentId = worksheet.Cells[row, 1].Text.Trim();
-                        var fullName = worksheet.Cells[row, 2].Text.Trim();
-                        var email = worksheet.Cells[row, 3].Text.Trim();
-                        var termSeason = worksheet.Cells[row, 4].Text.Trim();
-                        var termYearStr = worksheet.Cells[row, 5].Text.Trim();
-
-                        //find and set termId 
-                        var termID = await _termRepository.GetTermIdAsync(termSeason, int.Parse(termYearStr));
-                        if (termID == Guid.Empty)
+                        try
                         {
-                            var starDate = await _termRepository.GetLatestTermEndDateAsync();
-                            //create new term
-                            var newTerm = new Term
-                            {
-                                Season = termSeason,
-                                Year = int.Parse(termYearStr),
-                                StartDate = starDate,
-                                EndDate = starDate.AddMonths(4),
-                                IsActive = true
-                            };
-                            termID = newTerm.Id;
-                        }
+                            var studentId = worksheet.Cells[row, 1].Text.Trim();
+                            var fullName = worksheet.Cells[row, 2].Text.Trim();
+                            var email = worksheet.Cells[row, 3].Text.Trim();
+                            var termSeason = worksheet.Cells[row, 4].Text.Trim();
+                            var termYearStr = worksheet.Cells[row, 5].Text.Trim();
 
-                        if (string.IsNullOrEmpty(email)) continue;
+                            // Validate required fields
+                            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(fullName))
+                                continue;
 
-                        int.TryParse(termYearStr, out int termYear);
-                        if (existingUsers.TryGetValue(email, out var existingUser))
-                        {
-                            //User has an account but has never used it => delete account , create again
-                            if (!existingUser.EmailConfirmed)
+                            // Validate term year
+                            if (!int.TryParse(termYearStr, out int termYear))
+                                continue;
+
+                            //find and set termId 
+                            var termID = await _termRepository.GetTermIdAsync(termSeason, termYear);
+                            if (termID == Guid.Empty)
                             {
-                                var deleteResult = await _userManager.DeleteAsync(existingUser);
-                                if (!deleteResult.Succeeded)
+                                var starDate = await _termRepository.GetLatestTermEndDateAsync();
+                                // If no terms exist, use current date as start date
+                                if (starDate == null)
                                 {
+                                    starDate = DateTime.UtcNow;
+                                }
+                                
+                                //create new term
+                                var newTerm = new Term
+                                {
+                                    Season = termSeason,
+                                    Year = termYear,
+                                    StartDate = starDate.Value,
+                                    EndDate = starDate.Value.AddMonths(4),
+                                    IsActive = true
+                                };
+                                
+                                // Save the new term to database
+                                await _termRepository.CreateTermAsync(newTerm);
+                                termID = newTerm.Id;
+                            }
+
+                            if (existingUsers.TryGetValue(email, out var existingUser))
+                            {
+                                //User has an account but has never used it => delete account , create again
+                                if (!existingUser.EmailConfirmed)
+                                {
+                                    var deleteResult = await _userManager.DeleteAsync(existingUser);
+                                    if (!deleteResult.Succeeded)
+                                    {
+                                        continue;
+                                    }
+                                    existingUsers.Remove(email); 
+                                }
+                                else // user has an account and used it => reset password and open an account
+                                {
+                                    // Update existing confirmed user
+                                    existingUser.FullName = fullName;
+                                    existingUser.StudentId = studentId;
+                                    existingUser.TermId = termID;
+                                    existingUser.PastTerms = existingUser.PastTerms == null
+                                        ? $"{termSeason} {termYear}"
+                                        : $"{existingUser.PastTerms}, {termSeason} {termYear}";
+
+                                    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
+                                    await _mailService.SendReactivationEmail(
+                                        email, existingUser.UserName!, existingUser.FullName, resetToken);
+
                                     continue;
                                 }
-                                existingUsers.Remove(email); 
                             }
-                            else // user has an account and used it => reset password and open an account
+
+                            // Add new user 
+                            var newUser = new User
                             {
-                                // Update existing confirmed user
-                                existingUser.FullName = fullName;
-                                existingUser.StudentId = studentId;
-                                existingUser.TermId = termID;
-                                existingUser.PastTerms = existingUser.PastTerms == null
-                                    ? $"{termSeason} {termYear}"
-                                    : $"{existingUser.PastTerms}, {termSeason} {termYear}";
+                                StudentId = studentId,
+                                FullName = fullName,
+                                Email = email,
+                                UserName = email,
+                                EmailConfirmed = false,
+                                TermId = termID,
+                                PastTerms = $"{termSeason} {termYear}",
+                            };
 
-                                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
-                                await _mailService.SendReactivationEmail(
-                                    email, existingUser.UserName!, existingUser.FullName, resetToken);
-
+                            var newPass = GenerateRandom.GenerateRandomNumber();
+                            var createResult = await _userManager.CreateAsync(newUser, newPass);
+                            if (createResult.Succeeded)
+                            {
+                                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(newUser);
+                                await _mailService.SendWelcomeEmail(email, fullName, resetToken);
+                            }
+                            else
+                            {
+                                // Log the error for debugging
+                                var errorMessages = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                                // You might want to log this error or handle it appropriately
+                                // For now, we'll continue with the next user
                                 continue;
                             }
                         }
-
-                        // Add new user 
-                        var newUser = new User
+                        catch (Exception ex)
                         {
-                            StudentId = studentId,
-                            FullName = fullName,
-                            Email = email,
-                            UserName = email,
-                            EmailConfirmed = false,
-                            TermId = termID,
-                            PastTerms = $"{termSeason} {termYear}",
-                        };
-
-                        var newPass = GenerateRandom.GenerateRandomNumber();
-                        var createResult = await _userManager.CreateAsync(newUser, newPass);
-                        if (createResult.Succeeded)
-                        {
-                            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(newUser);
-                            await _mailService.SendWelcomeEmail(email, fullName, resetToken);
-                        }
-                        else
-                        {
+                            // Log the exception and continue with the next row
+                            // You might want to log this error or handle it appropriately
+                            continue;
                         }
                     }
                 }

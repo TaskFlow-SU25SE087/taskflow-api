@@ -39,8 +39,12 @@ namespace taskflow_api.TaskFlow.Application.Services
                 var tasks = await taskProjectRepository.GetAllActiveTasksAsync();
                 foreach (var task in tasks)
                 {
+                    // Skip tasks without deadlines
+                    if (!task.Deadline.HasValue)
+                        continue;
+
                     // Notify when deadline is expired
-                    if (!task.DeadlineExpiredNotified && now > task.Deadline)
+                    if (!task.DeadlineExpiredNotified && now > task.Deadline.Value)
                     {
                         var assignees = await taskAssigneeRepository.taskAssigneesAsync(task.Id);
                         foreach (var assignee in assignees)
@@ -60,9 +64,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                         continue; // Skip further checks for this task
                     }
 
-                    if (task.Deadline70Notified || task.Deadline <= task.CreatedAt)
+                    if (task.Deadline70Notified || task.Deadline.Value <= task.CreatedAt)
                         continue;
-                    var totalDuration = task.Deadline - task.CreatedAt;
+                    var totalDuration = task.Deadline.Value - task.CreatedAt;
                     var elapsed = now - task.CreatedAt;
                     if (elapsed.TotalSeconds / totalDuration.TotalSeconds >= 0.7)
                     {
