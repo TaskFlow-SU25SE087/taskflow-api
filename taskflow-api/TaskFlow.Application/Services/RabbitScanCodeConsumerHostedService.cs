@@ -284,7 +284,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     finally
                     {
                         // Delete Sonar project
-                        await codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
+                        //await codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
                     }
                 }
 
