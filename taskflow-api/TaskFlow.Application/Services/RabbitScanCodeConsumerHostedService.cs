@@ -53,7 +53,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                                  autoDelete: false,
                                  arguments: null);
 
-            var consumer = new EventingBasicConsumer(channel);
+            var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.Received += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
@@ -126,7 +126,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                             //get quality gate status
                             var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
                             int retry = 0;
-                            int maxRetry = 50;
+                            int maxRetry = 10;
                             int delayMs = 10000;
                             while (retry < maxRetry)
                             {
@@ -300,7 +300,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                         commit.ResultSummary = "Scan completed via RabbitMQ.";
                         await commitRepo.Update(commit);
 
-                        codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
+                        await codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
                     }
                 }
                 channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
