@@ -72,7 +72,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
             };
             cloneProcess.Start();
-            string cloneOutput = await cloneProcess.StandardOutput.ReadToEndAsync();
             string cloneError = await cloneProcess.StandardError.ReadToEndAsync();
             await cloneProcess.WaitForExitAsync();
 
@@ -94,20 +93,19 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
             };
             checkoutProcess.Start();
-            string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
             string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
             await checkoutProcess.WaitForExitAsync();
 
             if (checkoutProcess.ExitCode != 0)
                 throw new Exception($"git checkout failed:\n{checkoutError}");
 
-            //get file change in commit
-            var changedFilesProcess = new Process
+            // Get ALL files in this commit (not only changed)
+            var listFilesProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "git",
-                    Arguments = $"diff --name-only {commitId}^ {commitId}",
+                    Arguments = $"ls-tree -r --name-only {commitId}",
                     WorkingDirectory = extractPath,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -115,18 +113,18 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CreateNoWindow = true
                 }
             };
-            changedFilesProcess.Start();
-            var changedFiles = (await changedFilesProcess.StandardOutput.ReadToEndAsync())
-                               .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            await changedFilesProcess.WaitForExitAsync();
+            listFilesProcess.Start();
+            var commitFiles = (await listFilesProcess.StandardOutput.ReadToEndAsync())
+                                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            await listFilesProcess.WaitForExitAsync();
 
-            //delete file not in commit
+            // Delete files not in commit snapshot (but keep .git/)
             var allFiles = Directory.GetFiles(extractPath, "*", SearchOption.AllDirectories);
             foreach (var file in allFiles)
             {
                 var relativePath = Path.GetRelativePath(extractPath, file).Replace("\\", "/");
-                if (!changedFiles.Any(f => f.Replace("\\", "/").Equals(relativePath, StringComparison.OrdinalIgnoreCase))
-                && !relativePath.StartsWith(".git/"))
+                if (!commitFiles.Any(f => f.Equals(relativePath, StringComparison.OrdinalIgnoreCase))
+                    && !relativePath.StartsWith(".git/"))
                 {
                     File.Delete(file);
                 }
