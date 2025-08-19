@@ -9,5 +9,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<List<SonarIssueResponse>> GetIssuesByProjectAsync(string projectKey);
         Task<string> GetQualityGateStatusAsync(string projectKey);
         Task<ProjectMetricsDto> GetProjectMeasuresAsync(string projectKey);
+        Task DeleteProjectSonar(string projectKey);
     }
 }
