@@ -10,3 +10,4 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         List<int> DistributeEffortPointsByPercentage(int totalPoints, List<double> percentages);
     }
 }
+

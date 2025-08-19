@@ -198,3 +198,4 @@ This will add the new columns to your existing database tables.
 3. **Effort Points Templates**: Predefined effort point values for common task types
 4. **Reporting**: Effort points analytics and reporting features
 5. **Sprint Planning**: Integration with sprint capacity planning
+
