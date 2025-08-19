@@ -131,17 +131,27 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                         // Retry quality gate status if needed
                         var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
-                        int retry = 0, maxRetry = 10, delayMs = 10000;
+                        int retry = 0, maxRetry = 10, delayMs = 15000;
+                        int count0Issue = 0;
                         while (retry < maxRetry)
                         {
                             qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
-                            if (qgStatus != "NONE")
+                            issues = await sonarService.GetIssuesByProjectAsync(result.ProjectKey);
+
+                            if (qgStatus != "NONE" && issues.Count > 0)
+                                break;
+
+                            if (issues.Count == 0)
+                                count0Issue++;
+                            else
+                                count0Issue = 0;
+
+                            if (count0Issue > 3 && qgStatus != "NONE")
                                 break;
 
                             _logger.LogInformation(
-                                "Quality Gate status is NONE, waiting {Delay}s before retry #{Retry}",
-                                delayMs / 1000,
-                                retry + 1);
+                                "Quality Gate status is NONE or no issues, waiting {Delay}s before retry #{Retry}",
+                                delayMs / 1000, retry + 1);
 
                             await Task.Delay(delayMs);
                             retry++;
@@ -284,7 +294,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     finally
                     {
                         // Delete Sonar project
-                        //await codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
+                        await codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
                     }
                 }
 
