@@ -61,6 +61,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     CompletionAttachmentUrls = t.CompletionAttachmentUrlsList,
                     SprintId = t.SprintId ?? Guid.Empty,
                     SprintName = t.Sprint != null ? t.Sprint.Name : "No Sprint",
+                    EffortPoints = t.EffortPoints,
                     Commnets = t.TaskComments
                         .Select(c => new CommnetResponse
                         {
@@ -81,6 +82,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                             Executor = u.FullName,
                             Avatar = u.Avatar,
                             Role = pm.Role,
+                            AssignedEffortPoints = ta.AssignedEffortPoints,
                         }
                     ).ToList(),
                     Tags = t.TaskTags
@@ -128,6 +130,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     SprintName = t.Sprint != null ? t.Sprint.Name : "No Sprint",
                     BoardId = (Guid)t.BoardId!,
                     Status = t.Board!.Name,
+                    EffortPoints = t.EffortPoints,
                     Commnets = t.TaskComments
                         .Select(c => new CommnetResponse
                         {
@@ -248,6 +251,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                             Executor = u.FullName,
                             Avatar = u.Avatar,
                             Role = pm.Role,
+                            AssignedEffortPoints = ta.AssignedEffortPoints,
                         }
                     ).ToList(),
                     Tags = t.TaskTags

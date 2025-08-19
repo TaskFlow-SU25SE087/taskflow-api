@@ -18,7 +18,9 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; } = false;
-
+        
+        // Effort points assigned to this specific assignee
+        public int? AssignedEffortPoints { get; set; }
 
         public TaskAssignee()
         {

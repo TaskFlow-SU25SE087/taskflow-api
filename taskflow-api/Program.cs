@@ -52,6 +52,7 @@ builder.Services.AddScoped<ISprintMeetingLogsService, SprintMeetingLogsService>(
 builder.Services.AddScoped<ILogProjectService, LogProjectService>();
 builder.Services.AddScoped<ITeamActivityReportService, TeamActivityReportService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IEffortPointsService, EffortPointsService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();

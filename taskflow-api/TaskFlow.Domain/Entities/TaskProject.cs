@@ -38,6 +38,9 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public bool IsActive { get; set; } = false;
         public bool Deadline70Notified { get; set; } = false;
         public bool DeadlineExpiredNotified { get; set; } = false;
+        
+        // Effort points for the task
+        public int? EffortPoints { get; set; }
 
         public List<TaskAssignee> TaskAssignees { get; set; } = new List<TaskAssignee>();
         public List<Issue> Issues { get; set; } = new List<Issue>();
