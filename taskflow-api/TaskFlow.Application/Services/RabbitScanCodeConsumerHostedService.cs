@@ -118,163 +118,173 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                 if (result.Success)
                 {
-                    // Fetch issues and metrics
-                    var sonarService = scope.ServiceProvider.GetRequiredService<ICodeScanService>();
-                    var issues = await sonarService.GetIssuesByProjectAsync(result.ProjectKey);
-
-                    var commitScanIssueRepo = scope.ServiceProvider.GetRequiredService<ICommitScanIssueRepository>();
-                    var issueRepo = scope.ServiceProvider.GetRequiredService<ITaskIssueRepository>();
-
-                    // Retry quality gate status if needed
-                    var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
-                    int retry = 0, maxRetry = 10, delayMs = 10000;
-                    while (retry < maxRetry)
+                    try
                     {
-                        qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
-                        if (qgStatus != "NONE")
-                            break;
 
-                        _logger.LogInformation(
-                            "Quality Gate status is NONE, waiting {Delay}s before retry #{Retry}",
-                            delayMs / 1000,
-                            retry + 1);
 
-                        await Task.Delay(delayMs);
-                        retry++;
-                    }
+                        // Fetch issues and metrics
+                        var sonarService = scope.ServiceProvider.GetRequiredService<ICodeScanService>();
+                        var issues = await sonarService.GetIssuesByProjectAsync(result.ProjectKey);
 
-                    commit.QualityGateStatus = qgStatus;
+                        var commitScanIssueRepo = scope.ServiceProvider.GetRequiredService<ICommitScanIssueRepository>();
+                        var issueRepo = scope.ServiceProvider.GetRequiredService<ITaskIssueRepository>();
 
-                    // Fetch project metrics
-                    var metrics = await sonarService.GetProjectMeasuresAsync(result.ProjectKey);
-                    commit.Bugs = metrics.Bugs;
-                    commit.Vulnerabilities = metrics.Vulnerabilities;
-                    commit.CodeSmells = metrics.CodeSmells;
-                    commit.SecurityHotspots = metrics.SecurityHotspots;
-                    commit.DuplicatedLines = metrics.DuplicatedLines;
-                    commit.DuplicatedBlocks = metrics.DuplicatedBlocks;
-                    commit.DuplicatedLinesDensity = metrics.DuplicatedLinesDensity;
-                    commit.Coverage = metrics.Coverage;
-                    commit.QualityScore = CommitScoreCalculator.CalculateQualityScore(commit);
-
-                    // Process each issue
-                    foreach (var i in issues)
-                    {
-                        string blamedEmail = string.Empty;
-                        string blamedName = string.Empty;
-
-                        var filePath = i.Component.Contains(":") ? i.Component.Split(':')[1] : i.Component;
-                        var fullPath = Path.Combine(extractPath, filePath);
-                        var folderName = Path.GetFileName(extractPath);
-                        string cleanFilePath = filePath.StartsWith(folderName + "/") || filePath.StartsWith(folderName + "\\")
-                            ? filePath.Substring(folderName.Length + 1)
-                            : Path.GetFileName(filePath);
-
-                        string lineContent = string.Empty;
-                        if (File.Exists(fullPath) && i.Line > 0)
+                        // Retry quality gate status if needed
+                        var qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
+                        int retry = 0, maxRetry = 10, delayMs = 10000;
+                        while (retry < maxRetry)
                         {
-                            var lines = File.ReadAllLines(fullPath);
-                            if (i.Line <= lines.Length)
-                                lineContent = lines[i.Line - 1];
+                            qgStatus = await sonarService.GetQualityGateStatusAsync(result.ProjectKey);
+                            if (qgStatus != "NONE")
+                                break;
 
-                            // Get git blame info
-                            try
+                            _logger.LogInformation(
+                                "Quality Gate status is NONE, waiting {Delay}s before retry #{Retry}",
+                                delayMs / 1000,
+                                retry + 1);
+
+                            await Task.Delay(delayMs);
+                            retry++;
+                        }
+
+                        commit.QualityGateStatus = qgStatus;
+
+                        // Fetch project metrics
+                        var metrics = await sonarService.GetProjectMeasuresAsync(result.ProjectKey);
+                        commit.Bugs = metrics.Bugs;
+                        commit.Vulnerabilities = metrics.Vulnerabilities;
+                        commit.CodeSmells = metrics.CodeSmells;
+                        commit.SecurityHotspots = metrics.SecurityHotspots;
+                        commit.DuplicatedLines = metrics.DuplicatedLines;
+                        commit.DuplicatedBlocks = metrics.DuplicatedBlocks;
+                        commit.DuplicatedLinesDensity = metrics.DuplicatedLinesDensity;
+                        commit.Coverage = metrics.Coverage;
+                        commit.QualityScore = CommitScoreCalculator.CalculateQualityScore(commit);
+
+                        // Process each issue
+                        foreach (var i in issues)
+                        {
+                            string blamedEmail = string.Empty;
+                            string blamedName = string.Empty;
+
+                            var filePath = i.Component.Contains(":") ? i.Component.Split(':')[1] : i.Component;
+                            var fullPath = Path.Combine(extractPath, filePath);
+                            var folderName = Path.GetFileName(extractPath);
+                            string cleanFilePath = filePath.StartsWith(folderName + "/") || filePath.StartsWith(folderName + "\\")
+                                ? filePath.Substring(folderName.Length + 1)
+                                : Path.GetFileName(filePath);
+
+                            string lineContent = string.Empty;
+                            if (File.Exists(fullPath) && i.Line > 0)
                             {
-                                var blameProcess = new Process
+                                var lines = File.ReadAllLines(fullPath);
+                                if (i.Line <= lines.Length)
+                                    lineContent = lines[i.Line - 1];
+
+                                // Get git blame info
+                                try
                                 {
-                                    StartInfo = new ProcessStartInfo
+                                    var blameProcess = new Process
                                     {
-                                        FileName = "git",
-                                        Arguments = $"blame -L {i.Line},{i.Line} --line-porcelain \"{fullPath}\"",
-                                        WorkingDirectory = extractPath,
-                                        RedirectStandardOutput = true,
-                                        RedirectStandardError = true,
-                                        UseShellExecute = false,
-                                        CreateNoWindow = true
+                                        StartInfo = new ProcessStartInfo
+                                        {
+                                            FileName = "git",
+                                            Arguments = $"blame -L {i.Line},{i.Line} --line-porcelain \"{fullPath}\"",
+                                            WorkingDirectory = extractPath,
+                                            RedirectStandardOutput = true,
+                                            RedirectStandardError = true,
+                                            UseShellExecute = false,
+                                            CreateNoWindow = true
+                                        }
+                                    };
+
+                                    blameProcess.Start();
+                                    var output = await blameProcess.StandardOutput.ReadToEndAsync();
+                                    blameProcess.WaitForExit();
+
+                                    foreach (var line in output.Split('\n'))
+                                    {
+                                        if (line.StartsWith("author-mail "))
+                                            blamedEmail = line.Substring("author-mail ".Length).Trim('<', '>', '\r');
+                                        if (line.StartsWith("author "))
+                                            blamedName = line.Substring("author ".Length).Trim();
                                     }
-                                };
-
-                                blameProcess.Start();
-                                var output = await blameProcess.StandardOutput.ReadToEndAsync();
-                                blameProcess.WaitForExit();
-
-                                foreach (var line in output.Split('\n'))
+                                }
+                                catch (Exception ex)
                                 {
-                                    if (line.StartsWith("author-mail "))
-                                        blamedEmail = line.Substring("author-mail ".Length).Trim('<', '>', '\r');
-                                    if (line.StartsWith("author "))
-                                        blamedName = line.Substring("author ".Length).Trim();
+                                    _logger.LogWarning($"Failed to get git blame: {ex.Message}");
                                 }
                             }
-                            catch (Exception ex)
+
+                            bool isDuplicate = await commitRepo.checkDuplicateResult(
+                                commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
+
+                            if (!isDuplicate)
                             {
-                                _logger.LogWarning($"Failed to get git blame: {ex.Message}");
-                            }
-                        }
-
-                        bool isDuplicate = await commitRepo.checkDuplicateResult(
-                            commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
-
-                        if (!isDuplicate)
-                        {
-                            // Save scan issue
-                            var scanIssue = new CommitScanIssue
-                            {
-                                CommitRecordId = commit.Id,
-                                Rule = i.Rule,
-                                Severity = i.Severity,
-                                Message = i.Message,
-                                FilePath = cleanFilePath,
-                                Line = i.Line,
-                                LineContent = lineContent,
-                                CreatedAt = _timeProvider.Now,
-                                BlamedGitEmail = blamedEmail,
-                                BlamedGitName = blamedName
-                            };
-                            await commitScanIssueRepo.CreateAsync(scanIssue);
-
-                            // Create task issue
-                            var projectMemberRepo = scope.ServiceProvider.GetRequiredService<IProjectMemberRepository>();
-                            var idSystem = await projectMemberRepo.GetSystemMemberId(commit.ProjectPart.ProjectId);
-
-                            var issue = new Issue
-                            {
-                                ProjectId = commit.ProjectPart.ProjectId,
-                                Title = $"{i.Severity}: {i.Message}",
-                                Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
-                                Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
-                                Type = TypeIssue.Improvement,
-                                CreatedBy = idSystem,
-                                IsActive = true,
-                                CreatedAt = _timeProvider.Now,
-                            };
-                            await issueRepo.CreateTaskIssueAsync(issue);
-
-                            // Assign user to issue
-                            var userRepo = scope.ServiceProvider.GetRequiredService<IGitMemberRepository>();
-                            var member = await userRepo.GetMemberByNameAndEmailLocal(blamedName, blamedEmail, commit.ProjectPart.Id);
-
-                            if (member != null)
-                            {
-                                var taskAssigneeRepo = scope.ServiceProvider.GetRequiredService<ITaskAssigneeRepository>();
-                                var assigner = await projectMemberRepo.FindMemberInProject(
-                                    commit.ProjectPart.ProjectId, new Guid("00000000-0000-0000-0000-000000000002"));
-
-                                var taskAssignee = new TaskAssignee
+                                // Save scan issue
+                                var scanIssue = new CommitScanIssue
                                 {
-                                    RefId = issue.Id,
-                                    Type = RefType.Issue,
-                                    AssignerId = assigner!.Id,
-                                    ImplementerId = member.ProjectMemberId ?? null,
+                                    CommitRecordId = commit.Id,
+                                    Rule = i.Rule,
+                                    Severity = i.Severity,
+                                    Message = i.Message,
+                                    FilePath = cleanFilePath,
+                                    Line = i.Line,
+                                    LineContent = lineContent,
+                                    CreatedAt = _timeProvider.Now,
+                                    BlamedGitEmail = blamedEmail,
+                                    BlamedGitName = blamedName
+                                };
+                                await commitScanIssueRepo.CreateAsync(scanIssue);
+
+                                // Create task issue
+                                var projectMemberRepo = scope.ServiceProvider.GetRequiredService<IProjectMemberRepository>();
+                                var idSystem = await projectMemberRepo.GetSystemMemberId(commit.ProjectPart.ProjectId);
+
+                                var issue = new Issue
+                                {
+                                    ProjectId = commit.ProjectPart.ProjectId,
+                                    Title = $"{i.Severity}: {i.Message}",
+                                    Description = $"File: {i.Component}, Line: {i.Line}, Rule: {i.Rule}",
+                                    Priority = IssueMappingHelper.MapSeverityToPriority(i.Severity),
+                                    Type = TypeIssue.Improvement,
+                                    CreatedBy = idSystem,
+                                    IsActive = true,
                                     CreatedAt = _timeProvider.Now,
                                 };
-                                await taskAssigneeRepo.CreateTaskAssignee(taskAssignee);
-                            }
-                            else
-                            {
-                                _logger.LogWarning($"Member not found for name: {blamedName}, email: {blamedEmail}");
+                                await issueRepo.CreateTaskIssueAsync(issue);
+
+                                // Assign user to issue
+                                var userRepo = scope.ServiceProvider.GetRequiredService<IGitMemberRepository>();
+                                var member = await userRepo.GetMemberByNameAndEmailLocal(blamedName, blamedEmail, commit.ProjectPart.Id);
+
+                                if (member != null)
+                                {
+                                    var taskAssigneeRepo = scope.ServiceProvider.GetRequiredService<ITaskAssigneeRepository>();
+                                    var assigner = await projectMemberRepo.FindMemberInProject(
+                                        commit.ProjectPart.ProjectId, new Guid("00000000-0000-0000-0000-000000000002"));
+
+                                    var taskAssignee = new TaskAssignee
+                                    {
+                                        RefId = issue.Id,
+                                        Type = RefType.Issue,
+                                        AssignerId = assigner!.Id,
+                                        ImplementerId = member.ProjectMemberId ?? null,
+                                        CreatedAt = _timeProvider.Now,
+                                    };
+                                    await taskAssigneeRepo.CreateTaskAssignee(taskAssignee);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning($"Member not found for name: {blamedName}, email: {blamedEmail}");
+                                }
                             }
                         }
+                    }
+                    finally
+                    {
+                        // Delete Sonar project
+                        await codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
                     }
                 }
 
@@ -294,8 +304,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 commit.ResultSummary = "Scan completed via RabbitMQ.";
                 await commitRepo.Update(commit);
 
-                // Delete Sonar project
-                await codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
+               
 
                 // Acknowledge message
                 channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
