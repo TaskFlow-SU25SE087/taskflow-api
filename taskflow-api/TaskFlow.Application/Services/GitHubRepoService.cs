@@ -72,7 +72,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
             };
             cloneProcess.Start();
-            string cloneOutput = await cloneProcess.StandardOutput.ReadToEndAsync();
             string cloneError = await cloneProcess.StandardError.ReadToEndAsync();
             await cloneProcess.WaitForExitAsync();
 
@@ -94,64 +93,42 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
             };
             checkoutProcess.Start();
-            string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
             string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
             await checkoutProcess.WaitForExitAsync();
 
             if (checkoutProcess.ExitCode != 0)
                 throw new Exception($"git checkout failed:\n{checkoutError}");
 
-            // Remove all tracked files from the index temporarily
-            // This ensures that after reset only files from the target commit remain
-            var resetIndexProcess = new Process
+            // Get ALL files in this commit (not only changed)
+            var listFilesProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "git",
-                    Arguments = "ls-files -z | xargs -0 git rm --cached",
+                    Arguments = $"ls-tree -r --name-only {commitId}",
                     WorkingDirectory = extractPath,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true,
+                    CreateNoWindow = true
                 }
             };
-            resetIndexProcess.Start();
-            await resetIndexProcess.WaitForExitAsync();
+            listFilesProcess.Start();
+            var commitFiles = (await listFilesProcess.StandardOutput.ReadToEndAsync())
+                                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            await listFilesProcess.WaitForExitAsync();
 
-            // Reset the repository to the specific commit (hard reset)
-            var resetProcess = new Process
+            // Delete files not in commit snapshot (but keep .git/)
+            var allFiles = Directory.GetFiles(extractPath, "*", SearchOption.AllDirectories);
+            foreach (var file in allFiles)
             {
-                StartInfo = new ProcessStartInfo
+                var relativePath = Path.GetRelativePath(extractPath, file).Replace("\\", "/");
+                if (!commitFiles.Any(f => f.Equals(relativePath, StringComparison.OrdinalIgnoreCase))
+                    && !relativePath.StartsWith(".git/"))
                 {
-                    FileName = "git",
-                    Arguments = $"reset --hard {commitId}",
-                    WorkingDirectory = extractPath,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
+                    File.Delete(file);
                 }
-            };
-            resetProcess.Start();
-            await resetProcess.WaitForExitAsync();
-
-            // Remove untracked files and directories, leaving only commit files
-            var cleanProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    Arguments = "clean -fdx",
-                    WorkingDirectory = extractPath,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-            cleanProcess.Start();
-            await cleanProcess.WaitForExitAsync();
+            }
 
             return extractPath;
         }

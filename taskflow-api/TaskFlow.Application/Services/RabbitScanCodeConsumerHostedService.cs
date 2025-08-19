@@ -299,6 +299,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                         commit.Status = StatusCommit.Done;
                         commit.ResultSummary = "Scan completed via RabbitMQ.";
                         await commitRepo.Update(commit);
+
+                        codeScanService.DeleteProjectSonar($"taskflow-{commit.ProjectPartId}-{commit.CommitId}");
                     }
                 }
                 channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
