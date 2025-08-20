@@ -54,5 +54,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var gitMembers = await _gitHubMember.GitMember(projectPartId);
             return ApiResponse<List<GitMemberResponse>>.Success(gitMembers);
         }
+
+        [HttpPatch("{Id}/project-member/{ProjectMemberId}")]
+        [Authorize]
+        public async Task<ApiResponse<string>> AddProjectMember(
+            [FromRoute] Guid projectId, [FromRoute] Guid projectPartId,
+            [FromRoute] Guid Id, [FromRoute] Guid ProjectMemberId)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+            await _gitHubMember.AddProjectMember(Id, ProjectMemberId);
+            return ApiResponse<string>.Success("Add project member to GitHub member successfully");
+        }
     }
 }

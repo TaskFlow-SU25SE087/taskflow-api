@@ -32,6 +32,17 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _gitMemberRepository.Update(data);
         }
 
+        public async Task AddProjectMember(Guid Id, Guid ProjectMemberId)
+        {
+            var data = await _gitMemberRepository.GetGitMemberById(Id);
+            if (data == null)
+            {
+                throw new AppException(ErrorCode.GitMemberNotFound);
+            }
+            data.ProjectMemberId = ProjectMemberId;
+            await _gitMemberRepository.Update(data);
+        }
+
         public async Task CreateGitMember(Guid ProjectPartId, Guid ProjectMemberId, CreateGitMemberRequest gitMember)
         {
             var data = new GitMember

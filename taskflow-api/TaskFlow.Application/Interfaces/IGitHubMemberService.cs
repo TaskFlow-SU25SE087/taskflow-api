@@ -8,6 +8,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         Task CreateGitMember(Guid ProjectPartId, Guid ProjectMemberId, CreateGitMemberRequest gitMember);
         Task AddGitLocal(Guid Id, CreateGitMemberRequest gitMember);
+        Task AddProjectMember (Guid Id, Guid ProjectMemberId);
         Task<List<GitMemberResponse>> GitMember(Guid projectPartId);
     }
 }
