@@ -50,7 +50,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return token != null;
         }
 
-        public async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
+        public static async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
         {
             // Create a temporary folder to clone the repository
             var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
@@ -99,13 +99,13 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (checkoutProcess.ExitCode != 0)
                 throw new Exception($"git checkout failed:\n{checkoutError}");
 
-            // Get ALL files in this commit (not only changed)
-            var listFilesProcess = new Process
+            // Get files changed in this commit only (added or modified)
+            var diffProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "git",
-                    Arguments = $"ls-tree -r --name-only {commitId}",
+                    Arguments = $"diff-tree --no-commit-id --name-only -r {commitId}",
                     WorkingDirectory = extractPath,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -113,17 +113,17 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CreateNoWindow = true
                 }
             };
-            listFilesProcess.Start();
-            var commitFiles = (await listFilesProcess.StandardOutput.ReadToEndAsync())
+            diffProcess.Start();
+            var changedFiles = (await diffProcess.StandardOutput.ReadToEndAsync())
                                 .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            await listFilesProcess.WaitForExitAsync();
+            await diffProcess.WaitForExitAsync();
 
-            // Delete files not in commit snapshot (but keep .git/)
+            // Delete files not changed in this commit (keep .git folder)
             var allFiles = Directory.GetFiles(extractPath, "*", SearchOption.AllDirectories);
             foreach (var file in allFiles)
             {
                 var relativePath = Path.GetRelativePath(extractPath, file).Replace("\\", "/");
-                if (!commitFiles.Any(f => f.Equals(relativePath, StringComparison.OrdinalIgnoreCase))
+                if (!changedFiles.Any(f => f.Equals(relativePath, StringComparison.OrdinalIgnoreCase))
                     && !relativePath.StartsWith(".git/"))
                 {
                     File.Delete(file);
