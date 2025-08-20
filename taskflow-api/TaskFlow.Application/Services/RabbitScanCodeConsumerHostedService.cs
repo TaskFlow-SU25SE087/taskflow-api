@@ -226,8 +226,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 }
                             }
 
-                            bool isDuplicate = await commitRepo.checkDuplicateResult(
-                                commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
+                            bool isDuplicate = false;
+                            //bool isDuplicate = await commitRepo.checkDuplicateResult(
+                            //    commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
 
                             if (!isDuplicate)
                             {
