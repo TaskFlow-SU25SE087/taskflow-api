@@ -28,6 +28,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public double DuplicatedLinesDensity { get; set; } = 0.0;
         public double Coverage { get; set; } = 0.0;
         public TimeSpan ScanDuration { get; set; } = TimeSpan.Zero;
+        public double QualityScore { get; set; } = 0.0;
 
         public bool Result { get; set; } = false;
     }

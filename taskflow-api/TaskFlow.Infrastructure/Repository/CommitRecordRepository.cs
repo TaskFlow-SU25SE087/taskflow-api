@@ -85,6 +85,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     DuplicatedLinesDensity = c.DuplicatedLinesDensity,
                     Coverage = c.Coverage,
                     ScanDuration = c.ScanDuration,
+                    QualityScore = c.QualityScore,
                     Result = c.Result,
                 })
                 .ToListAsync();
