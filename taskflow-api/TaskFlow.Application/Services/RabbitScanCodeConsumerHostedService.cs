@@ -226,9 +226,12 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 }
                             }
 
-                            bool isDuplicate = false;
-                            //bool isDuplicate = await commitRepo.checkDuplicateResult(
-                            //    commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
+                            // Fallback to default values if blame info is not found
+                            blamedEmail = string.IsNullOrEmpty(blamedEmail) ? "unknown@example.com" : blamedEmail;
+                            blamedName = string.IsNullOrEmpty(blamedName) ? "Unknown" : blamedName;
+
+                            bool isDuplicate = await commitRepo.checkDuplicateResult(
+                                commit.ProjectPartId, i.Message, lineContent, blamedEmail, blamedName, cleanFilePath);
 
                             if (!isDuplicate)
                             {
