@@ -174,6 +174,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             sonar.sourceEncoding=UTF-8
             sonar.exclusions=**/bin/**,**/obj/**,**/node_modules/**,**/dist/**,**/build/**,**/.git/**/*
             sonar.inclusions=**/*.java,**/*.cs,**/*.js,**/*.ts,**/*.py
+            sonar.qualityprofile=AllRulesProfile
             sonar.java.binaries=.
             sonar.scm.provider=git
             ");
