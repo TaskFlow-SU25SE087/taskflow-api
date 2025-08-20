@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Infrastructure.Data;
 using taskflow_api.TaskFlow.Infrastructure.Interfaces;
@@ -30,6 +31,23 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             var gitMember = await _context.GitMembers.FindAsync(id);
             return gitMember;
+        }
+
+        public Task<List<GitMemberResponse>> GetListGitMemberByIProjectPartId(Guid projectPartId)
+        {
+            return _context.GitMembers
+                .Where(gm => gm.ProjectPartId == projectPartId)
+                .Select(gm => new GitMemberResponse
+                {
+                    Id = gm.Id,
+                    ProjectMemberId = gm.ProjectMemberId,
+                    GitName = gm.GitName,
+                    GitEmail = gm.GitEmail,
+                    GitAvatarUrl = gm.GitAvatarUrl,
+                    NameLocal = gm.NameLocal,
+                    EmailLocal = gm.EmailLocal,
+                })
+                .ToListAsync();
         }
 
         public async Task<GitMember?> GetMemberByNameAndEmailLocal(string name, string email, Guid projectPartId)

@@ -1,4 +1,5 @@
 ﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -42,6 +43,12 @@ namespace taskflow_api.TaskFlow.Application.Services
                 CreatedAt = _timeProvider.Now,
             };
              await _gitMemberRepository.CreateGitMember(data);
+        }
+
+        public async Task<List<GitMemberResponse>> GitMember(Guid projectPartId)
+        {
+            var data = await _gitMemberRepository.GetListGitMemberByIProjectPartId(projectPartId);
+            return data;
         }
     }
 }

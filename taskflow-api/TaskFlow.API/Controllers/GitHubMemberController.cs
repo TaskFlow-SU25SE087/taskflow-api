@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
 
@@ -42,6 +43,16 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
             await _gitHubMember.AddGitLocal(Id, request);
             return ApiResponse<string>.Success("Add GitHub member local successfully");
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<ApiResponse<List<GitMemberResponse>>> GetGitMember(
+            [FromRoute] Guid projectId, [FromRoute] Guid projectPartId)
+        {
+            await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+            var gitMembers = await _gitHubMember.GitMember(projectPartId);
+            return ApiResponse<List<GitMemberResponse>>.Success(gitMembers);
         }
     }
 }
