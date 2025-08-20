@@ -50,7 +50,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return token != null;
         }
 
-        public static async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
+        public async Task<string> CloneRepoAndCheckoutAsync(string repoFullName, string commitId, string accessToken)
         {
             // Create a temporary folder to clone the repository
             var extractPath = Path.Combine(Path.GetTempPath(), $"{commitId}_{Guid.NewGuid()}");
