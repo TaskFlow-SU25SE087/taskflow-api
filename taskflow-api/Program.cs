@@ -53,6 +53,7 @@ builder.Services.AddScoped<ILogProjectService, LogProjectService>();
 builder.Services.AddScoped<ITeamActivityReportService, TeamActivityReportService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IEffortPointsService, EffortPointsService>();
+builder.Services.AddScoped<ICodeQualityService, CodeQualityService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();

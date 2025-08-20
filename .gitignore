@@ -52,6 +52,10 @@ bld/
 # Static files
 wwwroot/*
 
+# Code Quality Demo and Documentation (not needed in production)
+wwwroot/code-quality-demo.html
+CODE_QUALITY_README.md
+
 # SQL Server files
 *.mdf
 *.ldf
