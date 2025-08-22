@@ -567,7 +567,11 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             //dowload file excel
             using var httpClient = new HttpClient();
-            using var stream = await httpClient.GetStreamAsync(file.usrFile);
+            var uri = new Uri(file.usrFile);
+            using var response = await httpClient.GetAsync(uri);
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync();
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
             memoryStream.Position = 0;

@@ -33,6 +33,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("RabbitImportFileConsumerHostedService starting...");
             var factory = new ConnectionFactory
             {
                 HostName = _settings.HostName,
@@ -72,6 +73,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                 try
                 {
+                    _logger.LogInformation("Processing job Id: {JobId}", job.JobId);
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var rabbitMQService = scope.ServiceProvider.GetRequiredService<IRabbitMQService>();
@@ -79,12 +81,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                         await userService.ImportEnrollmentsFromExcelAsync(job);
 
                     }
+                    _logger.LogInformation("Job {JobId} processed successfully", job.JobId);
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error processing message: {Message}", message);
                 }
                 finally
                 {
+                    _logger.LogInformation("Acknowledging message for JobId: {JobId}", job?.JobId);
                     channel.BasicAck(ea.DeliveryTag, false);
                 }
             };
