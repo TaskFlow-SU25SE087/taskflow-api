@@ -621,6 +621,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             //If the file has many students, divide it into 500 batches.
             var stFirst = new HashSet<ImportStudentRequest>();
             var stMTimes = new HashSet<ImportStudentRequest>();
+            string error = "Cannot create account(s) with email(s): <br/>";
             foreach (var batch in students.Chunk(500))
             {
                 var currentBatch = batch.ToList();
@@ -684,6 +685,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                                 //send mail
                                 await mailService.SendMailNewAccount(acc.Email, acc.Email, acc.FullName, password);
                             }
+                            else if (!success)
+                            {
+                                error += $"{acc.Email}, ";
+                                continue; // Skip to next student if creation fails
+                            }
                         }
                     }));
                 }
@@ -724,6 +730,10 @@ namespace taskflow_api.TaskFlow.Application.Services
                             {
                                 //send mail
                                 await mailService.SendMailReEnrollment(acc.Email, acc.Email, currentTerm.Season + " " + currentTerm.Year, acc.FullName);
+                            }else if (!success)
+                            {
+                                error += $"{acc.Email}, ";
+                                continue; // Skip to next student if update fails
                             }
                         }
                     }));
@@ -736,10 +746,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             ProcessingFile.statusFile = StatusFile.Success;
 
             //note
+            if (error.Equals("Cannot create account(s) with email(s): <br/>"))
+            {
+                error = string.Empty;
+            }
+            else
+            {
+                error = error.Substring(0, error.Length - 2);
+                error = " <br/>" + error;
+            }
             var note = string.Empty;
             note = $"Total Students: {students.Count}, " +
-                   $"New Students: {stFirst.Count}, " +
-                   $"Returning Students: {stMTimes.Count}";
+                   $" <br/>New Students: {stFirst.Count}, <br/>" +
+                   $" <br/>Returning Students: {stMTimes.Count}" +
+                   error;
             ProcessingFile.Note = note;
             ProcessingFile.UpdatedAt = _timeProvider.Now;
             await _processingFileRepository.UpdateProcessingFileAsync(ProcessingFile);
