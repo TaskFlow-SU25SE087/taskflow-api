@@ -822,7 +822,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             var datenow = _timeProvider.Now;
             string urlFIle = await _fileService.UploadFileExcel(file.File, "FileStudent_day_" + datenow);
-            await _processingFileRepository.CreateProcessingFileAsync(new ProcessingFile
+            var processingFile = new ProcessingFile
             {
                 Id = Guid.NewGuid(),
                 FileName = file.File.FileName,
@@ -830,13 +830,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                 CreatedAt = datenow,
                 UpdatedAt = datenow,
                 statusFile = StatusFile.Processing,
-            });
+            };
+            await _processingFileRepository.CreateProcessingFileAsync(processingFile);
             _rabbitMQService.ImportFIleJob(new ImportFileJobMessage
             {
-                Id = Guid.NewGuid(),
+                Id = processingFile.Id,
                 usrFile = urlFIle,
             });
-
         }
     }
 }
