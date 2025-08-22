@@ -236,7 +236,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (!user.IsActive) throw new AppException(ErrorCode.AccountBanned);
             if (user.Role.Equals(UserRole.User))
             {
-                if (user.Term.EndDate < DateTime.UtcNow && !user.Term.IsActive)
+                if (user.Term.IsActive && _timeProvider.Now >= user.Term.EndDate)
                 throw new AppException(ErrorCode.AccountExpired);
             }
 
