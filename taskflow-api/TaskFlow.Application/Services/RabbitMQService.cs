@@ -17,7 +17,31 @@ namespace taskflow_api.TaskFlow.Application.Services
             _settings = settings.Value;
             _logger = logger;
         }
-       
+
+        public void ImportFIleJob(ImportFileJobMessage job)
+        {
+            var factory = new ConnectionFactory()
+            {
+                HostName = _settings.HostName,
+                Port = _settings.Port,
+                UserName = _settings.UserName,
+                Password = _settings.Password
+            };
+
+            using var connection = factory.CreateConnection();
+            using var channel = connection.CreateModel();
+            channel.QueueDeclare(queue: _settings.ImportFileQueue,
+                                 durable: true,
+                                 exclusive: false,
+                                 autoDelete: false);
+            var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(job);
+            channel.BasicPublish(exchange: "",
+                     routingKey: _settings.ImportFileQueue,
+                     basicProperties: null,
+                     body: body);
+            _logger.LogInformation($"ImportFileJob sent to RabbitMQ: ");
+        }
+
         public void SendCommitJob(CommitJobMessage job)
         {
             var factory = new ConnectionFactory()

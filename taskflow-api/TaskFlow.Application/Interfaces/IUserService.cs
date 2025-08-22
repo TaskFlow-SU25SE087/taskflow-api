@@ -18,11 +18,11 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<UserResponse> UpdateUser(Guid userId, UpdateUserRequest model);
         Task<TokenModel> RenewToken(TokenModel model);
         Task<bool> VerifyAccount(string token);
-        Task ImportEnrollmentsFromExcelAsync(ImportUserFileRequest file);
+        Task ImportEnrollmentsFromExcelAsync(ImportFileJobMessage file);
         Task SendMailAgain();
         Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request);
         Task ResetPassword(ResetPasswordRequest request);
         Task SendMailResetPassword(string EmailOrUsername);
-
+        Task ImportFileExcelAsync(ImportUserFileRequest file);
     }
 }

@@ -7,5 +7,6 @@
         public string UserName { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ScanCommitQueue { get; set; } = string.Empty;
+        public string ImportFileQueue { get; set; } = string.Empty;
     }
 }

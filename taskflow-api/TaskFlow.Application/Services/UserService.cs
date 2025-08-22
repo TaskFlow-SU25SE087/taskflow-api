@@ -45,13 +45,16 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITermRepository _termRepository;
         private readonly AppTimeProvider _timeProvider;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IProcessingFileRepository _processingFileRepository;
+        private readonly IRabbitMQService _rabbitMQService;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
-            IConfiguration configuration, IFileService fileService, 
+            IConfiguration configuration, IFileService fileService,
             IHttpContextAccessor httpContextAccessor, IMapper mapper,
             IRefreshTokenRepository refeshTokenRepository, IMailService mailService,
             IVerifyTokenRopository verifyTokenRopository, IMemoryCache cache, ITermRepository termRepository,
-            AppTimeProvider timeProvider, IServiceProvider serviceProvider)
+            AppTimeProvider timeProvider, IServiceProvider serviceProvider, IProcessingFileRepository processingFileRepository,
+            IRabbitMQService rabbitMQService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -66,6 +69,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             _termRepository = termRepository;
             _timeProvider = timeProvider;
             _serviceProvider = serviceProvider;
+            _processingFileRepository = processingFileRepository;
+            _rabbitMQService = rabbitMQService;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -119,7 +124,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.CannotBanAdmin);
             }
-           
+
             user.IsActive = true;
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -237,7 +242,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (user.Role.Equals(UserRole.User))
             {
                 if (user.Term.IsActive && _timeProvider.Now >= user.Term.EndDate)
-                throw new AppException(ErrorCode.AccountExpired);
+                    throw new AppException(ErrorCode.AccountExpired);
             }
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
@@ -268,7 +273,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     }
                     await _userManager.DeleteAsync(existingGmail);
                 }
-                
+
             }
             var baseAvatarUrl = _configuration["CloudinarySettings:BaseAvatarUrl"];
             var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
@@ -283,7 +288,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
 
             var saveUser = await _userManager.CreateAsync(user, model.Password);
-            
+
             if (saveUser.Succeeded)
             {
                 string tokenVerify = GenerateRandom.GenerateRandomNumber();
@@ -400,7 +405,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 IssueAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(7) // Refresh token valid for 7 days
             };
-             await _refeshTokenRepository.CreateRefreshTokenAsync(refreshTokenEntity);
+            await _refeshTokenRepository.CreateRefreshTokenAsync(refreshTokenEntity);
 
             return new TokenModel
             {
@@ -462,7 +467,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _refeshTokenRepository.UpdateRefreshTokenAsync(stroredToken);
 
             //create new token
-            var　user = await _userManager.FindByIdAsync(stroredToken.UserId.ToString());
+            var user = await _userManager.FindByIdAsync(stroredToken.UserId.ToString());
             if (user == null)
             {
                 throw new AppException(ErrorCode.NoUserFound);
@@ -533,7 +538,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 var avatarPath = $"{baseAvatarUrl}/avatar/default.jpg";
                 user.Avatar = avatarPath;
             }
-            user.PhoneNumber=model.PhoneNumber;
+            user.PhoneNumber = model.PhoneNumber;
             if (model.PhoneNumber != null) user.PhoneNumberConfirmed = true;
             user.UserName = model.Username;
             var result = await _userManager.UpdateAsync(user);
@@ -554,43 +559,37 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             return _mapper.Map<UserResponse>(user);
         }
-        public async Task ImportEnrollmentsFromExcelAsync(ImportUserFileRequest file)
+        public async Task ImportEnrollmentsFromExcelAsync(ImportFileJobMessage file)
         {
-            if (file == null || file.File.Length == 0)
-                throw new AppException(ErrorCode.NoFile);
+            var ProcessingFile = await _processingFileRepository.GetProcessingFileByIdAsync(file.Id);
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+            //dowload file excel
+            using var httpClient = new HttpClient();
+            using var stream = await httpClient.GetStreamAsync(file.usrFile);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            using var package = new ExcelPackage(memoryStream);
+
             var students = new HashSet<ImportStudentRequest>();
-
-            using (var stream = new MemoryStream())
+            var worksheet = package.Workbook.Worksheets[0];
+            int rowCount = worksheet.Dimension.Rows;
+            // Collect all StudentID from Excel
+            for (int row = 2; row <= rowCount; row++)
             {
-                await file.File.CopyToAsync(stream);
-                using (var package = new ExcelPackage(stream))
+                var st = new ImportStudentRequest
                 {
-                    if (package.Workbook.Worksheets.Count == 0)
-                        throw new AppException(new ErrorDetail(9998, "Excel file contains no worksheets", StatusCodes.Status400BadRequest));
-
-                    var worksheet = package.Workbook.Worksheets[0];
-                    if (worksheet.Dimension == null)
-                        throw new AppException(new ErrorDetail(9997, "Excel worksheet is empty", StatusCodes.Status400BadRequest));
-
-                    int rowCount = worksheet.Dimension.Rows;
-
-                    // Collect all StudentID from Excel
-                    for (int row = 2; row <= rowCount; row++)
-                    {
-                        var st = new ImportStudentRequest
-                        {
-                            StudentId = worksheet.Cells[row, 1].Text.Trim(),
-                            FullName = worksheet.Cells[row, 2].Text.Trim(),
-                            Email = worksheet.Cells[row, 3].Text.Trim(),
-                        };
-                        //var stId = worksheet.Cells[row, 1].Text.Trim();
-                        students.Add(st);
-                    }
-                }
+                    StudentId = worksheet.Cells[row, 1].Text.Trim(),
+                    FullName = worksheet.Cells[row, 2].Text.Trim(),
+                    Email = worksheet.Cells[row, 3].Text.Trim(),
+                };
+                //var stId = worksheet.Cells[row, 1].Text.Trim();
+                students.Add(st);
             }
+
             //find tern for studens
             var currentTerm = await _termRepository.GetCurrentTermAsync();
             if (currentTerm == null)
@@ -679,7 +678,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                             if (success)
                             {
                                 //send mail
-                               await mailService.SendMailNewAccount(acc.Email, acc.Email, acc.FullName, password);
+                                await mailService.SendMailNewAccount(acc.Email, acc.Email, acc.FullName, password);
                             }
                         }
                     }));
@@ -690,7 +689,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             //learn again
             var taskLA = Task.Run(async () =>
             {
-                if(stMTimes.Count == 0)
+                if (stMTimes.Count == 0)
                 {
                     return; // No students to update
                 }
@@ -720,7 +719,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                             if (success)
                             {
                                 //send mail
-                                await mailService.SendMailReEnrollment(acc.Email, acc.Email, currentTerm.Season+ " " + currentTerm.Year , acc.FullName);
+                                await mailService.SendMailReEnrollment(acc.Email, acc.Email, currentTerm.Season + " " + currentTerm.Year, acc.FullName);
                             }
                         }
                     }));
@@ -730,6 +729,16 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             await Task.WhenAll(taskFL, taskLA);
             //update info file 
+            ProcessingFile.statusFile = StatusFile.Success;
+
+            //note
+            var note = string.Empty;
+            note = $"Total Students: {students.Count}, " +
+                   $"New Students: {stFirst.Count}, " +
+                   $"Returning Students: {stMTimes.Count}";
+            ProcessingFile.Note = note;
+            ProcessingFile.UpdatedAt = _timeProvider.Now;
+            await _processingFileRepository.UpdateProcessingFileAsync(ProcessingFile);
         }
 
         public async Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request)
@@ -783,6 +792,47 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             var resetToken = _userManager.GeneratePasswordResetTokenAsync(user).Result;
             return _mailService.SendResetPasswordEmail(user.Email!, resetToken);
+        }
+
+        public async Task ImportFileExcelAsync(ImportUserFileRequest file)
+        {
+            if (file == null || file.File.Length == 0)
+                throw new AppException(ErrorCode.NoFile);
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            var students = new HashSet<ImportStudentRequest>();
+
+            using (var stream = new MemoryStream())
+            {
+                await file.File.CopyToAsync(stream);
+                using (var package = new ExcelPackage(stream))
+                {
+                    if (package.Workbook.Worksheets.Count == 0)
+                        throw new AppException(new ErrorDetail(9998, "Excel file contains no worksheets", StatusCodes.Status400BadRequest));
+
+                    var worksheet = package.Workbook.Worksheets[0];
+                    if (worksheet.Dimension == null)
+                        throw new AppException(new ErrorDetail(9997, "Excel worksheet is empty", StatusCodes.Status400BadRequest));
+                }
+            }
+            var datenow = _timeProvider.Now;
+            string urlFIle = await _fileService.UploadFileExcel(file.File, "FileStudent_day_" + datenow);
+            await _processingFileRepository.CreateProcessingFileAsync(new ProcessingFile
+            {
+                Id = Guid.NewGuid(),
+                FileName = file.File.FileName,
+                UrlFile = urlFIle,
+                CreatedAt = datenow,
+                UpdatedAt = datenow,
+                statusFile = StatusFile.Processing,
+            });
+            _rabbitMQService.ImportFIleJob(new ImportFileJobMessage
+            {
+                Id = Guid.NewGuid(),
+                usrFile = urlFIle,
+            });
+
         }
     }
 }

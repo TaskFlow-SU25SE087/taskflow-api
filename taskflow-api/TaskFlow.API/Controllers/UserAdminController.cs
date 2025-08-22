@@ -49,7 +49,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpPost("import")]
         public async Task<ApiResponse<bool>> AddList([FromForm] ImportUserFileRequest file)
         {
-            await _userService.ImportEnrollmentsFromExcelAsync(file);
+            await _userService.ImportFileExcelAsync(file);
             return ApiResponse<bool>.Success(true);
         }
     }
