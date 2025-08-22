@@ -24,6 +24,9 @@ using Azure.Core;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq;
+using System.Threading.Tasks;
+using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace taskflow_api.TaskFlow.Application.Services
 {
@@ -40,12 +43,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IFileService _fileService;
         private readonly IMemoryCache _cache;
         private readonly ITermRepository _termRepository;
+        private readonly AppTimeProvider _timeProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         public UserService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration configuration, IFileService fileService, 
             IHttpContextAccessor httpContextAccessor, IMapper mapper,
             IRefreshTokenRepository refeshTokenRepository, IMailService mailService,
-            IVerifyTokenRopository verifyTokenRopository, IMemoryCache cache, ITermRepository termRepository)
+            IVerifyTokenRopository verifyTokenRopository, IMemoryCache cache, ITermRepository termRepository,
+            AppTimeProvider timeProvider, IServiceProvider serviceProvider)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -58,6 +64,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             _fileService = fileService;
             _cache = cache;
             _termRepository = termRepository;
+            _timeProvider = timeProvider;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task<UserAdminResponse> BanUser(Guid userId)
@@ -553,7 +561,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-            var emailsInFile = new HashSet<string>();
+            var students = new HashSet<ImportStudentRequest>();
 
             using (var stream = new MemoryStream())
             {
@@ -569,131 +577,159 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                     int rowCount = worksheet.Dimension.Rows;
 
-                    // Collect all emails from Excel
+                    // Collect all StudentID from Excel
                     for (int row = 2; row <= rowCount; row++)
                     {
-                        var email = worksheet.Cells[row, 3].Text.Trim();
-                        if (!string.IsNullOrEmpty(email))
-                            emailsInFile.Add(email);
-                    }
-
-                    // Load all existing users into dictionary
-                    var existingUsers = _userManager.Users
-                        .Where(u => emailsInFile.Contains(u.Email!) && u.Email != null)
-                        .ToList()
-                        .ToDictionary(u => u.Email!, u => u);
-
-                    for (int row = 2; row <= rowCount; row++)
-                    {
-                        try
+                        var st = new ImportStudentRequest
                         {
-                            var studentId = worksheet.Cells[row, 1].Text.Trim();
-                            var fullName = worksheet.Cells[row, 2].Text.Trim();
-                            var email = worksheet.Cells[row, 3].Text.Trim();
-                            var termSeason = worksheet.Cells[row, 4].Text.Trim();
-                            var termYearStr = worksheet.Cells[row, 5].Text.Trim();
-
-                            // Validate required fields
-                            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(fullName))
-                                continue;
-
-                            // Validate term year
-                            if (!int.TryParse(termYearStr, out int termYear))
-                                continue;
-
-                            //find and set termId 
-                            var termID = await _termRepository.GetTermIdAsync(termSeason, termYear);
-                            if (termID == Guid.Empty)
-                            {
-                                var starDate = await _termRepository.GetLatestTermEndDateAsync();
-                                // If no terms exist, use current date as start date
-                                if (starDate == null)
-                                {
-                                    starDate = DateTime.UtcNow;
-                                }
-                                
-                                //create new term
-                                var newTerm = new Term
-                                {
-                                    Season = termSeason,
-                                    Year = termYear,
-                                    StartDate = starDate.Value,
-                                    EndDate = starDate.Value.AddMonths(4),
-                                    IsActive = true
-                                };
-                                
-                                // Save the new term to database
-                                await _termRepository.CreateTermAsync(newTerm);
-                                termID = newTerm.Id;
-                            }
-
-                            if (existingUsers.TryGetValue(email, out var existingUser))
-                            {
-                                //User has an account but has never used it => delete account , create again
-                                if (!existingUser.EmailConfirmed)
-                                {
-                                    var deleteResult = await _userManager.DeleteAsync(existingUser);
-                                    if (!deleteResult.Succeeded)
-                                    {
-                                        continue;
-                                    }
-                                    existingUsers.Remove(email); 
-                                }
-                                else // user has an account and used it => reset password and open an account
-                                {
-                                    // Update existing confirmed user
-                                    existingUser.FullName = fullName;
-                                    existingUser.StudentId = studentId;
-                                    existingUser.TermId = termID;
-                                    existingUser.PastTerms = existingUser.PastTerms == null
-                                        ? $"{termSeason} {termYear}"
-                                        : $"{existingUser.PastTerms}, {termSeason} {termYear}";
-
-                                    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
-                                    await _mailService.SendReactivationEmail(
-                                        email, existingUser.UserName!, existingUser.FullName, resetToken);
-
-                                    continue;
-                                }
-                            }
-
-                            // Add new user 
-                            var newUser = new User
-                            {
-                                StudentId = studentId,
-                                FullName = fullName,
-                                Email = email,
-                                UserName = email,
-                                EmailConfirmed = false,
-                                TermId = termID,
-                                PastTerms = $"{termSeason} {termYear}",
-                            };
-
-                            var newPass = GenerateRandom.GenerateRandomNumber();
-                            var createResult = await _userManager.CreateAsync(newUser, newPass);
-                            if (createResult.Succeeded)
-                            {
-                                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(newUser);
-                                await _mailService.SendWelcomeEmail(email, fullName, resetToken);
-                            }
-                            else
-                            {
-                                // Log the error for debugging
-                                var errorMessages = string.Join("; ", createResult.Errors.Select(e => e.Description));
-                                // You might want to log this error or handle it appropriately
-                                // For now, we'll continue with the next user
-                                continue;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            // Log the exception and continue with the next row
-                            // You might want to log this error or handle it appropriately
-                            continue;
-                        }
+                            StudentId = worksheet.Cells[row, 1].Text.Trim(),
+                            FullName = worksheet.Cells[row, 2].Text.Trim(),
+                            Email = worksheet.Cells[row, 3].Text.Trim(),
+                        };
+                        //var stId = worksheet.Cells[row, 1].Text.Trim();
+                        students.Add(st);
                     }
                 }
             }
+            //find tern for studens
+            var currentTerm = await _termRepository.GetCurrentTermAsync();
+            if (currentTerm == null)
+            {
+                //create new term if not exists
+                currentTerm = new Term
+                {
+                    //auto generate season and year based on current date
+                    Season = _timeProvider.Now.Month switch
+                    {
+                        >= 1 and <= 4 => "Spring",
+                        >= 5 and <= 8 => "Summer",
+                        >= 9 and <= 12 => "Fall",
+                        _ => "Unknown"
+                    },
+                    Year = _timeProvider.Now.Year,
+                    StartDate = DateTime.UtcNow,
+                    EndDate = DateTime.UtcNow.AddMonths(4),
+                    IsActive = true
+                };
+
+                await _termRepository.CreateTermAsync(currentTerm);
+            }
+
+            //If the file has many students, divide it into 500 batches.
+            var stFirst = new HashSet<ImportStudentRequest>();
+            var stMTimes = new HashSet<ImportStudentRequest>();
+            foreach (var batch in students.Chunk(500))
+            {
+                var currentBatch = batch.ToList();
+                var studentDbs = await _userManager.Users
+                    .Where(u => currentBatch.Select(s => s.StudentId).Contains(u.StudentId))
+                    .ToListAsync();
+
+                //student exists in database
+                var existedIds = studentDbs.Select(u => u.StudentId).ToHashSet();
+                stMTimes.UnionWith(currentBatch
+                    .Where(s => !string.IsNullOrWhiteSpace(s.StudentId) && existedIds.Contains(s.StudentId)));
+
+                //student first learn in current term 
+                var notExistedIds = currentBatch
+                    .Where(s => !string.IsNullOrWhiteSpace(s.StudentId) && !existedIds.Contains(s.StudentId))
+                    .Select(s => new ImportStudentRequest
+                    {
+                        StudentId = s.StudentId,
+                        FullName = s.FullName,
+                        Email = s.Email
+                    })
+                    .ToHashSet();
+                stFirst.UnionWith(notExistedIds);
+            }
+
+            // first learn
+            var taskFL = Task.Run(async () =>
+            {
+                if (stFirst.Count == 0)
+                {
+                    return; // No new students to add
+                }
+                var batchTasks = new List<Task>();
+                foreach (var batch in stFirst.Chunk(500))
+                {
+                    batchTasks.Add(Task.Run(async () =>
+                    {
+                        using var scope = _serviceProvider.CreateScope();
+                        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                        var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
+                        foreach (var acc in batch)
+                        {
+                            var newSt = new User
+                            {
+                                FullName = acc.FullName,
+                                Email = acc.Email,
+                                UserName = acc.Email,
+                                Role = UserRole.User,
+                                IsActive = true,
+                                TermId = currentTerm.Id,
+                                StudentId = acc.StudentId,
+                                Avatar = $"{_configuration["CloudinarySettings:BaseAvatarUrl"]}/avatar/default.jpg",
+                                EmailConfirmed = true // Automatically confirm email for Student
+                            };
+                            //create user
+                            //greanet password
+                            var password = GenerateRandom.GenerateRandomPassword();
+                            bool success = (await userManager.CreateAsync(newSt, password)).Succeeded;
+                            if (success)
+                            {
+                                //send mail
+                               await mailService.SendMailNewAccount(acc.Email, acc.Email, acc.FullName, password);
+                            }
+                        }
+                    }));
+                }
+                await Task.WhenAll(batchTasks);
+            });
+
+            //learn again
+            var taskLA = Task.Run(async () =>
+            {
+                if(stMTimes.Count == 0)
+                {
+                    return; // No students to update
+                }
+                var batchTasks = new List<Task>();
+                foreach (var batch in stMTimes.Chunk(500))
+                {
+                    batchTasks.Add(Task.Run(async () =>
+                    {
+                        using var scope = _serviceProvider.CreateScope();
+                        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                        var mailService = scope.ServiceProvider.GetRequiredService<IMailService>();
+                        foreach (var acc in batch)
+                        {
+                            //update user
+                            var existingUser = await userManager.Users
+                                .FirstOrDefaultAsync(u => u.StudentId == acc.StudentId);
+                            if (existingUser == null)
+                            {
+                                continue; // Skip if user not found
+                            }
+                            var oldTermId = existingUser.TermId;
+                            existingUser.PastTerms = existingUser.PastTerms == null
+                                ? oldTermId.ToString()
+                                : $"{existingUser.PastTerms},{oldTermId}";
+                            existingUser.TermId = currentTerm.Id;
+                            bool success = (await userManager.UpdateAsync(existingUser)).Succeeded;
+                            if (success)
+                            {
+                                //send mail
+                                await mailService.SendMailReEnrollment(acc.Email, acc.Email, currentTerm.Season+ " " + currentTerm.Year , acc.FullName);
+                            }
+                        }
+                    }));
+                }
+                await Task.WhenAll(batchTasks);
+            });
+
+            await Task.WhenAll(taskFL, taskLA);
+            //update info file 
         }
 
         public async Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request)

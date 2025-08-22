@@ -12,5 +12,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<List<Term>> GetAllTermsAsync(int page, int pageSize);
         Task<List<Term>> GetAllActiveTermsAsync();
         Task DeleteTermAsync(Guid termId);
+        Task<Term?> GetCurrentTermAsync();
     }
 }
