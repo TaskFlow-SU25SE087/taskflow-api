@@ -743,7 +743,7 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             await Task.WhenAll(taskFL, taskLA);
             //update info file 
-            ProcessingFile.statusFile = StatusFile.Success;
+            ProcessingFile.StatusFile = StatusFile.Success;
 
             //note
             if (error.Equals("Cannot create account(s) with email(s): <br/>"))
@@ -849,7 +849,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 UrlFile = urlFIle,
                 CreatedAt = datenow,
                 UpdatedAt = datenow,
-                statusFile = StatusFile.Processing,
+                StatusFile = StatusFile.Processing,
             };
             await _processingFileRepository.CreateProcessingFileAsync(processingFile);
             _rabbitMQService.ImportFIleJob(new ImportFileJobMessage
@@ -857,6 +857,30 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Id = processingFile.Id,
                 usrFile = urlFIle,
             });
+        }
+
+        public async Task<PagedResult<ProcessingFile>> getListFileProcess(int page)
+        {
+            var pagingParams = new PagingParams
+            {
+                PageNumber = page,
+                PageSize = 5
+            };
+            //get processing files
+            var item = await _processingFileRepository.GetProcessingFiles(pagingParams);
+
+            var totalCount = await _processingFileRepository.GetCountAllProcessFile();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pagingParams.PageSize);
+            var pagedResult = new PagedResult<ProcessingFile>
+            {
+                Items = item,
+                TotalPages = totalPages,
+                PageSize = pagingParams.PageSize,
+                PageNumber = pagingParams.PageNumber,
+                TotalItems = totalCount,
+            };
+
+            return pagedResult;
         }
     }
 }
