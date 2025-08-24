@@ -95,6 +95,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .FirstOrDefaultAsync();
         }
 
+        public Task<int> GetProjectCountByProjectID(Guid projectId)
+        {
+            return _context.ProjectMembers
+                .CountAsync(pm => pm.ProjectId == projectId && pm.IsActive);
+        }
+
         public Task<int> GetProjectCountByUserIdAsync(Guid userId)
         {
             return _context.ProjectMembers

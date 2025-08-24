@@ -34,7 +34,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public Task<List<Term>> GetAllTermsAsync(int page, int pageSize)
         {
             return _context.Terms
-                .Where(t => t.IsActive)
                 .OrderByDescending(t => t.StartDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

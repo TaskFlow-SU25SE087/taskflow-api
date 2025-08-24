@@ -17,5 +17,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<List<TeamMemberResponse>> GetDetailedTeamMembersAsync(Guid projectId);
         Task<ProjectMemberResponse?> GetMeInProjectAsync(Guid projectId, Guid projectMemberId);
         Task<Guid> GetSystemMemberId(Guid projectId);
+        Task<int> GetProjectCountByProjectID(Guid projectId);
     }
 }

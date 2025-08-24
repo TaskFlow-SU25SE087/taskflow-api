@@ -135,6 +135,14 @@ namespace taskflow_api.TaskFlow.Application.Services
             //Remove the member from the project
             member.IsActive = false;
             await _projectMemberRepository.UpdateMember(member);
+            int projectCount = await _projectMemberRepository.GetProjectCountByProjectID(member.ProjectId);
+            if (projectCount == 0)
+            {
+                // If no members left, delete the project
+                var project = await _projectRepository.GetProjectByIdAsync(member.ProjectId);
+                project!.IsActive = false; // Mark project as inactive
+                await _projectRepository.UpdateProject(project);
+            }
             return true;
         }
         public async Task<bool> RemoveMember(Guid projectId, Guid projectMemberId)
