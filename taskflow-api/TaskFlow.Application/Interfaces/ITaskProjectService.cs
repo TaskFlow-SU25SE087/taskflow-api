@@ -24,5 +24,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<bool> IsTaskCompleted(Guid taskId);
         Task<BurndownChartResponse> GetBurndownChart(Guid projectId, Guid sprintId);
         Task<TaskCompletionSummaryResponse> GetTaskCompletionReport(Guid projectId, TaskCompletionReportRequest request);
+        Task BulkAssignTaskToUsers(Guid TaskId, Guid ProjectId, BulkAssignTaskRequest request);
     }
 }

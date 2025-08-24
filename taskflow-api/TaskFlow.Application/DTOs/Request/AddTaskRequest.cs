@@ -15,5 +15,9 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
         public TaskPriority Priority { get; set; } = TaskPriority.High;
         public DateTime? Deadline { get; set; }
         public IFormFile? File { get; set; }
+        
+        // Effort points for the task
+        [Range(0, int.MaxValue, ErrorMessage = "Effort points must be a positive number")]
+        public int? EffortPoints { get; set; }
     }
 }

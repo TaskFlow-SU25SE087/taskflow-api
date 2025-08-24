@@ -106,6 +106,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Description = request.Description,
                 Priority = request.Priority,
                 Deadline = request.Deadline,
+                EffortPoints = request.EffortPoints,
                 IsActive = true,
                 CreatedAt = _timeProvider.Now,
             };
@@ -141,6 +142,20 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.TaskNotFound);
             }
 
+            // Validate effort points if task has effort points
+            if (task.EffortPoints.HasValue && request.AssignedEffortPoints.HasValue)
+            {
+                // Get current total assigned effort points
+                var currentAssignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
+                var currentTotalAssigned = currentAssignees.Sum(a => a.AssignedEffortPoints ?? 0);
+                var newTotal = currentTotalAssigned + request.AssignedEffortPoints.Value;
+                
+                if (newTotal > task.EffortPoints.Value)
+                {
+                    throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+                }
+            }
+
             // Get assigner information for notification
             var assignerName = UserAssign.User?.FullName ?? UserAssign.User?.UserName ?? "Project Member";
 
@@ -150,6 +165,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 ImplementerId = request.ImplementerId,
                 RefId = TaskId,
                 Type = RefType.Task,
+                AssignedEffortPoints = request.AssignedEffortPoints,
                 IsActive = true,
                 CreatedAt = _timeProvider.Now
             };
@@ -335,6 +351,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.Description = request.Description;
             taskUpdate.Priority = request.Priority;
             taskUpdate.Deadline = request.Deadline;
+            taskUpdate.EffortPoints = request.EffortPoints;
             taskUpdate.UpdatedAt = _timeProvider.Now;
 
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
@@ -639,6 +656,85 @@ namespace taskflow_api.TaskFlow.Application.Services
                 TotalTimeSpent = totalTimeSpent,
                 Tasks = reportTasks
             };
+        }
+
+        public async Task BulkAssignTaskToUsers(Guid TaskId, Guid ProjectId, BulkAssignTaskRequest request)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            
+            // Check user is in project
+            var UserAssign = await _projectMemberRepository.FindMemberInProject(ProjectId, Guid.Parse(UserId!));
+            if (UserAssign == null)
+            {
+                throw new AppException(ErrorCode.UserNotInProject);
+            }
+
+            // Get task information
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId);
+            if (task == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+
+            // Validate effort points distribution if task has effort points
+            if (task.EffortPoints.HasValue)
+            {
+                var totalAssignedPoints = request.Assignees.Sum(a => a.AssignedEffortPoints ?? 0);
+                if (totalAssignedPoints != task.EffortPoints.Value)
+                {
+                    throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+                }
+            }
+
+            // Check for duplicate assignees
+            var assigneeIds = request.Assignees.Select(a => a.ImplementerId).ToList();
+            if (assigneeIds.Count != assigneeIds.Distinct().Count())
+            {
+                throw new AppException(ErrorCode.DuplicateAssignee);
+            }
+
+            // Check if any assignee is already assigned to this task
+            foreach (var assignee in request.Assignees)
+            {
+                bool checkExists = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, assignee.ImplementerId);
+                if (checkExists)
+                {
+                    throw new AppException(ErrorCode.TaskAlreadyAssigned);
+                }
+            }
+
+            // Create task assignees
+            var taskAssignees = new List<TaskAssignee>();
+            foreach (var assignee in request.Assignees)
+            {
+                var newTaskAssignee = new TaskAssignee
+                {
+                    AssignerId = UserAssign.Id,
+                    ImplementerId = assignee.ImplementerId,
+                    RefId = TaskId,
+                    Type = RefType.Task,
+                    AssignedEffortPoints = assignee.AssignedEffortPoints,
+                    IsActive = true,
+                    CreatedAt = _timeProvider.Now
+                };
+                taskAssignees.Add(newTaskAssignee);
+            }
+
+            await _taskAssigneeRepository.CreateListTaskAssignee(taskAssignees);
+
+            // Send notifications to all assigned users
+            var assignerName = UserAssign.User?.FullName ?? UserAssign.User?.UserName ?? "Project Member";
+            foreach (var assignee in request.Assignees)
+            {
+                await _notificationService.NotifyTaskAssignmentAsync(
+                    assignee.ImplementerId,
+                    ProjectId,
+                    TaskId,
+                    task.Title,
+                    assignerName
+                );
+            }
         }
     }
 }

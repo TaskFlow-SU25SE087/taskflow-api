@@ -66,6 +66,8 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
 
         public static readonly ErrorDetail TaskNotFound = new(8001, "Task not found", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail CannotUpdateStatus = new(8002, "Cannot update task status", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail InvalidEffortPointsDistribution = new(8003, "Invalid effort points distribution. Total assigned points must equal task effort points", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail DuplicateAssignee = new(8004, "Duplicate assignee found in the request", StatusCodes.Status400BadRequest);
 
 
         public static readonly ErrorDetail NoPermission = new(9001, "You do not have permission to perform this action", StatusCodes.Status403Forbidden);
