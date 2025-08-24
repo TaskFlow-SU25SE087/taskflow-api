@@ -152,7 +152,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var pagingParams = new PagingParams
             {
                 PageNumber = Page,
-                PageSize = 5
+                PageSize = 30
             };
 
             var usersQuery = _userManager.Users
