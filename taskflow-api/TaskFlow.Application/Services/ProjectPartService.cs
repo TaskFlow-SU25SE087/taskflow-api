@@ -123,6 +123,44 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _projectPartRepository.CreatePartAsync(part);
         }
 
+        public async Task DeleteWeebhook(string RepoUrl)
+        {
+            var projectpart = await _projectPartRepository.GetByRepoUrlAsync(RepoUrl);
+            if (projectpart == null)
+            {
+                throw new AppException(ErrorCode.PartNotFound);
+            }
+            //get user github token
+            var at = await _userGitHubRepository.GetTokenByIdAsync(projectpart.UserGitHubTokenId);
+            if (at == null)
+            {
+                throw new AppException(ErrorCode.UserGitHubTokenNotFound);
+            }
+            //delete webhook
+            var result = await _repoService.DeleteWebhook(RepoUrl, at, projectpart.WebhookUrl);
+            if (!result)
+            {
+                throw new AppException(ErrorCode.WebhookDeletionFailed);
+            }
+
+            //get many project have webhook is webhook delete
+            var parts = await _projectPartRepository.GetAllPartsByWebhookUrlAsync(projectpart.WebhookUrl);
+            if (parts == null || parts.Count == 0)
+            {
+                _logger.LogWarning($"No project parts found with webhook URL: {projectpart.WebhookUrl}");
+                return;
+            }
+            //delete webhook in all project part
+            foreach (var part in parts)
+            {
+                //update part
+                part.WebhookUrl = null;
+                part.UserGitHubTokenId = null;
+                part.RepoUrl = null;
+            }
+            await _projectPartRepository.UpdateListPartAsync(parts);
+        }
+
         public async Task<List<ProjectPartResponse>> GetAllRepositories(Guid ProjectId)
         {
             var part = await _projectPartRepository.GetAllPartsByProjectIdAsync(ProjectId);

@@ -10,5 +10,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task UpdateAsync(ProjectPart part);
         Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl);
         Task<List<ProjectPartResponse>> GetAllPartsByProjectIdAsync(Guid projectId);
+        Task<List<ProjectPart>> GetAllPartsByWebhookUrlAsync(string webhookUrl);
+        Task UpdateListPartAsync(List<ProjectPart> parts);
     }
 }

@@ -2,8 +2,10 @@
 using Azure.Core;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Newtonsoft.Json.Linq;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -159,6 +161,56 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var response = await _httpClient.SendAsync(request);
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteWebhook(string repoUrl, string at, string webhookUrl)
+        {
+            var baseUri = ConvertRepoUrlToApi(repoUrl);
+
+            //get list hooks
+            var listRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUri}/hooks");
+            listRequest.Headers.Authorization = new AuthenticationHeaderValue("token", at);
+            listRequest.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
+
+            var listResponse = await _httpClient.SendAsync(listRequest);
+            if (!listResponse.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Failed to list webhooks for {repoUrl}. Status: {listResponse.StatusCode}");
+                return false;
+            }
+            var content = await listResponse.Content.ReadAsStringAsync();
+            var hooks = JArray.Parse(content);
+
+            //find the webhook with the specified URL
+            var targetHook = hooks.FirstOrDefault(h => h["config"]?["url"]?.ToString() == webhookUrl);
+            if (targetHook == null)
+            {
+                _logger.LogWarning($"No webhook found with URL {webhookUrl} for {repoUrl}");
+                return true; // no webhook to delete
+            }
+
+            var hookId = targetHook["id"]?.ToString();
+            if (string.IsNullOrEmpty(hookId))
+            {
+                _logger.LogError($"Webhook ID not found for URL {webhookUrl} in {repoUrl}");
+                return false;
+            }
+
+            //delete the webhook
+            var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, $"{baseUri}/hooks/{hookId}");
+            deleteRequest.Headers.Authorization = new AuthenticationHeaderValue("token", at);
+            deleteRequest.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
+
+            var deleteResponse = await _httpClient.SendAsync(deleteRequest);
+
+            //check if delete was successful
+            if (!deleteResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await deleteResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"Failed to delete webhook {hookId} in {repoUrl}. Status: {deleteResponse.StatusCode}, Response: {errorContent}");
+                return false;
+            }
+            return deleteResponse.IsSuccessStatusCode;
         }
 
         public async Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken)

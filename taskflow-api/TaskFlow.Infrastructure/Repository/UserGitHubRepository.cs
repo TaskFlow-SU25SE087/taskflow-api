@@ -13,6 +13,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             _context = context;
         }
+
+        public async Task<string> GetTokenByIdAsync(Guid? userGitHubTokenId)
+        {
+            var token = await _context.UserGitHubTokens
+                .FirstOrDefaultAsync(x => x.Id == userGitHubTokenId);
+            return token?.AccessToken ?? string.Empty;
+        }
+
         public async Task<UserGitHubToken?> GetTokenByUserIdAsync(Guid userId)
         {
             return await _context.UserGitHubTokens

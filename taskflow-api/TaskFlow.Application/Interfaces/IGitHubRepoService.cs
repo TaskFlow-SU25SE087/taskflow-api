@@ -13,5 +13,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<List<GitHubRepoDto>> GetUserRepos();
         Task<bool> CheckUserConnectGitHub();
         Task<List<MemberInGithubResponse>> GetGitHubRepoMembers(string repoUrl, string accessToken);
+        Task<bool> DeleteWebhook(string repoUrl, string at, string webhookUrl);
     }
 }
