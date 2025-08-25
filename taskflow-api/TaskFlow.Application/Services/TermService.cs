@@ -49,7 +49,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.TermNotFound);
             }
-            term.IsActive = false;
+            term.IsActive = !term.IsActive;
             await _termRepository.UpdateTermAsync(term);
         }
 
