@@ -65,21 +65,28 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             await LogSimple(projectId, projectMemberId, TypeLog.CreateProject,
-            $"{member!.User.FullName} created project");
+                $"{member!.User.FullName} created project");
         }
 
         public async Task LogDeleteProject(Guid projectId, Guid projectMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             await LogSimple(projectId, projectMemberId, TypeLog.DeleteProject,
-            $"{member!.User.FullName} deleted project");
+                $"{member!.User.FullName} deleted project");
         }
 
         public async Task LogJoinProject(Guid projectId, Guid projectMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             await LogSimple(projectId, projectMemberId, TypeLog.JoinProject,
-            $"{member!.User.FullName} participated in the project");
+                $"{member!.User.FullName} participated in the project");
+        }
+
+        public async Task LogLeaveProject(Guid projectId, Guid projectMemberId)
+        {
+            var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
+            await LogSimple(projectId, projectMemberId, TypeLog.LeaveProject,
+                $"{member!.User.FullName} left the project");
         }
     }
 }

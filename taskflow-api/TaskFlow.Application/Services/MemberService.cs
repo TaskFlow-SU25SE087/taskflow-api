@@ -144,6 +144,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                 var project = await _projectRepository.GetProjectByIdAsync(member.ProjectId);
                 project!.IsActive = false; // Mark project as inactive
                 await _projectRepository.UpdateProject(project);
+
+                //log user leave project
+                await _logService.LogLeaveProject(member.ProjectId, member.Id);
             }
             return true;
         }
@@ -178,7 +181,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             memberProject.IsActive = true;
             await _projectMemberRepository.UpdateMember(memberProject);
             //Log the user to the project
-            await _logService.LogJoinProject(verifyToken.ProjectId.Value, memberProject.Id);
+            await _logService.LogJoinProject(memberProject.ProjectId, memberProject.Id);
 
             //Update token
             verifyToken.IsUsed = true;
