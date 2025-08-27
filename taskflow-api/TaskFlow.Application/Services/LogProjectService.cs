@@ -15,13 +15,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ILogProjectRepository _logProjectRepository;
         private readonly AppTimeProvider _timeProvider;
         private readonly IProjectMemberRepository _projectMemberRepository;
+        private readonly ISprintRepository _sprintRepository;
 
         public LogProjectService(ILogProjectRepository logProjectRepository, AppTimeProvider timeProvider,
-            IProjectMemberRepository projectMemberRepository)
+            IProjectMemberRepository projectMemberRepository, ISprintRepository sprintRepository)
         {
             _logProjectRepository = logProjectRepository;
             _timeProvider = timeProvider;
             _projectMemberRepository = projectMemberRepository;
+            _sprintRepository = sprintRepository;
         }
 
         //get all log of project
@@ -95,6 +97,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             var actor = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(actorMemberId);
             await LogSimple(projectId, actorMemberId, TypeLog.RemoveMember,
                 $"{actor!.User.FullName} removed {member!.User.FullName} from the project");
+        }
+
+        public async Task LogCreateSprint(Guid sprintId)
+        {
+            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
+            if (sprint != null)
+            {
+                var member = await _projectMemberRepository.FindLeader(sprint.ProjectId);
+                if (member != null)
+                {
+                    await LogSimple(sprint.ProjectId, member.Id, TypeLog.CreateSprint,
+                        $"{member.User.FullName} created sprint {sprint.Name}");
+                }
+            }
         }
     }
 }

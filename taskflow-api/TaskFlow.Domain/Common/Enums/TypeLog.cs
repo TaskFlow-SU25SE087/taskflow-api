@@ -7,5 +7,6 @@
         JoinProject = 3,
         LeaveProject = 4,
         RemoveMember = 5,
+        CreateSprint = 6,
     }
 }

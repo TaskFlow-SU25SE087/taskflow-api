@@ -26,6 +26,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<ProjectMember?> FindLeader(Guid projectId)
+        {
+            var leader = await _context.ProjectMembers
+                .Include(pm => pm.User)
+                .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.Role == ProjectRole.Leader && pm.IsActive);
+            return leader;
+        }
+
         public async Task<ProjectMember?> FindMemberInProject(Guid projectId, Guid userId)
         {
             return await _context.ProjectMembers

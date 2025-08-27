@@ -16,14 +16,17 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITaskProjectRepository _taskProjectRepository;
         private readonly AppTimeProvider _timeProvider;
         private readonly ISprintMeetingLogsService _sprintMeetingLogs;
+        private readonly ILogProjectService _logService;
 
         public SprintService(ISprintRepository repository, ITaskProjectRepository taskProjectRepository,
-            AppTimeProvider timeProvider, ISprintMeetingLogsService sprintMeetingLogs)
+            AppTimeProvider timeProvider, ISprintMeetingLogsService sprintMeetingLogs,
+            ILogProjectService logService)
         {
             _sprintRepository = repository;
             _taskProjectRepository = taskProjectRepository;
             _timeProvider = timeProvider;
             _sprintMeetingLogs = sprintMeetingLogs;
+            _logService = logService;
         }
 
         public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID)
@@ -115,6 +118,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Status = SprintStatus.NotStarted
             };
             await _sprintRepository.CreateSprintAsync(newSprint);
+            //log create sprint
+            await _logService.LogCreateSprint(newSprint.Id);
             return true;
         }
 
