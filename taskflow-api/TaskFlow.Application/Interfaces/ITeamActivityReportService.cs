@@ -7,5 +7,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         Task<TeamActivityReportResponse> GenerateTeamActivityReportAsync(Guid projectId, TeamActivityReportRequest request);
         Task<MemberActivityResponse> GenerateMemberActivityReportAsync(Guid projectId, Guid memberId, TeamActivityReportRequest request);
+        Task<BurndownChartResponse> GetBurndownChartAsync(Guid projectId, Guid sprintId);
     }
 }

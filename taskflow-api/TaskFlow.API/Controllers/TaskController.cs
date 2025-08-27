@@ -199,21 +199,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
-        [HttpGet("burndown-chart/{sprintId}")]
-        [Authorize]
-        public async Task<ApiResponse<BurndownChartResponse>> GetBurndownChart(
-            [FromRoute] Guid projectId, [FromRoute] Guid sprintId)
-        {
-            var isAuthorized = await _authorization.AuthorizeAsync(
-                projectId, ProjectRole.Leader, ProjectRole.Member);
-            if (!isAuthorized)
-            {
-                return ApiResponse<BurndownChartResponse>.Error(9002, "Unauthorized access");
-            }
 
-            var result = await _context.GetBurndownChart(projectId, sprintId);
-            return ApiResponse<BurndownChartResponse>.Success(result);
-        }
 
         /// <summary>
         /// Get comprehensive task completion report for a project

@@ -99,5 +99,31 @@ namespace taskflow_api.TaskFlow.API.Controllers
                 return StatusCode(500, ApiResponse<TeamActivityReportResponse>.Error(500, "An error occurred while generating the team activity report"));
             }
         }
+
+        /// <summary>
+        /// Get burndown chart data for a specific sprint in a project
+        /// </summary>
+        /// <param name="projectId">The project ID</param>
+        /// <param name="sprintId">The sprint ID</param>
+        /// <returns>Burndown chart data with effort points by priority and daily progress</returns>
+        [HttpGet("project/{projectId}/sprint/{sprintId}/burndown-chart")]
+        public async Task<ActionResult<ApiResponse<BurndownChartResponse>>> GetBurndownChart(
+            Guid projectId,
+            Guid sprintId)
+        {
+            try
+            {
+                var burndownChart = await _teamActivityReportService.GetBurndownChartAsync(projectId, sprintId);
+                return Ok(ApiResponse<BurndownChartResponse>.Success(burndownChart));
+            }
+            catch (AppException ex)
+            {
+                return BadRequest(ApiResponse<BurndownChartResponse>.Error(400, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<BurndownChartResponse>.Error(500, "An error occurred while generating the burndown chart"));
+            }
+        }
     }
 }
