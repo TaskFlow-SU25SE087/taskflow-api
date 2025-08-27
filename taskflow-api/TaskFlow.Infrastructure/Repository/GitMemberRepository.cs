@@ -27,6 +27,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task DeleteAllProjectPart(Guid projectPartId)
+        {
+            var gitMembers = _context.GitMembers
+                .Where(gm => gm.ProjectPartId == projectPartId);
+            _context.GitMembers.RemoveRange(gitMembers);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<GitMember?> GetGitMemberById(Guid id)
         {
             var gitMember = await _context.GitMembers.FindAsync(id);

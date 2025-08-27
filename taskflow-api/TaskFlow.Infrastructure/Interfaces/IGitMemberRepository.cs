@@ -7,6 +7,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task CreateGitMember(GitMember data);
         Task CreateListGitMember(List<GitMember> data);
+        Task DeleteAllProjectPart(Guid projectPartId);
         Task<GitMember?> GetGitMemberById(Guid id);
         Task<List<GitMemberResponse>> GetListGitMemberByIProjectPartId(Guid projectPartId);
         Task<GitMember?> GetMemberByNameAndEmailLocal(string name, string email, Guid projectPartId);

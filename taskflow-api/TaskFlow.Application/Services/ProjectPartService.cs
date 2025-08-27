@@ -159,6 +159,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 part.RepoUrl = null;
             }
             await _projectPartRepository.UpdateListPartAsync(parts);
+            await _gitMemberRepository.DeleteAllProjectPart(projectpart.Id);
         }
 
         public async Task<List<ProjectPartResponse>> GetAllRepositories(Guid ProjectId)
