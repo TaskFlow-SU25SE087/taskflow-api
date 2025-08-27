@@ -23,6 +23,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public ProjectRole Role { get; set; }
         public TaskActivityStats TaskStats { get; set; } = new();
         public CommentActivityStats CommentStats { get; set; } = new();
+        public EffortPointStats EffortPointStats { get; set; } = new();
         public List<TaskActivityDetail> TaskActivities { get; set; } = new();
         public List<CommentActivityDetail> CommentActivities { get; set; } = new();
     }
@@ -50,6 +51,18 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public double AverageCommentsPerTask { get; set; }
     }
 
+    public class EffortPointStats
+    {
+        public int TotalAssignedEffortPoints { get; set; }
+        public int TotalCompletedEffortPoints { get; set; }
+        public int TotalInProgressEffortPoints { get; set; }
+        public int TotalTodoEffortPoints { get; set; }
+        public double EffortPointCompletionRate { get; set; }
+        public double AverageEffortPointsPerTask { get; set; }
+        public int TotalTasksWithEffortPoints { get; set; }
+        public int TotalTasksWithoutEffortPoints { get; set; }
+    }
+
     public class TaskActivityDetail
     {
         public Guid TaskId { get; set; }
@@ -60,7 +73,9 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public DateTime? CompletedAt { get; set; }
         public DateTime? Deadline { get; set; }
         public bool IsOverdue { get; set; }
-        public string? SprintName { get; set; } = string.Empty;
+        public string? SprintName { get; set; }
+        public int? TaskEffortPoints { get; set; }
+        public int? AssignedEffortPoints { get; set; }
     }
 
     public class CommentActivityDetail
@@ -86,6 +101,18 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public double OverallCompletionRate { get; set; }
         public double AverageTasksPerMember { get; set; }
         public double AverageCommentsPerTask { get; set; }
+        
+        // Effort Point Summary
+        public int TotalAssignedEffortPoints { get; set; }
+        public int TotalCompletedEffortPoints { get; set; }
+        public int TotalInProgressEffortPoints { get; set; }
+        public int TotalTodoEffortPoints { get; set; }
+        public double OverallEffortPointCompletionRate { get; set; }
+        public double AverageEffortPointsPerTask { get; set; }
+        public double AverageEffortPointsPerMember { get; set; }
+        public int TotalTasksWithEffortPoints { get; set; }
+        public int TotalTasksWithoutEffortPoints { get; set; }
+        
         public List<TopContributor> TopContributors { get; set; } = new();
     }
 
@@ -95,6 +122,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         public string FullName { get; set; } = string.Empty;
         public int CompletedTasks { get; set; }
         public int TotalComments { get; set; }
+        public int CompletedEffortPoints { get; set; }
         public double ContributionScore { get; set; }
     }
 }
