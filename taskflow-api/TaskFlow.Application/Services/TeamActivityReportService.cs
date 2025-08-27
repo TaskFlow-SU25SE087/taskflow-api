@@ -424,7 +424,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             // Get all tasks in the sprint
             var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(sprintId);
             
-            // Calculate effort points by priority
+            // Calculate effort points by priority using actual task effort points
             var priorityEfforts = new List<PriorityEffortData>();
             var totalEffortPoints = 0;
             var completedEffortPoints = 0;
@@ -432,8 +432,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             foreach (TaskPriority priority in Enum.GetValues(typeof(TaskPriority)))
             {
                 var priorityTasks = tasks.Where(t => t.Priority == priority).ToList();
-                var priorityTotalPoints = priorityTasks.Count * GetEffortPointsByPriority(priority);
-                var priorityCompletedPoints = priorityTasks.Where(t => IsTaskCompleted(t)).Count() * GetEffortPointsByPriority(priority);
+                var priorityTotalPoints = priorityTasks.Sum(t => t.EffortPoints ?? 0);
+                var priorityCompletedPoints = priorityTasks.Where(t => IsTaskCompleted(t)).Sum(t => t.EffortPoints ?? 0);
 
                 priorityEfforts.Add(new PriorityEffortData
                 {
@@ -464,7 +464,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                     IsTaskCompleted(t) && 
                     t.UpdatedAt.Date <= currentDate.Date).ToList();
                 
-                var completedPointsUpToDate = completedTasksUpToDate.Sum(t => GetEffortPointsByPriority(t.Priority));
+                var completedPointsUpToDate = completedTasksUpToDate.Sum(t => t.EffortPoints ?? 0);
                 var remainingPoints = Math.Max(0, totalEffortPoints - completedPointsUpToDate);
 
                 dailyProgress.Add(new DailyProgressData
@@ -499,17 +499,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
         }
 
-        private int GetEffortPointsByPriority(TaskPriority priority)
-        {
-            return priority switch
-            {
-                TaskPriority.Low => 1,
-                TaskPriority.Medium => 3,
-                TaskPriority.High => 5,
-                TaskPriority.Urgent => 8,
-                _ => 1
-            };
-        }
+
 
         private bool IsTaskCompleted(TaskProject task)
         {
