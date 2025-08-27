@@ -10,5 +10,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task LogDeleteProject(Guid projectId, Guid projectMemberId);
         Task LogJoinProject(Guid projectId, Guid projectMemberId);
         Task LogLeaveProject(Guid projectId, Guid projectMemberId);
+        Task LogRemoveMember(Guid projectId, Guid id, Guid actorMemberId);
     }
 }

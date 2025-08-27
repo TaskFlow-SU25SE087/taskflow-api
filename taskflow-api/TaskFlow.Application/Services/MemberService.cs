@@ -150,7 +150,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             return true;
         }
-        public async Task<bool> RemoveMember(Guid projectId, Guid projectMemberId)
+        public async Task<bool> RemoveMember(Guid projectId, Guid projectMemberId, Guid actorMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             if (member == null)
@@ -161,6 +161,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             member!.IsActive = false;
             member.HasJoinedBefore = true; // Mark as has joined before
             await _projectMemberRepository.UpdateMember(member);
+            //log remove user in project
+            await _logService.LogRemoveMember(member.ProjectId, member.Id, actorMemberId);
             await _notificationService.NotifyProjectMemberChangeAsync(projectId, $"Member {(string.IsNullOrEmpty(member.User?.FullName) ? member.User?.Email : member.User?.FullName) ?? member.UserId.ToString()} has been removed from the project.");
             return true;
         }

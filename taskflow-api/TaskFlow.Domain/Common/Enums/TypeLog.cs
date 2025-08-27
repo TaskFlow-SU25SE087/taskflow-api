@@ -6,5 +6,6 @@
         DeleteProject = 2,
         JoinProject = 3,
         LeaveProject = 4,
+        RemoveMember = 5,
     }
 }

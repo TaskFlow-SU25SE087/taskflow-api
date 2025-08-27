@@ -88,5 +88,13 @@ namespace taskflow_api.TaskFlow.Application.Services
             await LogSimple(projectId, projectMemberId, TypeLog.LeaveProject,
                 $"{member!.User.FullName} left the project");
         }
+
+        public async Task LogRemoveMember(Guid projectId, Guid id, Guid actorMemberId)
+        {
+            var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(id);
+            var actor = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(actorMemberId);
+            await LogSimple(projectId, actorMemberId, TypeLog.RemoveMember,
+                $"{actor!.User.FullName} removed {member!.User.FullName} from the project");
+        }
     }
 }
