@@ -42,12 +42,8 @@ namespace taskflow_api.TaskFlow.API.Controllers
         public async Task<ApiResponse<bool>> UpdateSprint(
             [FromRoute] Guid projectId, [FromRoute] Guid sprintId, UpdateSprintRequest request)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.UpdateSprint(projectId, sprintId, request);
+            var member = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+            var result = await _context.UpdateSprint(projectId, member, sprintId, request);
             return ApiResponse<bool>.Success(result);
         }
 
@@ -69,9 +65,8 @@ namespace taskflow_api.TaskFlow.API.Controllers
         public async Task<ApiResponse<bool>> AddTasksToSprint(
             [FromRoute] Guid projectId, [FromRoute] Guid sprintId, [FromBody] List<Guid> taskIds)
         {
-            var isAuthorized = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
-
-            await _context.AddTasksToSprint(projectId, sprintId, taskIds);
+            var memberId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+            await _context.AddTasksToSprint(projectId, sprintId, taskIds, memberId);
             return ApiResponse<bool>.Success(true);
         }
 

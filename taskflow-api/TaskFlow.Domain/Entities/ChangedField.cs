@@ -2,5 +2,11 @@
 {
     public enum ChangedField
     {
+        Name,
+        Description,
+        StartDate,
+        EndDate,
+        Status,
+        AddTaskToSprint
     }
 }

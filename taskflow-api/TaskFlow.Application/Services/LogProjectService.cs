@@ -1,5 +1,8 @@
-﻿using System;
+﻿using AutoMapper.Execution;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System;
 using taskflow_api.Migrations;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
@@ -33,7 +36,7 @@ namespace taskflow_api.TaskFlow.Application.Services
         }
 
         //---Private helper log ---
-        private async Task LogSimple(Guid projectId, Guid projectMemberId, TypeLog action, string description)
+        private async Task LogSimple(Guid projectId, Guid projectMemberId, TypeLog action, string description, LogChangeContext logChange)
         {
             var log = new LogProject
             {
@@ -42,12 +45,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                 ActionType = action,
                 Description = description,
                 CreatedAt = _timeProvider.Now,
+                SprintId = logChange.SprintId,
+                TaskProjectID = logChange.TaskProjectID
             };
             await _logProjectRepository.CreateLogProject(log);
         }
 
         private async Task LogChange(Guid projectId, Guid projectMemberId, TypeLog action, 
-            ChangedField field, string oldValue, string newValue)
+            ChangedField field, string oldValue, string newValue,
+            LogChangeContext logChange)
         {
             var log = new LogProject
             {
@@ -57,6 +63,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 FieldChanged = field,
                 OldValue = oldValue,
                 NewValue = newValue,
+                SprintId = logChange.SprintId,
+                TaskProjectID = logChange.TaskProjectID,
                 CreatedAt = _timeProvider.Now
             };
             await _logProjectRepository.CreateLogProject(log);
@@ -67,28 +75,28 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             await LogSimple(projectId, projectMemberId, TypeLog.CreateProject,
-                $"{member!.User.FullName} created project");
+                $"{member!.User.FullName} created project", new LogChangeContext());
         }
 
         public async Task LogDeleteProject(Guid projectId, Guid projectMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             await LogSimple(projectId, projectMemberId, TypeLog.DeleteProject,
-                $"{member!.User.FullName} deleted project");
+                $"{member!.User.FullName} deleted project", new LogChangeContext());
         }
 
         public async Task LogJoinProject(Guid projectId, Guid projectMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             await LogSimple(projectId, projectMemberId, TypeLog.JoinProject,
-                $"{member!.User.FullName} participated in the project");
+                $"{member!.User.FullName} participated in the project", new LogChangeContext());
         }
 
         public async Task LogLeaveProject(Guid projectId, Guid projectMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             await LogSimple(projectId, projectMemberId, TypeLog.LeaveProject,
-                $"{member!.User.FullName} left the project");
+                $"{member!.User.FullName} left the project", new LogChangeContext());
         }
 
         public async Task LogRemoveMember(Guid projectId, Guid id, Guid actorMemberId)
@@ -96,7 +104,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(id);
             var actor = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(actorMemberId);
             await LogSimple(projectId, actorMemberId, TypeLog.RemoveMember,
-                $"{actor!.User.FullName} removed {member!.User.FullName} from the project");
+                $"{actor!.User.FullName} removed {member!.User.FullName} from the project", new LogChangeContext());
         }
 
         public async Task LogCreateSprint(Guid sprintId)
@@ -108,9 +116,37 @@ namespace taskflow_api.TaskFlow.Application.Services
                 if (member != null)
                 {
                     await LogSimple(sprint.ProjectId, member.Id, TypeLog.CreateSprint,
-                        $"{member.User.FullName} created sprint {sprint.Name}");
+                        $"{member.User.FullName} created sprint {sprint.Name}", new LogChangeContext());
                 }
             }
+        }
+
+        public async Task UpdateTitleSprint(Guid sprintId, Guid actorMemberId, ChangedField field , string oldValue, string newValue)
+        {
+            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
+            var logChange = new LogChangeContext
+            {
+                SprintId = sprintId,
+            };
+            await LogChange(sprint.ProjectId, actorMemberId, TypeLog.UpdateSprint,
+                field, oldValue, newValue, logChange);
+        }
+
+        public async Task LogAddTaskToSprint(Guid actorMemberId, Guid sprintId, List<TaskProject> tasks)
+        {
+            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
+            var actor = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(actorMemberId);
+            if (sprint == null || actor == null) return;
+            var nameTask = new List<string>();
+            foreach (var task in tasks)
+            {
+                nameTask.Add(task.Title);
+            }
+            await LogSimple(sprint.ProjectId, actor.Id, TypeLog.AddTaskToSprint,
+                        $"Added tasks: {string.Join(", ", nameTask)} to sprint {sprint.Name}", new LogChangeContext
+                        {
+                            SprintId = sprintId,
+                        });
         }
     }
 }

@@ -29,7 +29,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _logService = logService;
         }
 
-        public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID)
+        public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID, Guid memberId)
         {
             List<TaskProject> tasks = await _taskProjectRepository.GetListTasksByIdsAsync(TaskID);
             foreach (var task in tasks)
@@ -37,6 +37,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 task.SprintId = SprintId;
             }
             await _taskProjectRepository.UpdateListTaskAsync(tasks);
+            //log add task to sprint
+            await _logService.LogAddTaskToSprint(memberId, SprintId, tasks);
         }
 
         public async Task ChangeStatusSprint(Guid SpringId, SprintStatus status)
@@ -139,7 +141,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return result;
         }
 
-        public async Task<bool> UpdateSprint(Guid ProjectId, Guid SprintId, UpdateSprintRequest request)
+        public async Task<bool> UpdateSprint(Guid ProjectId, Guid actorMemberId, Guid SprintId, UpdateSprintRequest request)
         {
             var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
             if (sprint == null || sprint.ProjectId != ProjectId || sprint.Status != SprintStatus.Completed)
@@ -148,12 +150,32 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.CannotUpdateSprint);
             }
 
-            //update sprint
-            sprint.Name = request.Name;
-            sprint.Description = request.Description;
-            sprint.StartDate = request.StartDate;
-            sprint.EndDate = request.EndDate;
-            sprint.Status = request.Status;
+            //update sprint and create log
+            if (sprint == null || sprint.ProjectId != ProjectId)
+            {
+                sprint!.Name = request.Name;
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Name ,sprint.Name, request.Name);
+            }
+            if (sprint.Description != request.Description)
+            {
+                sprint!.Description = request.Description;
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Description, sprint.Description, request.Description);
+            }
+            if (sprint.StartDate != request.StartDate)
+            {
+                sprint!.StartDate = request.StartDate;
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.StartDate, sprint.StartDate.ToString("yyyy-MM-dd"), request.StartDate.ToString("yyyy-MM-dd"));
+            }
+            if (sprint.EndDate != request.EndDate)
+            {
+                sprint!.EndDate = request.EndDate;
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.EndDate, sprint.EndDate.ToString("yyyy-MM-dd"), request.EndDate.ToString("yyyy-MM-dd"));
+            }
+            if (sprint.Status != request.Status)
+            {
+                sprint.Status = request.Status;
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Status, sprint.Status.ToString(), request.Status.ToString());
+            }
             await _sprintRepository.UpdateSprintAsync(sprint);
             return true;
         }
