@@ -22,12 +22,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITagRepository _TagRepository;
         private readonly INotificationService _notificationService;
         private readonly AppTimeProvider _timeProvider;
+        private readonly ILogProjectService _logService;
 
         public MemberService(UserManager<User> userManager, IVerifyTokenRopository verifyTokenRopository,
                             IProjectRepository projectRepository, IProjectMemberRepository projectMemberRepository,
                             IMailService mailService, IHttpContextAccessor httpContextAccessor,
                             ITagRepository TagRepository, INotificationService notificationService,
-                            AppTimeProvider timeProvider)
+                            AppTimeProvider timeProvider, ILogProjectService logService)
         {
             _userManager = userManager;
             _verifyTokenRopository = verifyTokenRopository;
@@ -38,6 +39,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _TagRepository = TagRepository;
             _notificationService = notificationService;
             _timeProvider = timeProvider;
+            _logService = logService;
         }
         public async Task<bool> AddMember(Guid ProjectId, AddMemberRequest request)
         {
@@ -175,6 +177,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             //Active the user in the project
             memberProject.IsActive = true;
             await _projectMemberRepository.UpdateMember(memberProject);
+            //Log the user to the project
+            await _logService.LogJoinProject(verifyToken.ProjectId.Value, memberProject.Id);
 
             //Update token
             verifyToken.IsUsed = true;

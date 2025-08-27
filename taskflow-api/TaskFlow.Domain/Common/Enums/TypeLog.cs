@@ -4,5 +4,6 @@
     {
         CreateProject = 1,
         DeleteProject = 2,
+        JoinProject = 3,
     }
 }

@@ -8,5 +8,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<List<ProjectLogResponse>> AllLogPrj(Guid projectId);
         Task LogCreateProject(Guid projectId, Guid projectMemberId);
         Task LogDeleteProject(Guid projectId, Guid projectMemberId);
+        Task LogJoinProject(Guid projectId, Guid projectMemberId);
     }
 }

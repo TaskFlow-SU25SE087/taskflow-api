@@ -24,37 +24,62 @@ namespace taskflow_api.TaskFlow.Application.Services
             _projectMemberRepository = projectMemberRepository;
         }
 
+        //get all log of project
         public Task<List<ProjectLogResponse>> AllLogPrj(Guid projectId)
         {
             return _logProjectRepository.AllLogPrj(projectId);
         }
 
-        public async Task LogCreateProject(Guid projectId, Guid projectMemberId)
+        //---Private helper log ---
+        private async Task LogSimple(Guid projectId, Guid projectMemberId, TypeLog action, string description)
         {
-            var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
             var log = new LogProject
             {
                 ProjectMemberId = projectMemberId,
                 ProjectId = projectId,
-                ActionType = TypeLog.CreateProject,
-                Description = member!.User.FullName + " created project",
+                ActionType = action,
+                Description = description,
                 CreatedAt = _timeProvider.Now,
             };
             await _logProjectRepository.CreateLogProject(log);
         }
 
+        private async Task LogChange(Guid projectId, Guid projectMemberId, TypeLog action, 
+            ChangedField field, string oldValue, string newValue)
+        {
+            var log = new LogProject
+            {
+                ProjectId = projectId,
+                ProjectMemberId = projectMemberId,
+                ActionType = action,
+                FieldChanged = field,
+                OldValue = oldValue,
+                NewValue = newValue,
+                CreatedAt = _timeProvider.Now
+            };
+            await _logProjectRepository.CreateLogProject(log);
+        }
+
+        //---Public Log ---
+        public async Task LogCreateProject(Guid projectId, Guid projectMemberId)
+        {
+            var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
+            await LogSimple(projectId, projectMemberId, TypeLog.CreateProject,
+            $"{member!.User.FullName} created project");
+        }
+
         public async Task LogDeleteProject(Guid projectId, Guid projectMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
-            var log = new LogProject
-            {
-                ProjectMemberId = projectMemberId,
-                ProjectId = projectId,
-                ActionType = TypeLog.DeleteProject,
-                Description = member!.User.FullName + " deleted project",
-                CreatedAt = _timeProvider.Now,
-            };
-            await _logProjectRepository.CreateLogProject(log);
+            await LogSimple(projectId, projectMemberId, TypeLog.DeleteProject,
+            $"{member!.User.FullName} deleted project");
+        }
+
+        public async Task LogJoinProject(Guid projectId, Guid projectMemberId)
+        {
+            var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
+            await LogSimple(projectId, projectMemberId, TypeLog.JoinProject,
+            $"{member!.User.FullName} participated in the project");
         }
     }
 }
