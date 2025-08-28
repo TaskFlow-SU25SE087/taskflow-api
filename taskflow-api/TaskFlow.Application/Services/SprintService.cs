@@ -151,7 +151,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
 
             //update sprint and create log
-            if (sprint == null || sprint.ProjectId != ProjectId)
+            if ( sprint.ProjectId != ProjectId)
             {
                 sprint!.Name = request.Name;
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Name ,sprint.Name, request.Name);
