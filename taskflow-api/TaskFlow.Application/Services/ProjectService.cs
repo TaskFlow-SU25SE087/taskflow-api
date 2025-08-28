@@ -108,8 +108,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 ProjectId = projectId,
                 Name = "Sprint " + _timeProvider.Now.ToString("ddMMyy"),
                 Description = "First sprint of the project",
-                StartDate = _timeProvider.Now,
-                EndDate = _timeProvider.Now.AddDays(14), // Default 2 weeks sprint
+                StartDate = _timeProvider.Now.Date,
+                EndDate = _timeProvider.Now.Date.AddDays(14), // Default 2 weeks sprint
                 Status = SprintStatus.NotStarted,
                 IsActive = true
             };
