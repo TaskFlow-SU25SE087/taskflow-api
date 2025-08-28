@@ -150,31 +150,36 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.CannotUpdateSprint);
             }
 
+            if (request.StartDate > request.EndDate)
+            {
+                throw new AppException(ErrorCode.InvalidDateRange);
+            }
             //update sprint and create log
             if (sprint.Name != request.Name)
             {
-                sprint!.Name = request.Name;
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Name ,sprint.Name, request.Name);
+                sprint!.Name = request.Name;
             }
             if (sprint.Description != request.Description)
             {
-                sprint!.Description = request.Description;
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Description, sprint.Description, request.Description);
+                sprint!.Description = request.Description;
+
             }
-            if (sprint.StartDate != request.StartDate)
+            if (sprint.StartDate.Date != request.StartDate.Date)
             {
-                sprint!.StartDate = request.StartDate;
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.StartDate, sprint.StartDate.ToString("yyyy-MM-dd"), request.StartDate.ToString("yyyy-MM-dd"));
+                sprint!.StartDate = request.StartDate;
             }
-            if (sprint.EndDate != request.EndDate)
+            if (sprint.EndDate.Date != request.EndDate.Date)
             {
-                sprint!.EndDate = request.EndDate;
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.EndDate, sprint.EndDate.ToString("yyyy-MM-dd"), request.EndDate.ToString("yyyy-MM-dd"));
+                sprint!.EndDate = request.EndDate;
             }
             if (sprint.Status != request.Status)
             {
-                sprint.Status = request.Status;
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Status, sprint.Status.ToString(), request.Status.ToString());
+                sprint.Status = request.Status;
             }
             await _sprintRepository.UpdateSprintAsync(sprint);
             return true;
