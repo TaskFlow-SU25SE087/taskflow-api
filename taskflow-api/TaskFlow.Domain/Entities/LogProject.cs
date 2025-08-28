@@ -17,7 +17,9 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public Guid? TaskProjectID { get; set; }
         public TaskProject? TaskProject { get; set; }
         public Guid? SprintId { get; set; }
-        public Sprint? Sprint { get; set; } 
+        public Sprint? Sprint { get; set; }
+        public Guid? BoardId { get; set; }
+        public Board? Board { get; set; }
 
         public TypeLog ActionType { get; set; }
         public ChangedField? FieldChanged { get; set; }

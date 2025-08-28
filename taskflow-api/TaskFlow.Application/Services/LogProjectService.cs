@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using System;
 using taskflow_api.Migrations;
+using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
@@ -30,9 +31,23 @@ namespace taskflow_api.TaskFlow.Application.Services
         }
 
         //get all log of project
-        public Task<List<ProjectLogResponse>> AllLogPrj(Guid projectId)
+        public async Task<PagedResult<ProjectLogResponse>> AllLogPrj(Guid projectId, Guid? nextLogId)
         {
-            return _logProjectRepository.AllLogPrj(projectId);
+            var pagingParams = new PagingParams
+            {
+                PageNumber = 1,
+                PageSize = 5
+            };
+
+            var item = await _logProjectRepository.AllLogPrj(projectId, nextLogId, pagingParams.PageSize);
+
+            var pagedResult = new PagedResult<ProjectLogResponse>
+            {
+                Items = item,
+                HasMore = item.Count == pagingParams.PageSize,
+                NextCursor = item.Count == 0 ? null : item.Last().Id.ToString()
+            };
+            return pagedResult;
         }
 
         //---Private helper log ---
