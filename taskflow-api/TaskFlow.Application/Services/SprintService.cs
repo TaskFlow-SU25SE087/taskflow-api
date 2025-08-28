@@ -166,15 +166,15 @@ namespace taskflow_api.TaskFlow.Application.Services
                 sprint!.Description = request.Description;
 
             }
-            if (sprint.StartDate.Date != request.StartDate.Date)
+            if (sprint.StartDate.ToLocalTime().Date != request.StartDate.Date)
             {
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.StartDate, sprint.StartDate.ToString("yyyy-MM-dd"), request.StartDate.ToString("yyyy-MM-dd"));
-                sprint!.StartDate = request.StartDate.Date;
+                sprint!.StartDate = DateTime.SpecifyKind(request.StartDate.Date, DateTimeKind.Local);
             }
-            if (sprint.EndDate.Date != request.EndDate.Date)
+            if (sprint.EndDate.ToLocalTime().Date != request.EndDate.Date)
             {
                 await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.EndDate, sprint.EndDate.ToString("yyyy-MM-dd"), request.EndDate.ToString("yyyy-MM-dd"));
-                sprint!.EndDate = request.EndDate.Date;
+                sprint!.EndDate = DateTime.SpecifyKind(request.EndDate.Date, DateTimeKind.Local);
             }
             if (sprint.Status != request.Status)
             {
