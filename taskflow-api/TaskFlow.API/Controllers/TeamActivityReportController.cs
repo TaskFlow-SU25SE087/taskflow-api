@@ -4,6 +4,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.API.Controllers
@@ -14,10 +15,14 @@ namespace taskflow_api.TaskFlow.API.Controllers
     public class TeamActivityReportController : ControllerBase
     {
         private readonly ITeamActivityReportService _teamActivityReportService;
+        private readonly ITaskFlowAuthorizationService _authorization;
 
-        public TeamActivityReportController(ITeamActivityReportService teamActivityReportService)
+        public TeamActivityReportController(
+            ITeamActivityReportService teamActivityReportService,
+            ITaskFlowAuthorizationService authorization)
         {
             _teamActivityReportService = teamActivityReportService;
+            _authorization = authorization;
         }
 
         /// <summary>
@@ -33,6 +38,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
+                // Verify user has access to this project (any role is fine for viewing reports)
+                var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+                if (!isAuthorized)
+                {
+                    return BadRequest(ApiResponse<TeamActivityReportResponse>.Error(403, "You don't have permission to access this project's team activity report"));
+                }
+
                 var report = await _teamActivityReportService.GenerateTeamActivityReportAsync(projectId, request);
                 return Ok(ApiResponse<TeamActivityReportResponse>.Success(report));
             }
@@ -61,6 +73,27 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
+                // Verify user has access to this project (any role is fine for viewing reports)
+                var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+                if (!isAuthorized)
+                {
+                    return BadRequest(ApiResponse<MemberActivityResponse>.Error(403, "You don't have permission to access this project's team activity report"));
+                }
+
+                // Get current user ID to check if they're viewing their own report or if they're a leader
+                var currentUserId = await _authorization.GetCurrentUserIdAsync();
+                
+                // Check if user is trying to view someone else's report
+                if (memberId != currentUserId)
+                {
+                    // Only project leaders can view other members' reports
+                    var isLeader = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+                    if (!isLeader)
+                    {
+                        return BadRequest(ApiResponse<MemberActivityResponse>.Error(403, "You can only view your own activity report. Project leaders can view all member reports."));
+                    }
+                }
+
                 var report = await _teamActivityReportService.GenerateMemberActivityReportAsync(projectId, memberId, request);
                 return Ok(ApiResponse<MemberActivityResponse>.Success(report));
             }
@@ -87,6 +120,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
+                // Verify user has access to this project (any role is fine for viewing reports)
+                var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+                if (!isAuthorized)
+                {
+                    return BadRequest(ApiResponse<TeamActivityReportResponse>.Error(403, "You don't have permission to access this project's team activity report"));
+                }
+
                 var report = await _teamActivityReportService.GenerateTeamActivityReportAsync(projectId, request);
                 return Ok(ApiResponse<TeamActivityReportResponse>.Success(report));
             }
@@ -113,6 +153,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
+                // Verify user has access to this project (any role is fine for viewing reports)
+                var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
+                if (!isAuthorized)
+                {
+                    return BadRequest(ApiResponse<BurndownChartResponse>.Error(403, "You don't have permission to access this project's burndown chart"));
+                }
+
                 var burndownChart = await _teamActivityReportService.GetBurndownChartAsync(projectId, sprintId);
                 return Ok(ApiResponse<BurndownChartResponse>.Success(burndownChart));
             }
