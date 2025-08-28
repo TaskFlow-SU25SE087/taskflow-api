@@ -38,6 +38,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
+                // ✅ SECURITY: Input validation
+                if (projectId == Guid.Empty)
+                {
+                    return BadRequest(ApiResponse<TeamActivityReportResponse>.Error(400, "Invalid project ID"));
+                }
+
                 // Verify user has access to this project (any role is fine for viewing reports)
                 var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
                 if (!isAuthorized)
@@ -73,6 +79,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
+                // ✅ SECURITY: Input validation
+                if (projectId == Guid.Empty || memberId == Guid.Empty)
+                {
+                    return BadRequest(ApiResponse<MemberActivityResponse>.Error(400, "Invalid project or member ID"));
+                }
+
                 // Verify user has access to this project (any role is fine for viewing reports)
                 var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
                 if (!isAuthorized)
@@ -120,6 +132,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
+                // ✅ SECURITY: Input validation
+                if (projectId == Guid.Empty)
+                {
+                    return BadRequest(ApiResponse<TeamActivityReportResponse>.Error(400, "Invalid project ID"));
+                }
+
                 // Verify user has access to this project (any role is fine for viewing reports)
                 var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
                 if (!isAuthorized)
@@ -153,7 +171,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             try
             {
-                // Verify user has access to this project (any role is fine for viewing reports)
+                // ✅ SECURITY: Input validation
+                if (projectId == Guid.Empty || sprintId == Guid.Empty)
+                {
+                    return BadRequest(ApiResponse<BurndownChartResponse>.Error(400, "Invalid project or sprint ID"));
+                }
+
+                // ✅ SECURITY: Verify user has access to this project (any role is fine for viewing reports)
                 var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
                 if (!isAuthorized)
                 {

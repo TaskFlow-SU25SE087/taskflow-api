@@ -409,6 +409,12 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<BurndownChartResponse> GetBurndownChartAsync(Guid projectId, Guid sprintId)
         {
+            // ✅ SECURITY: Additional input validation
+            if (projectId == Guid.Empty || sprintId == Guid.Empty)
+            {
+                throw new AppException(ErrorCode.NoPermission);
+            }
+
             // Get sprint information
             var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
             if (sprint == null)
