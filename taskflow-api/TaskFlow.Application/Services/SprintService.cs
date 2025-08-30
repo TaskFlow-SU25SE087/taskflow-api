@@ -52,7 +52,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 {
                     throw new AppException(ErrorCode.SprintAlreadyInProgress);
                 }
-                if (sprint.StartDate <= DateTime.UtcNow)
+                if (_timeProvider.Now < sprint.StartDate)
                 {
                     throw new AppException(ErrorCode.CannotStartSprint);
                 }
@@ -92,6 +92,21 @@ namespace taskflow_api.TaskFlow.Application.Services
                     task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] End sprint: {sprint.Name}" + " ;";
                 }
                 await _taskProjectRepository.UpdateListTaskAsync(tasks);
+                await _sprintRepository.UpdateSprintAsync(sprint);
+
+            }
+            //resume sprint to OnHold
+            else if (status.Equals(SprintStatus.InProgress) && sprint.Status == SprintStatus.OnHold)
+            {
+                await _sprintRepository.UpdateSprintAsync(sprint);
+            }
+            else if (status.Equals(SprintStatus.OnHold))
+            {
+                if (sprint.Status.Equals(SprintStatus.Completed) ||
+                    sprint.Status.Equals(SprintStatus.NotStarted))
+                {
+                    throw new AppException(ErrorCode.CannotRevertSprint);
+                }
                 await _sprintRepository.UpdateSprintAsync(sprint);
 
             }

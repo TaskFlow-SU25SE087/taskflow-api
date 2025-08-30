@@ -89,6 +89,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail SourceEmpty = new(9017, "Source is empty", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail WebhookDeletionFailed = new(9018, "Failed to delete webhook", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail InvalidDateRange = new(9019, "Invalid date range", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail CannotRevertSprint = new(9020, "Cannot revert sprint", StatusCodes.Status400BadRequest);
 
     }
 }
