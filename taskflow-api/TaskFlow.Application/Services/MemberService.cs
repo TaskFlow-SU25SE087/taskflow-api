@@ -134,6 +134,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.CannotLeaveProjectAsPM);
             }
+            //log user leave project
+            await _logService.LogLeaveProject(member.ProjectId, member.Id);
             //Remove the member from the project
             member.IsActive = false;
             await _projectMemberRepository.UpdateMember(member);
@@ -144,9 +146,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 var project = await _projectRepository.GetProjectByIdAsync(member.ProjectId);
                 project!.IsActive = false; // Mark project as inactive
                 await _projectRepository.UpdateProject(project);
-
-                //log user leave project
-                await _logService.LogLeaveProject(member.ProjectId, member.Id);
             }
             return true;
         }
