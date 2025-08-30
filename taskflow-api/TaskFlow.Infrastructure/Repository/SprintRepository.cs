@@ -59,7 +59,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         {
             return await _context.Sprints
                 .Where(s => s.ProjectId == projectId && s.IsActive 
-                && s.Status == SprintStatus.NotStarted && s.StartDate > afterDate)
+                && s.Status == SprintStatus.NotStarted && s.StartDate >= afterDate)
                 .OrderBy(s => s.EndDate)
                 .FirstOrDefaultAsync();
         }

@@ -44,19 +44,28 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task ChangeStatusSprint(Guid SpringId, SprintStatus status)
         {
             var sprint = await _sprintRepository.GetSprintByIdAsync(SpringId);
-            sprint!.Status = status;
             if (status.Equals(SprintStatus.InProgress)) //start sprint
             {
-                bool checkSprintStart = await _sprintRepository.CheckSprintStartDate(sprint.ProjectId);
-                if (checkSprintStart || sprint.Status.Equals(SprintStatus.Completed))
+                if (sprint.Status == SprintStatus.OnHold)
                 {
-                    throw new AppException(ErrorCode.SprintAlreadyInProgress);
+                    // resume sprint
+                    sprint.Status = SprintStatus.InProgress;
+                    await _sprintRepository.UpdateSprintAsync(sprint);
                 }
-                if (_timeProvider.Now < sprint.StartDate)
+                else
                 {
-                    throw new AppException(ErrorCode.CannotStartSprint);
+                    bool checkSprintStart = await _sprintRepository.CheckSprintStartDate(sprint.ProjectId);
+                    if (checkSprintStart || sprint.Status.Equals(SprintStatus.Completed))
+                    {
+                        throw new AppException(ErrorCode.SprintAlreadyInProgress);
+                    }
+                    if (_timeProvider.Now < sprint.StartDate)
+                    {
+                        throw new AppException(ErrorCode.CannotStartSprint);
+                    }
+                    sprint!.Status = status;
+                    await _sprintRepository.UpdateSprintAsync(sprint);
                 }
-                await _sprintRepository.UpdateSprintAsync(sprint);
             }
             else if (status.Equals(SprintStatus.Completed))// complete sprint
             {
@@ -91,14 +100,10 @@ namespace taskflow_api.TaskFlow.Application.Services
                     task.SprintId = newSprint.Id;
                     task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] End sprint: {sprint.Name}" + " ;";
                 }
+                sprint!.Status = status;
                 await _taskProjectRepository.UpdateListTaskAsync(tasks);
                 await _sprintRepository.UpdateSprintAsync(sprint);
 
-            }
-            //resume sprint to OnHold
-            else if (status.Equals(SprintStatus.InProgress) && sprint.Status == SprintStatus.OnHold)
-            {
-                await _sprintRepository.UpdateSprintAsync(sprint);
             }
             else if (status.Equals(SprintStatus.OnHold))
             {
@@ -107,6 +112,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 {
                     throw new AppException(ErrorCode.CannotRevertSprint);
                 }
+                sprint!.Status = status;
                 await _sprintRepository.UpdateSprintAsync(sprint);
 
             }
