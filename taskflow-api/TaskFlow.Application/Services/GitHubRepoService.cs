@@ -2,8 +2,10 @@
 using Azure.Core;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Newtonsoft.Json.Linq;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -72,7 +74,6 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
             };
             cloneProcess.Start();
-            string cloneOutput = await cloneProcess.StandardOutput.ReadToEndAsync();
             string cloneError = await cloneProcess.StandardError.ReadToEndAsync();
             await cloneProcess.WaitForExitAsync();
 
@@ -94,64 +95,42 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
             };
             checkoutProcess.Start();
-            string checkoutOutput = await checkoutProcess.StandardOutput.ReadToEndAsync();
             string checkoutError = await checkoutProcess.StandardError.ReadToEndAsync();
             await checkoutProcess.WaitForExitAsync();
 
             if (checkoutProcess.ExitCode != 0)
                 throw new Exception($"git checkout failed:\n{checkoutError}");
 
-            // Remove all tracked files from the index temporarily
-            // This ensures that after reset only files from the target commit remain
-            var resetIndexProcess = new Process
+            // Get files changed in this commit only (added or modified)
+            var diffProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "git",
-                    Arguments = "ls-files -z | xargs -0 git rm --cached",
+                    Arguments = $"diff-tree --no-commit-id --name-only -r {commitId}",
                     WorkingDirectory = extractPath,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true,
+                    CreateNoWindow = true
                 }
             };
-            resetIndexProcess.Start();
-            await resetIndexProcess.WaitForExitAsync();
+            diffProcess.Start();
+            var changedFiles = (await diffProcess.StandardOutput.ReadToEndAsync())
+                                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            await diffProcess.WaitForExitAsync();
 
-            // Reset the repository to the specific commit (hard reset)
-            var resetProcess = new Process
+            // Delete files not changed in this commit (keep .git folder)
+            var allFiles = Directory.GetFiles(extractPath, "*", SearchOption.AllDirectories);
+            foreach (var file in allFiles)
             {
-                StartInfo = new ProcessStartInfo
+                var relativePath = Path.GetRelativePath(extractPath, file).Replace("\\", "/");
+                if (!changedFiles.Any(f => f.Equals(relativePath, StringComparison.OrdinalIgnoreCase))
+                    && !relativePath.StartsWith(".git/"))
                 {
-                    FileName = "git",
-                    Arguments = $"reset --hard {commitId}",
-                    WorkingDirectory = extractPath,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
+                    File.Delete(file);
                 }
-            };
-            resetProcess.Start();
-            await resetProcess.WaitForExitAsync();
-
-            // Remove untracked files and directories, leaving only commit files
-            var cleanProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    Arguments = "clean -fdx",
-                    WorkingDirectory = extractPath,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-            cleanProcess.Start();
-            await cleanProcess.WaitForExitAsync();
+            }
 
             return extractPath;
         }
@@ -182,6 +161,56 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var response = await _httpClient.SendAsync(request);
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteWebhook(string repoUrl, string at, string webhookUrl)
+        {
+            var baseUri = ConvertRepoUrlToApi(repoUrl);
+
+            //get list hooks
+            var listRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUri}/hooks");
+            listRequest.Headers.Authorization = new AuthenticationHeaderValue("token", at);
+            listRequest.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
+
+            var listResponse = await _httpClient.SendAsync(listRequest);
+            if (!listResponse.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Failed to list webhooks for {repoUrl}. Status: {listResponse.StatusCode}");
+                return false;
+            }
+            var content = await listResponse.Content.ReadAsStringAsync();
+            var hooks = JArray.Parse(content);
+
+            //find the webhook with the specified URL
+            var targetHook = hooks.FirstOrDefault(h => h["config"]?["url"]?.ToString() == webhookUrl);
+            if (targetHook == null)
+            {
+                _logger.LogWarning($"No webhook found with URL {webhookUrl} for {repoUrl}");
+                return true; // no webhook to delete
+            }
+
+            var hookId = targetHook["id"]?.ToString();
+            if (string.IsNullOrEmpty(hookId))
+            {
+                _logger.LogError($"Webhook ID not found for URL {webhookUrl} in {repoUrl}");
+                return false;
+            }
+
+            //delete the webhook
+            var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, $"{baseUri}/hooks/{hookId}");
+            deleteRequest.Headers.Authorization = new AuthenticationHeaderValue("token", at);
+            deleteRequest.Headers.UserAgent.ParseAdd("SEP-TaskFlow");
+
+            var deleteResponse = await _httpClient.SendAsync(deleteRequest);
+
+            //check if delete was successful
+            if (!deleteResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await deleteResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"Failed to delete webhook {hookId} in {repoUrl}. Status: {deleteResponse.StatusCode}, Response: {errorContent}");
+                return false;
+            }
+            return deleteResponse.IsSuccessStatusCode;
         }
 
         public async Task<string> DownloadCommitSourceAsync(string repoFullName, string commitId, string accessToken)

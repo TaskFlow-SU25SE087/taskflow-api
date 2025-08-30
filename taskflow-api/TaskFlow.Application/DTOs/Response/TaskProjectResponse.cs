@@ -26,6 +26,10 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
         }
         public Guid BoardId { get; set; }
         public string Status { get; set; } = null!;
+        
+        // Effort points for the task
+        public int? EffortPoints { get; set; }
+        
         public List<TaskAssigneeResponse> TaskAssignees { get; set; } = new List<TaskAssigneeResponse>();
         public List<TaskTagResponse> Tags { get; set; } = new List<TaskTagResponse>();
         public List<CommnetResponse> Commnets { get; set; } = new List<CommnetResponse>();
@@ -40,6 +44,9 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
             public string? Executor { get; set; }
             public string? Avatar { get; set; }
             public ProjectRole Role { get; set; }
+            
+            // Effort points assigned to this specific assignee
+            public int? AssignedEffortPoints { get; set; }
         }
 
         public class TaskTagResponse

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Any;
@@ -52,6 +53,7 @@ builder.Services.AddScoped<ISprintMeetingLogsService, SprintMeetingLogsService>(
 builder.Services.AddScoped<ILogProjectService, LogProjectService>();
 builder.Services.AddScoped<ITeamActivityReportService, TeamActivityReportService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IEffortPointsService, EffortPointsService>();
 
 //Repository
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -72,12 +74,14 @@ builder.Services.AddScoped<IProjectPartRepository, ProjectPartRepository>();
 builder.Services.AddScoped<IUserIntegrationRepository, UserIntegrationRepository>();
 builder.Services.AddScoped<ICommitRecordRepository, CommitRecordRepository>();
 builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
+builder.Services.AddHostedService<RabbitImportFIleConsumerHostedService>();
 builder.Services.AddScoped<IUserGitHubRepository, UserGitHubRepository>();
 builder.Services.AddScoped<ICommitScanIssueRepository, CommitScanIssueRepository>();
 builder.Services.AddScoped<IGitMemberRepository, GitMemberRepository>();
 builder.Services.AddScoped<IGitHubMemberService, GitHubMemberService>();
 builder.Services.AddScoped<ISprintMeetingLogsRepository, SprintMeetingLogsRepository>();
 builder.Services.AddScoped<ILogProjectRepository, LogProjectRepository>();
+builder.Services.AddScoped<IProcessingFileRepository, ProcessingFileRepository>();
 
 //Signalr
 builder.Services.AddSignalR();

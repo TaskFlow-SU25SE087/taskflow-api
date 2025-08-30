@@ -25,11 +25,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<ApiResponse<List<ProjectLogResponse>>> GetProjectLogs([FromRoute] Guid projectId)
+        public async Task<ApiResponse<PagedResult<ProjectLogResponse>>> GetProjectLogs(
+            [FromRoute] Guid projectId, [FromQuery] Guid nextcursor)
         {
             await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader, ProjectRole.Member);
-            var logs = await _logProjectService.AllLogPrj(projectId);
-            return ApiResponse<List<ProjectLogResponse>>.Success(logs);
+            var logs = await _logProjectService.AllLogPrj(projectId, nextcursor);
+            return ApiResponse<PagedResult<ProjectLogResponse>>.Success(logs);
         }
     }
 }

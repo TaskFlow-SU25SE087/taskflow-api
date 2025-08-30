@@ -4,5 +4,11 @@
     {
         CreateProject = 1,
         DeleteProject = 2,
+        JoinProject = 3,
+        LeaveProject = 4,
+        RemoveMember = 5,
+        CreateSprint = 6,
+        UpdateSprint = 7,
+        AddTaskToSprint = 8,
     }
 }

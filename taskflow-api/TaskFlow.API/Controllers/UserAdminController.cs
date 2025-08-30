@@ -5,6 +5,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.API.Controllers
 {
@@ -49,8 +50,15 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [HttpPost("import")]
         public async Task<ApiResponse<bool>> AddList([FromForm] ImportUserFileRequest file)
         {
-            await _userService.ImportEnrollmentsFromExcelAsync(file);
+            await _userService.ImportFileExcelAsync(file);
             return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpGet("processing-files")]
+        public async Task<ApiResponse<PagedResult<ProcessingFile>>> GetProcessingFiles([FromQuery] int page = 1)
+        {
+            var files = await _userService.getListFileProcess(page);
+            return ApiResponse<PagedResult<ProcessingFile>>.Success(files);
         }
     }
 }

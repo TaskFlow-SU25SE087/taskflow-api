@@ -1,11 +1,13 @@
-﻿using taskflow_api.TaskFlow.Application.DTOs.Request;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
 {
     public interface ITermService
     {
-        Task<List<Term>> GetListTerm(int page);
+        Task<PagedResult<TermResponse>> GetListTerm(int page);
         Task<List<Term>> GetAllTermsForAdmin();
         Task CreateTerm(CreateTerm request);
         Task<Term?> GetTermById(Guid id);

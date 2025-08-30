@@ -13,5 +13,9 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Request
         [Required(ErrorMessage = "Board ID cannot be empty")]
         public TaskPriority Priority { get; set; }
         public DateTime? Deadline { get; set; }
+        
+        // Effort points for the task
+        [Range(0, int.MaxValue, ErrorMessage = "Effort points must be a positive number")]
+        public int? EffortPoints { get; set; }
     }
 }

@@ -14,5 +14,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task <List<ProjectPartResponse>> GetAllRepositories(Guid ProjectId);
         Task<PagedResult<CommitRecordResponse>> GetCommits(Guid partId, int page);
         Task<List<CommitDetailResponse>> GetCommitDetail(string commitId);
+        Task DeleteWeebhook(string RepoUrl);
     }
 }

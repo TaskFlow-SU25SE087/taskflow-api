@@ -22,7 +22,6 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITaskAssigneeRepository _taskAssigneeRepository;
         private readonly IProjectMemberRepository _projectMemberRepository;
-        private readonly ISprintRepository _sprintRepository;
         private readonly INotificationService _notificationService;
         private readonly AppTimeProvider _timeProvider;
 
@@ -30,7 +29,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
             ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
             ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository,
-            ISprintRepository sprintRepository, AppTimeProvider timeProvider,
+            AppTimeProvider timeProvider,
             INotificationService notificationService)
         {
             _taskProjectRepository = taskProjectRepository;
@@ -42,7 +41,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _taskAssigneeRepository = taskAssigneeRepository;
             _projectMemberRepository = projectMemberRepository;
-            _sprintRepository = sprintRepository;
             _notificationService = notificationService;
             _timeProvider = timeProvider;
         }
@@ -106,6 +104,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Description = request.Description,
                 Priority = request.Priority,
                 Deadline = request.Deadline,
+                EffortPoints = request.EffortPoints,
                 IsActive = true,
                 CreatedAt = _timeProvider.Now,
             };
@@ -141,6 +140,20 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.TaskNotFound);
             }
 
+            // Validate effort points if task has effort points
+            if (task.EffortPoints.HasValue && request.AssignedEffortPoints.HasValue)
+            {
+                // Get current total assigned effort points
+                var currentAssignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
+                var currentTotalAssigned = currentAssignees.Sum(a => a.AssignedEffortPoints ?? 0);
+                var newTotal = currentTotalAssigned + request.AssignedEffortPoints.Value;
+                
+                if (newTotal > task.EffortPoints.Value)
+                {
+                    throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+                }
+            }
+
             // Get assigner information for notification
             var assignerName = UserAssign.User?.FullName ?? UserAssign.User?.UserName ?? "Project Member";
 
@@ -150,6 +163,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 ImplementerId = request.ImplementerId,
                 RefId = TaskId,
                 Type = RefType.Task,
+                AssignedEffortPoints = request.AssignedEffortPoints,
                 IsActive = true,
                 CreatedAt = _timeProvider.Now
             };
@@ -177,11 +191,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             var oldBoard = await _boardRepository.GetBoardByIdAsync(taskProject.BoardId.HasValue ? taskProject.BoardId.Value : Guid.Empty);
             var oldBoardName = oldBoard?.Name ?? "Unknown";
 
-            var sprint = await  _sprintRepository.GetSprintByIdAsync(taskProject.SprintId.HasValue ? taskProject.SprintId.Value : Guid.Empty);
-            if (!sprint!.Status.Equals(SprintStatus.InProgress))
-            {
-                throw new AppException(ErrorCode.CannotUpdateStatus);
-            }
+            // Note: Sprint status validation removed as sprint repository is no longer available in this service
+            // Sprint validation should be handled at the controller level if needed
 
             // Change board
             taskProject!.BoardId = BoardId;
@@ -335,6 +346,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.Description = request.Description;
             taskUpdate.Priority = request.Priority;
             taskUpdate.Deadline = request.Deadline;
+            taskUpdate.EffortPoints = request.EffortPoints;
             taskUpdate.UpdatedAt = _timeProvider.Now;
 
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
@@ -420,115 +432,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             await _taskAssigneeRepository.UpdateAsync(taskAssignee);
         }
 
-        public async Task<BurndownChartResponse> GetBurndownChart(Guid projectId, Guid sprintId)
-        {
-            // Get sprint information
-            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
-            if (sprint == null)
-            {
-                throw new AppException(ErrorCode.SprintNotFound);
-            }
 
-            if (sprint.ProjectId != projectId)
-            {
-                throw new AppException(ErrorCode.NoPermission);
-            }
-
-            // Get all tasks in the sprint
-            var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(sprintId);
-            
-            // Calculate effort points by priority
-            var priorityEfforts = new List<PriorityEffortData>();
-            var totalEffortPoints = 0;
-            var completedEffortPoints = 0;
-
-            foreach (TaskPriority priority in Enum.GetValues(typeof(TaskPriority)))
-            {
-                var priorityTasks = tasks.Where(t => t.Priority == priority).ToList();
-                var priorityTotalPoints = priorityTasks.Count * GetEffortPointsByPriority(priority);
-                var priorityCompletedPoints = priorityTasks.Where(t => IsTaskCompleted(t)).Count() * GetEffortPointsByPriority(priority);
-
-                priorityEfforts.Add(new PriorityEffortData
-                {
-                    Priority = priority,
-                    PriorityName = priority.ToString(),
-                    TotalEffortPoints = priorityTotalPoints,
-                    CompletedEffortPoints = priorityCompletedPoints,
-                    RemainingEffortPoints = priorityTotalPoints - priorityCompletedPoints,
-                    CompletionPercentage = priorityTotalPoints > 0 ? (double)priorityCompletedPoints / priorityTotalPoints * 100 : 0
-                });
-
-                totalEffortPoints += priorityTotalPoints;
-                completedEffortPoints += priorityCompletedPoints;
-            }
-
-            // Calculate daily progress
-            var dailyProgress = new List<DailyProgressData>();
-            var idealBurndown = new List<DailyProgressData>();
-            var totalDays = (sprint.EndDate - sprint.StartDate).Days + 1;
-            var dailyIdealBurn = totalEffortPoints / (double)totalDays;
-
-            for (int i = 0; i <= totalDays; i++)
-            {
-                var currentDate = sprint.StartDate.AddDays(i);
-                
-                // Calculate cumulative completed tasks up to this date
-                var completedTasksUpToDate = tasks.Where(t => 
-                    IsTaskCompleted(t) && 
-                    t.UpdatedAt.Date <= currentDate.Date).ToList();
-                
-                var completedPointsUpToDate = completedTasksUpToDate.Sum(t => GetEffortPointsByPriority(t.Priority));
-                var remainingPoints = Math.Max(0, totalEffortPoints - completedPointsUpToDate);
-
-                dailyProgress.Add(new DailyProgressData
-                {
-                    Date = currentDate,
-                    RemainingEffortPoints = remainingPoints,
-                    CompletedEffortPoints = completedPointsUpToDate,
-                    TotalEffortPoints = totalEffortPoints
-                });
-
-                // Ideal burndown line (linear decrease)
-                var idealRemaining = Math.Max(0, totalEffortPoints - (dailyIdealBurn * i));
-                idealBurndown.Add(new DailyProgressData
-                {
-                    Date = currentDate,
-                    RemainingEffortPoints = (int)idealRemaining,
-                    CompletedEffortPoints = (int)(totalEffortPoints - idealRemaining),
-                    TotalEffortPoints = totalEffortPoints
-                });
-            }
-
-            return new BurndownChartResponse
-            {
-                SprintId = sprint.Id,
-                SprintName = sprint.Name,
-                StartDate = sprint.StartDate,
-                EndDate = sprint.EndDate,
-                TotalDays = totalDays,
-                PriorityEfforts = priorityEfforts,
-                DailyProgress = dailyProgress,
-                IdealBurndown = idealBurndown
-            };
-        }
-
-        private int GetEffortPointsByPriority(TaskPriority priority)
-        {
-            return priority switch
-            {
-                TaskPriority.Low => 1,
-                TaskPriority.Medium => 3,
-                TaskPriority.High => 5,
-                TaskPriority.Urgent => 8,
-                _ => 1
-            };
-        }
-
-        private bool IsTaskCompleted(TaskProject task)
-        {
-            // Task is completed only when it has board type Done
-            return task.Board != null && task.Board.Type == BoardType.Done;
-        }
 
         public async Task<TaskCompletionSummaryResponse> GetTaskCompletionReport(Guid projectId, TaskCompletionReportRequest request)
         {
@@ -639,6 +543,85 @@ namespace taskflow_api.TaskFlow.Application.Services
                 TotalTimeSpent = totalTimeSpent,
                 Tasks = reportTasks
             };
+        }
+
+        public async Task BulkAssignTaskToUsers(Guid TaskId, Guid ProjectId, BulkAssignTaskRequest request)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            
+            // Check user is in project
+            var UserAssign = await _projectMemberRepository.FindMemberInProject(ProjectId, Guid.Parse(UserId!));
+            if (UserAssign == null)
+            {
+                throw new AppException(ErrorCode.UserNotInProject);
+            }
+
+            // Get task information
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId);
+            if (task == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+
+            // Validate effort points distribution if task has effort points
+            if (task.EffortPoints.HasValue)
+            {
+                var totalAssignedPoints = request.Assignees.Sum(a => a.AssignedEffortPoints ?? 0);
+                if (totalAssignedPoints != task.EffortPoints.Value)
+                {
+                    throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+                }
+            }
+
+            // Check for duplicate assignees
+            var assigneeIds = request.Assignees.Select(a => a.ImplementerId).ToList();
+            if (assigneeIds.Count != assigneeIds.Distinct().Count())
+            {
+                throw new AppException(ErrorCode.DuplicateAssignee);
+            }
+
+            // Check if any assignee is already assigned to this task
+            foreach (var assignee in request.Assignees)
+            {
+                bool checkExists = await _taskAssigneeRepository.IsTaskAssigneeExistsAsync(TaskId, assignee.ImplementerId);
+                if (checkExists)
+                {
+                    throw new AppException(ErrorCode.TaskAlreadyAssigned);
+                }
+            }
+
+            // Create task assignees
+            var taskAssignees = new List<TaskAssignee>();
+            foreach (var assignee in request.Assignees)
+            {
+                var newTaskAssignee = new TaskAssignee
+                {
+                    AssignerId = UserAssign.Id,
+                    ImplementerId = assignee.ImplementerId,
+                    RefId = TaskId,
+                    Type = RefType.Task,
+                    AssignedEffortPoints = assignee.AssignedEffortPoints,
+                    IsActive = true,
+                    CreatedAt = _timeProvider.Now
+                };
+                taskAssignees.Add(newTaskAssignee);
+            }
+
+            await _taskAssigneeRepository.CreateListTaskAssignee(taskAssignees);
+
+            // Send notifications to all assigned users
+            var assignerName = UserAssign.User?.FullName ?? UserAssign.User?.UserName ?? "Project Member";
+            foreach (var assignee in request.Assignees)
+            {
+                await _notificationService.NotifyTaskAssignmentAsync(
+                    assignee.ImplementerId,
+                    ProjectId,
+                    TaskId,
+                    task.Title,
+                    assignerName
+                );
+            }
         }
     }
 }

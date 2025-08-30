@@ -11,7 +11,7 @@ namespace taskflow_api.TaskFlow.Domain.Entities
         public string Note { get; set; } = string.Empty;
         [Required]
         public string UrlFile { get; set; } = null!;
-        public StatusFile statusFile { get; set; } = StatusFile.Processing;
+        public StatusFile StatusFile { get; set; } = StatusFile.Processing;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = null;
     }

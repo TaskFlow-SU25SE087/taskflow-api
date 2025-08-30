@@ -2,6 +2,7 @@
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Application.Interfaces
 {
@@ -18,11 +19,12 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<UserResponse> UpdateUser(Guid userId, UpdateUserRequest model);
         Task<TokenModel> RenewToken(TokenModel model);
         Task<bool> VerifyAccount(string token);
-        Task ImportEnrollmentsFromExcelAsync(ImportUserFileRequest file);
+        Task ImportEnrollmentsFromExcelAsync(ImportFileJobMessage file);
         Task SendMailAgain();
         Task ConfirmEmailAndSetPasswordAsync(ActivateAccountRequest request);
         Task ResetPassword(ResetPasswordRequest request);
         Task SendMailResetPassword(string EmailOrUsername);
-
+        Task ImportFileExcelAsync(ImportUserFileRequest file);
+        Task<PagedResult<ProcessingFile>> getListFileProcess(int page);
     }
 }

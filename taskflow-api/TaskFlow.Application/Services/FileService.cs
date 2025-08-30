@@ -88,5 +88,23 @@ namespace taskflow_api.TaskFlow.Application.Services
             var result = await _cloudinary.UploadAsync(uploadParams);
             return result.SecureUrl.ToString();
         }
+
+        public async Task<string> UploadFileExcel(IFormFile file, string nameFile)
+        {
+            var fileExt = Path.GetExtension(file.FileName);
+            await using var stream = file.OpenReadStream();
+            var uploadParams = new RawUploadParams
+            {
+                File = new FileDescription(file.FileName, stream),
+                PublicId = nameFile + fileExt,
+                Folder = "Studentfile/excel"
+            };
+            var result = await _cloudinary.UploadAsync(uploadParams);
+            if (result.Error != null)
+            {
+                throw new Exception($"Error uploading file: {result.Error.Message}");
+            }
+            return result.SecureUrl.ToString();
+        }
     }
 }

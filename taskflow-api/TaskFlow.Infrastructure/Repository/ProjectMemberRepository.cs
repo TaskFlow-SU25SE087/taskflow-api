@@ -26,6 +26,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<ProjectMember?> FindLeader(Guid projectId)
+        {
+            var leader = await _context.ProjectMembers
+                .Include(pm => pm.User)
+                .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.Role == ProjectRole.Leader && pm.IsActive);
+            return leader;
+        }
+
         public async Task<ProjectMember?> FindMemberInProject(Guid projectId, Guid userId)
         {
             return await _context.ProjectMembers
@@ -93,6 +101,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                     Role = pm.Role,
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        public Task<int> GetProjectCountByProjectID(Guid projectId)
+        {
+            return _context.ProjectMembers
+                .CountAsync(pm => pm.ProjectId == projectId && pm.IsActive);
         }
 
         public Task<int> GetProjectCountByUserIdAsync(Guid userId)

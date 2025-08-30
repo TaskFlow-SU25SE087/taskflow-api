@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
@@ -9,8 +10,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<DateTime?> GetLatestTermEndDateAsync();
         Task UpdateTermAsync(Term data);
         Task<Term?> GetTermByIdAsync(Guid termId);
-        Task<List<Term>> GetAllTermsAsync(int page, int pageSize);
+        Task<List<TermResponse>> GetAllTermsAsync(int page, int pageSize);
         Task<List<Term>> GetAllActiveTermsAsync();
         Task DeleteTermAsync(Guid termId);
+        Task<Term?> GetCurrentTermAsync();
+        Task<List<User>> GetPastUser(Guid termId);
+        Task<int> CountTerm();
     }
 }

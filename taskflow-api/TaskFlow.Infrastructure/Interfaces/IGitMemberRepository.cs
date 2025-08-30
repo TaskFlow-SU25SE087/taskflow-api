@@ -1,4 +1,5 @@
-﻿using taskflow_api.TaskFlow.Domain.Entities;
+﻿using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
@@ -6,7 +7,9 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task CreateGitMember(GitMember data);
         Task CreateListGitMember(List<GitMember> data);
+        Task DeleteAllProjectPart(Guid projectPartId);
         Task<GitMember?> GetGitMemberById(Guid id);
+        Task<List<GitMemberResponse>> GetListGitMemberByIProjectPartId(Guid projectPartId);
         Task<GitMember?> GetMemberByNameAndEmailLocal(string name, string email, Guid projectPartId);
         Task Update(GitMember data);
     }

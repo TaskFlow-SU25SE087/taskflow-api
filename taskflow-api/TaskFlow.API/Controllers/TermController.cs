@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Application.Services;
 using taskflow_api.TaskFlow.Domain.Entities;
@@ -23,10 +24,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpGet("list")]
-        public async Task<ApiResponse<List<Term>>> GetListTerm([FromQuery] int page)
+        public async Task<ApiResponse<PagedResult<TermResponse>>> GetListTerm([FromQuery] int page)
         {
             var terms = await _termService.GetListTerm(page);
-            return ApiResponse<List<Term>>.Success(terms);
+            return ApiResponse<PagedResult<TermResponse>>.Success(terms);
         }
 
         [HttpGet("all")]

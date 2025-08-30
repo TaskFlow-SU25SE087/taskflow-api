@@ -22,5 +22,21 @@ namespace taskflow_api.TaskFlow.Shared.Helpers
             int code = RandomNumberGenerator.GetInt32(100000, 1000000);
             return code.ToString();
         }
+
+        public static string GenerateRandomPassword()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            var randomNumber = new byte[8];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+            }
+            var password = new char[8];
+            for (int i = 0; i < password.Length; i++)
+            {
+                password[i] = chars[randomNumber[i] % chars.Length];
+            }
+            return new string(password);
+        }
     }
 }

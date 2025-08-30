@@ -22,7 +22,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task ChangeBoard(Guid BoardId, Guid TaskId);
         Task<List<TaskProjectResponse>> GetTasksByBoardType(Guid projectId, BoardType boardType);
         Task<bool> IsTaskCompleted(Guid taskId);
-        Task<BurndownChartResponse> GetBurndownChart(Guid projectId, Guid sprintId);
         Task<TaskCompletionSummaryResponse> GetTaskCompletionReport(Guid projectId, TaskCompletionReportRequest request);
+        Task BulkAssignTaskToUsers(Guid TaskId, Guid ProjectId, BulkAssignTaskRequest request);
     }
 }

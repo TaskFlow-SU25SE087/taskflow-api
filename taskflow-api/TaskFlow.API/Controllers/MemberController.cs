@@ -57,12 +57,8 @@ namespace taskflow_api.TaskFlow.API.Controllers
         [Authorize]
         public async Task<ApiResponse<bool>> RemoveMember([FromRoute] Guid projectId, [FromRoute] Guid projectMemberId)
         {
-            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
-            if (!isAuthorized)
-            {
-                return ApiResponse<bool>.Error(9002, "Unauthorized access");
-            }
-            var result = await _context.RemoveMember(projectId, projectMemberId);
+            var actorMemberId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+            var result = await _context.RemoveMember(projectId, projectMemberId , actorMemberId);
             return ApiResponse<bool>.Success(result);
         }
 

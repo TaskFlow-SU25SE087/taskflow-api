@@ -16,10 +16,33 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
 
         public TypeLog ActionType { get; set; }
         public ChangedField? FieldChanged { get; set; }
+
+        public BoardIdLogResponse? Board { get; set; } = null;
+        public SprintIdLogResponse? Sprint { get; set; } = null;
+        public TaskIdLogResponse? Task { get; set; } = null;
+
         public string? OldValue { get; set; } = string.Empty;
         public string? NewValue { get; set; } = string.Empty;
         public string? Description { get; set; } = string.Empty;
 
         public DateTime CreateAt { get; set; }
+    }
+
+    public class BoardIdLogResponse
+    {
+        public Guid? BoardId { get; set; } = null;
+        public string? BoardName { get; set; } = string.Empty;
+    }
+
+    public class SprintIdLogResponse
+    {
+        public Guid? SprintId { get; set; } = null;
+        public string? SprintName { get; set; } = string.Empty;
+    }
+
+    public class TaskIdLogResponse
+    {
+        public Guid? TaskId { get; set; } = null;
+        public string? TaskName { get; set; } = string.Empty;
     }
 }

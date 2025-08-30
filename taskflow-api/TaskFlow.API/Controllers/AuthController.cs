@@ -22,6 +22,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<ApiResponse<TokenModel>> Login(LoginRequest model)
         {
             var token = await _userService.Login(model);
@@ -29,6 +30,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<ApiResponse<TokenModel>> Register([FromForm] RegisterAccountRequest model)
         {
             var result = await _userService.RegisterAccount(model);
@@ -36,6 +38,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("token/refresh")]
+        [AllowAnonymous]
         public async Task<ApiResponse<TokenModel>> RenewToken(TokenModel model)
         {
             var newToken = await _userService.RenewToken(model);
@@ -67,6 +70,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("account/activate")]
+        [AllowAnonymous]
         public async Task<ApiResponse<string>> ActivateAccount([FromBody] ActivateAccountRequest model)
         {
             await _userService.ConfirmEmailAndSetPasswordAsync(model);
@@ -74,6 +78,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("account/reset-password")]
+        [AllowAnonymous]
         public async Task<ApiResponse<string>> ResetPassword([FromBody] ResetPasswordRequest model)
         {
             await _userService.ResetPassword(model);
@@ -81,6 +86,7 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpPost("account/reset-password/send-mail")]
+        [AllowAnonymous]
         public async Task<ApiResponse<string>> SendMailResetPassword([FromBody] string EmailOrUsername)
         {
             await _userService.SendMailResetPassword(EmailOrUsername);

@@ -16,17 +16,20 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITaskProjectRepository _taskProjectRepository;
         private readonly AppTimeProvider _timeProvider;
         private readonly ISprintMeetingLogsService _sprintMeetingLogs;
+        private readonly ILogProjectService _logService;
 
         public SprintService(ISprintRepository repository, ITaskProjectRepository taskProjectRepository,
-            AppTimeProvider timeProvider, ISprintMeetingLogsService sprintMeetingLogs)
+            AppTimeProvider timeProvider, ISprintMeetingLogsService sprintMeetingLogs,
+            ILogProjectService logService)
         {
             _sprintRepository = repository;
             _taskProjectRepository = taskProjectRepository;
             _timeProvider = timeProvider;
             _sprintMeetingLogs = sprintMeetingLogs;
+            _logService = logService;
         }
 
-        public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID)
+        public async Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID, Guid memberId)
         {
             List<TaskProject> tasks = await _taskProjectRepository.GetListTasksByIdsAsync(TaskID);
             foreach (var task in tasks)
@@ -34,6 +37,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 task.SprintId = SprintId;
             }
             await _taskProjectRepository.UpdateListTaskAsync(tasks);
+            //log add task to sprint
+            await _logService.LogAddTaskToSprint(memberId, SprintId, tasks);
         }
 
         public async Task ChangeStatusSprint(Guid SpringId, SprintStatus status)
@@ -47,7 +52,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 {
                     throw new AppException(ErrorCode.SprintAlreadyInProgress);
                 }
-                if (sprint.StartDate <= DateTime.UtcNow)
+                if (_timeProvider.Now < sprint.StartDate)
                 {
                     throw new AppException(ErrorCode.CannotStartSprint);
                 }
@@ -90,6 +95,21 @@ namespace taskflow_api.TaskFlow.Application.Services
                 await _sprintRepository.UpdateSprintAsync(sprint);
 
             }
+            //resume sprint to OnHold
+            else if (status.Equals(SprintStatus.InProgress) && sprint.Status == SprintStatus.OnHold)
+            {
+                await _sprintRepository.UpdateSprintAsync(sprint);
+            }
+            else if (status.Equals(SprintStatus.OnHold))
+            {
+                if (sprint.Status.Equals(SprintStatus.Completed) ||
+                    sprint.Status.Equals(SprintStatus.NotStarted))
+                {
+                    throw new AppException(ErrorCode.CannotRevertSprint);
+                }
+                await _sprintRepository.UpdateSprintAsync(sprint);
+
+            }
         }
 
         public async Task<bool> CreateSprint(Guid ProjectId, CreateSprintRequest request)
@@ -115,6 +135,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Status = SprintStatus.NotStarted
             };
             await _sprintRepository.CreateSprintAsync(newSprint);
+            //log create sprint
+            await _logService.LogCreateSprint(newSprint.Id);
             return true;
         }
 
@@ -134,21 +156,46 @@ namespace taskflow_api.TaskFlow.Application.Services
             return result;
         }
 
-        public async Task<bool> UpdateSprint(Guid ProjectId, Guid SprintId, UpdateSprintRequest request)
+        public async Task<bool> UpdateSprint(Guid ProjectId, Guid actorMemberId, Guid SprintId, UpdateSprintRequest request)
         {
             var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
-            if (sprint == null || sprint.ProjectId != ProjectId || sprint.Status != SprintStatus.Completed)
+            if (sprint == null || sprint.ProjectId != ProjectId || sprint.Status == SprintStatus.Completed)
             {
                 // Sprint not found or Project mismatch
                 throw new AppException(ErrorCode.CannotUpdateSprint);
             }
 
-            //update sprint
-            sprint.Name = request.Name;
-            sprint.Description = request.Description;
-            sprint.StartDate = request.StartDate;
-            sprint.EndDate = request.EndDate;
-            sprint.Status = request.Status;
+            if (request.StartDate > request.EndDate)
+            {
+                throw new AppException(ErrorCode.InvalidDateRange);
+            }
+            //update sprint and create log
+            if (sprint.Name != request.Name)
+            {
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Name ,sprint.Name, request.Name);
+                sprint!.Name = request.Name;
+            }
+            if (sprint.Description != request.Description)
+            {
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Description, sprint.Description, request.Description);
+                sprint!.Description = request.Description;
+
+            }
+            if (sprint.StartDate.ToLocalTime().Date != request.StartDate.Date)
+            {
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.StartDate, sprint.StartDate.ToString("yyyy-MM-dd"), request.StartDate.ToString("yyyy-MM-dd"));
+                sprint!.StartDate = DateTime.SpecifyKind(request.StartDate.Date, DateTimeKind.Local);
+            }
+            if (sprint.EndDate.ToLocalTime().Date != request.EndDate.Date)
+            {
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.EndDate, sprint.EndDate.ToString("yyyy-MM-dd"), request.EndDate.ToString("yyyy-MM-dd"));
+                sprint!.EndDate = DateTime.SpecifyKind(request.EndDate.Date, DateTimeKind.Local);
+            }
+            if (sprint.Status != request.Status)
+            {
+                await _logService.UpdateTitleSprint(sprint.Id, actorMemberId, ChangedField.Status, sprint.Status.ToString(), request.Status.ToString());
+                sprint.Status = request.Status;
+            }
             await _sprintRepository.UpdateSprintAsync(sprint);
             return true;
         }

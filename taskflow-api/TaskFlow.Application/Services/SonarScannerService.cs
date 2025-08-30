@@ -25,6 +25,31 @@ namespace taskflow_api.TaskFlow.Application.Services
             _config = config;
         }
 
+        public async Task DeleteProjectSonar(string projectKey)
+        {
+            var sonarHost = _config["SonarQube:HostUrl"];
+            var sonarToken = _config["SonarQube:Token"];
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, 
+                $"{sonarHost}/api/projects/delete?project={projectKey}");
+
+            if (!string.IsNullOrEmpty(sonarToken))
+            {
+                var byteArray = Encoding.ASCII.GetBytes($"{sonarToken}:");
+                request.Headers.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            }
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Failed to delete project {projectKey}. " +
+                                    $"Status: {response.StatusCode}, Response: {content}");
+            }
+        }
+
         public async Task<List<SonarIssueResponse>> GetIssuesByProjectAsync(string projectKey)
         {
             var sonarHost = _config["SonarQube:HostUrl"];
@@ -147,9 +172,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             sonar.host.url={_sonarSetting.HostUrl}
             sonar.login={_sonarSetting.Token}
             sonar.sourceEncoding=UTF-8
-            sonar.exclusions=**/bin/**,**/obj/**,**/node_modules/**,**/dist/**,**/build/**
+            sonar.exclusions=**/bin/**,**/obj/**,**/node_modules/**,**/dist/**,**/build/**,**/.git/**/*
             sonar.inclusions=**/*.java,**/*.cs,**/*.js,**/*.ts,**/*.py
-            sonar.java.binaries=none
+            sonar.qualityprofile=AllRulesProfile
+            sonar.java.binaries=.
+            sonar.scm.provider=git
             ");
 
             var process = new ProcessStartInfo

@@ -41,7 +41,14 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .ToListAsync();
         }
 
-            public async Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl)
+        public async Task<List<ProjectPart>> GetAllPartsByWebhookUrlAsync(string webhookUrl)
+        {
+            return await _context.ProjectParts
+                .Where(x => x.WebhookUrl == webhookUrl)
+                .ToListAsync();
+        }
+
+        public async Task<ProjectPart?> GetByRepoUrlAsync(string repoUrl)
             {
             return await _context.ProjectParts
                  .Include(x => x.UserGitHubToken)
@@ -57,6 +64,12 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
         public async Task UpdateAsync(ProjectPart part)
         {
             _context.ProjectParts.Update(part);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateListPartAsync(List<ProjectPart> parts)
+        {
+            _context.ProjectParts.UpdateRange(parts);
             await _context.SaveChangesAsync();
         }
     }

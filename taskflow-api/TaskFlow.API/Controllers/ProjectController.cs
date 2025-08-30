@@ -72,8 +72,10 @@ namespace taskflow_api.TaskFlow.API.Controllers
         }
 
         [HttpGet("{projectid}")]
+        [Authorize]
         public async Task<ApiResponse<ProjectDetailResponse>> GetProject(Guid projectid)
         {
+            await _authorization.AuthorizeAsync(projectid, ProjectRole.Leader, ProjectRole.Member);
             var project = await _context.GetProject(projectid);
             return ApiResponse<ProjectDetailResponse>.Success(project);
         }

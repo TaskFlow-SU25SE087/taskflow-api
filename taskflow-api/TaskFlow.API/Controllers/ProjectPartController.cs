@@ -73,5 +73,13 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var commit = await _projectPartService.GetCommitDetail(commitId);
             return ApiResponse<List<CommitDetailResponse>>.Success(commit);
         }
+
+        [HttpDelete("webhook")]
+        [Authorize]
+        public async Task<ApiResponse<string>> DeleteWebhook([FromQuery] string repoUrl)
+        {
+            await _projectPartService.DeleteWeebhook(repoUrl);
+            return ApiResponse<string>.Success("Delete webhook successfully");
+        }
     }
 }

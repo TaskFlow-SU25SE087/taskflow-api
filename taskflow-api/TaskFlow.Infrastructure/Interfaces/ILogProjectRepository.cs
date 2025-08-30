@@ -5,7 +5,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
 {
     public interface ILogProjectRepository
     {
-        Task<List<ProjectLogResponse>> AllLogPrj(Guid projectId);
+        Task<List<ProjectLogResponse>> AllLogPrj(Guid projectId, Guid? nextLogId, int pagesize);
         Task CreateLogProject(LogProject log);
     }
 }

@@ -5,5 +5,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     public interface IRabbitMQService
     {
         void SendCommitJob(CommitJobMessage job);
+        void ImportFIleJob(ImportFileJobMessage job);
     }
 }

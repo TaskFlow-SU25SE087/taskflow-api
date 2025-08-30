@@ -307,6 +307,9 @@ namespace taskflow_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("BoardId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -335,6 +338,8 @@ namespace taskflow_api.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
 
                     b.HasIndex("ProjectId");
 
@@ -394,15 +399,15 @@ namespace taskflow_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("StatusFile")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UrlFile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("statusFile")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -659,6 +664,9 @@ namespace taskflow_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("AssignedEffortPoints")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("AssignerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -764,6 +772,9 @@ namespace taskflow_api.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("EffortPoints")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -1137,6 +1148,10 @@ namespace taskflow_api.Migrations
 
             modelBuilder.Entity("taskflow_api.TaskFlow.Domain.Entities.LogProject", b =>
                 {
+                    b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Board", "Board")
+                        .WithMany()
+                        .HasForeignKey("BoardId");
+
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
@@ -1156,6 +1171,8 @@ namespace taskflow_api.Migrations
                     b.HasOne("taskflow_api.TaskFlow.Domain.Entities.TaskProject", "TaskProject")
                         .WithMany()
                         .HasForeignKey("TaskProjectID");
+
+                    b.Navigation("Board");
 
                     b.Navigation("Project");
 

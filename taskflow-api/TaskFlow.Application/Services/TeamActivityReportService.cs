@@ -16,17 +16,23 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly TaskFlowDbContext _context;
         private readonly IProjectRepository _projectRepository;
         private readonly IProjectMemberRepository _projectMemberRepository;
+        private readonly ISprintRepository _sprintRepository;
+        private readonly ITaskProjectRepository _taskProjectRepository;
         private readonly AppTimeProvider _timeProvider;
 
         public TeamActivityReportService(
             TaskFlowDbContext context,
             IProjectRepository projectRepository,
             IProjectMemberRepository projectMemberRepository,
+            ISprintRepository sprintRepository,
+            ITaskProjectRepository taskProjectRepository,
             AppTimeProvider timeProvider)
         {
             _context = context;
             _projectRepository = projectRepository;
             _projectMemberRepository = projectMemberRepository;
+            _sprintRepository = sprintRepository;
+            _taskProjectRepository = taskProjectRepository;
             _timeProvider = timeProvider;
         }
 
@@ -63,6 +69,12 @@ namespace taskflow_api.TaskFlow.Application.Services
             var totalTodoTasks = 0;
             var totalOverdueTasks = 0;
             var totalComments = 0;
+            var totalAssignedEffortPoints = 0;
+            var totalCompletedEffortPoints = 0;
+            var totalInProgressEffortPoints = 0;
+            var totalTodoEffortPoints = 0;
+            var totalTasksWithEffortPoints = 0;
+            var totalTasksWithoutEffortPoints = 0;
 
             foreach (var member in projectMembers)
             {
@@ -76,6 +88,14 @@ namespace taskflow_api.TaskFlow.Application.Services
                 totalTodoTasks += memberActivity.TaskStats.TotalTodo;
                 totalOverdueTasks += memberActivity.TaskStats.TotalOverdue;
                 totalComments += memberActivity.CommentStats.TotalComments;
+                
+                // Aggregate effort point totals
+                totalAssignedEffortPoints += memberActivity.EffortPointStats.TotalAssignedEffortPoints;
+                totalCompletedEffortPoints += memberActivity.EffortPointStats.TotalCompletedEffortPoints;
+                totalInProgressEffortPoints += memberActivity.EffortPointStats.TotalInProgressEffortPoints;
+                totalTodoEffortPoints += memberActivity.EffortPointStats.TotalTodoEffortPoints;
+                totalTasksWithEffortPoints += memberActivity.EffortPointStats.TotalTasksWithEffortPoints;
+                totalTasksWithoutEffortPoints += memberActivity.EffortPointStats.TotalTasksWithoutEffortPoints;
             }
 
             // Calculate top contributors
@@ -86,7 +106,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                     FullName = ma.FullName,
                     CompletedTasks = ma.TaskStats.TotalCompleted,
                     TotalComments = ma.CommentStats.TotalComments,
-                    ContributionScore = CalculateContributionScore(ma.TaskStats, ma.CommentStats)
+                    CompletedEffortPoints = ma.EffortPointStats.TotalCompletedEffortPoints,
+                    ContributionScore = CalculateContributionScore(ma.TaskStats, ma.CommentStats, ma.EffortPointStats)
                 })
                 .OrderByDescending(tc => tc.ContributionScore)
                 .Take(request.TopContributorsCount)
@@ -104,6 +125,18 @@ namespace taskflow_api.TaskFlow.Application.Services
                 OverallCompletionRate = totalTasks > 0 ? (double)totalCompletedTasks / totalTasks * 100 : 0,
                 AverageTasksPerMember = memberActivities.Count > 0 ? (double)totalTasks / memberActivities.Count : 0,
                 AverageCommentsPerTask = totalTasks > 0 ? (double)totalComments / totalTasks : 0,
+                
+                // Effort Point Summary
+                TotalAssignedEffortPoints = totalAssignedEffortPoints,
+                TotalCompletedEffortPoints = totalCompletedEffortPoints,
+                TotalInProgressEffortPoints = totalInProgressEffortPoints,
+                TotalTodoEffortPoints = totalTodoEffortPoints,
+                OverallEffortPointCompletionRate = totalAssignedEffortPoints > 0 ? (double)totalCompletedEffortPoints / totalAssignedEffortPoints * 100 : 0,
+                AverageEffortPointsPerTask = totalTasks > 0 ? (double)totalAssignedEffortPoints / totalTasks : 0,
+                AverageEffortPointsPerMember = memberActivities.Count > 0 ? (double)totalAssignedEffortPoints / memberActivities.Count : 0,
+                TotalTasksWithEffortPoints = totalTasksWithEffortPoints,
+                TotalTasksWithoutEffortPoints = totalTasksWithoutEffortPoints,
+                
                 TopContributors = topContributors
             };
 
@@ -159,6 +192,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             // Calculate task statistics
             var taskStats = CalculateTaskStats(tasks, taskAssignments);
             var commentStats = CalculateCommentStats(comments, tasks.Count);
+            var effortPointStats = CalculateEffortPointStats(tasks, taskAssignments);
 
             // Get detailed task activities if requested
             var taskActivities = request.IncludeTaskDetails 
@@ -180,6 +214,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Role = projectMember.Role,
                 TaskStats = taskStats,
                 CommentStats = commentStats,
+                EffortPointStats = effortPointStats,
                 TaskActivities = taskActivities,
                 CommentActivities = commentActivities
             };
@@ -256,6 +291,55 @@ namespace taskflow_api.TaskFlow.Application.Services
             return stats;
         }
 
+        private EffortPointStats CalculateEffortPointStats(List<TaskProject> tasks, List<TaskAssignee> taskAssignments)
+        {
+            var stats = new EffortPointStats();
+            var totalEffortPoints = 0;
+            var tasksWithEffortPoints = 0;
+            var tasksWithoutEffortPoints = 0;
+
+            foreach (var task in tasks)
+            {
+                var assignment = taskAssignments.FirstOrDefault(ta => ta.RefId == task.Id);
+                var taskEffortPoints = task.EffortPoints ?? 0;
+                var assignedEffortPoints = assignment?.AssignedEffortPoints ?? taskEffortPoints;
+
+                if (assignedEffortPoints > 0)
+                {
+                    totalEffortPoints += assignedEffortPoints;
+                    tasksWithEffortPoints++;
+
+                    // Count effort points by status
+                    switch (task.Board?.Type)
+                    {
+                        case BoardType.Done:
+                            stats.TotalCompletedEffortPoints += assignedEffortPoints;
+                            break;
+                        case BoardType.InProgress:
+                            stats.TotalInProgressEffortPoints += assignedEffortPoints;
+                            break;
+                        case BoardType.Todo:
+                            stats.TotalTodoEffortPoints += assignedEffortPoints;
+                            break;
+                    }
+                }
+                else
+                {
+                    tasksWithoutEffortPoints++;
+                }
+            }
+
+            stats.TotalAssignedEffortPoints = totalEffortPoints;
+            stats.TotalTasksWithEffortPoints = tasksWithEffortPoints;
+            stats.TotalTasksWithoutEffortPoints = tasksWithoutEffortPoints;
+            stats.EffortPointCompletionRate = totalEffortPoints > 0 
+                ? (double)stats.TotalCompletedEffortPoints / totalEffortPoints * 100 
+                : 0;
+            stats.AverageEffortPointsPerTask = tasks.Count > 0 ? (double)totalEffortPoints / tasks.Count : 0;
+
+            return stats;
+        }
+
         private async Task<List<TaskActivityDetail>> GetTaskActivityDetails(List<TaskProject> tasks, List<TaskAssignee> taskAssignments)
         {
             var details = new List<TaskActivityDetail>();
@@ -276,7 +360,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                     CompletedAt = task.Board?.Type == BoardType.Done ? task.UpdatedAt : null,
                     Deadline = task.Deadline,
                     IsOverdue = task.Deadline.HasValue && task.Deadline.Value < now && task.Board?.Type != BoardType.Done,
-                    SprintName = task.Sprint?.Name
+                    SprintName = task.Sprint?.Name,
+                    TaskEffortPoints = task.EffortPoints,
+                    AssignedEffortPoints = assignment.AssignedEffortPoints
                 });
             }
 
@@ -304,7 +390,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             return details.OrderByDescending(d => d.CreatedAt).ToList();
         }
 
-        private double CalculateContributionScore(TaskActivityStats taskStats, CommentActivityStats commentStats)
+        private double CalculateContributionScore(TaskActivityStats taskStats, CommentActivityStats commentStats, EffortPointStats effortPointStats)
         {
             // Weighted scoring system
             var taskScore = taskStats.TotalCompleted * 10 + // Completed tasks worth 10 points each
@@ -314,9 +400,117 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             var commentScore = commentStats.TotalComments * 2; // Each comment worth 2 points
 
+            var effortPointScore = effortPointStats.TotalCompletedEffortPoints * 2; // Each completed effort point worth 2 points
+
             var penaltyScore = taskStats.TotalOverdue * 5; // Overdue tasks penalty
 
-            return Math.Max(0, taskScore + commentScore - penaltyScore);
+            return Math.Max(0, taskScore + commentScore + effortPointScore - penaltyScore);
+        }
+
+        public async Task<BurndownChartResponse> GetBurndownChartAsync(Guid projectId, Guid sprintId)
+        {
+            // ✅ SECURITY: Additional input validation
+            if (projectId == Guid.Empty || sprintId == Guid.Empty)
+            {
+                throw new AppException(ErrorCode.NoPermission);
+            }
+
+            // Get sprint information
+            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
+            if (sprint == null)
+            {
+                throw new AppException(ErrorCode.SprintNotFound);
+            }
+
+            if (sprint.ProjectId != projectId)
+            {
+                throw new AppException(ErrorCode.NoPermission);
+            }
+
+            // Get all tasks in the sprint
+            var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(sprintId);
+            
+            // Calculate effort points by priority using actual task effort points
+            var priorityEfforts = new List<PriorityEffortData>();
+            var totalEffortPoints = 0;
+            var completedEffortPoints = 0;
+
+            foreach (TaskPriority priority in Enum.GetValues(typeof(TaskPriority)))
+            {
+                var priorityTasks = tasks.Where(t => t.Priority == priority).ToList();
+                var priorityTotalPoints = priorityTasks.Sum(t => t.EffortPoints ?? 0);
+                var priorityCompletedPoints = priorityTasks.Where(t => IsTaskCompleted(t)).Sum(t => t.EffortPoints ?? 0);
+
+                priorityEfforts.Add(new PriorityEffortData
+                {
+                    Priority = priority,
+                    PriorityName = priority.ToString(),
+                    TotalEffortPoints = priorityTotalPoints,
+                    CompletedEffortPoints = priorityCompletedPoints,
+                    RemainingEffortPoints = priorityTotalPoints - priorityCompletedPoints,
+                    CompletionPercentage = priorityTotalPoints > 0 ? (double)priorityCompletedPoints / priorityTotalPoints * 100 : 0
+                });
+
+                totalEffortPoints += priorityTotalPoints;
+                completedEffortPoints += priorityCompletedPoints;
+            }
+
+            // Calculate daily progress
+            var dailyProgress = new List<DailyProgressData>();
+            var idealBurndown = new List<DailyProgressData>();
+            var totalDays = (sprint.EndDate - sprint.StartDate).Days + 1;
+            var dailyIdealBurn = totalEffortPoints / (double)totalDays;
+
+            for (int i = 0; i <= totalDays; i++)
+            {
+                var currentDate = sprint.StartDate.AddDays(i);
+                
+                // Calculate cumulative completed tasks up to this date
+                var completedTasksUpToDate = tasks.Where(t => 
+                    IsTaskCompleted(t) && 
+                    t.UpdatedAt.Date <= currentDate.Date).ToList();
+                
+                var completedPointsUpToDate = completedTasksUpToDate.Sum(t => t.EffortPoints ?? 0);
+                var remainingPoints = Math.Max(0, totalEffortPoints - completedPointsUpToDate);
+
+                dailyProgress.Add(new DailyProgressData
+                {
+                    Date = currentDate,
+                    RemainingEffortPoints = remainingPoints,
+                    CompletedEffortPoints = completedPointsUpToDate,
+                    TotalEffortPoints = totalEffortPoints
+                });
+
+                // Ideal burndown line (linear decrease)
+                var idealRemaining = Math.Max(0, totalEffortPoints - (dailyIdealBurn * i));
+                idealBurndown.Add(new DailyProgressData
+                {
+                    Date = currentDate,
+                    RemainingEffortPoints = (int)idealRemaining,
+                    CompletedEffortPoints = (int)(totalEffortPoints - idealRemaining),
+                    TotalEffortPoints = totalEffortPoints
+                });
+            }
+
+            return new BurndownChartResponse
+            {
+                SprintId = sprint.Id,
+                SprintName = sprint.Name,
+                StartDate = sprint.StartDate,
+                EndDate = sprint.EndDate,
+                TotalDays = totalDays,
+                PriorityEfforts = priorityEfforts,
+                DailyProgress = dailyProgress,
+                IdealBurndown = idealBurndown
+            };
+        }
+
+
+
+        private bool IsTaskCompleted(TaskProject task)
+        {
+            // Task is completed only when it has board type Done
+            return task.Board != null && task.Board.Type == BoardType.Done;
         }
     }
 }

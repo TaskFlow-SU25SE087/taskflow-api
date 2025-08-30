@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System.Net;
 using System.Net.Mail;
@@ -314,6 +315,90 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Body = body
             };
             await SendMailAsync(mailContent);
+        }
+
+        public Task SendMailNewAccount(string email, string username, string fullname, string password)
+        {
+            var content = new MailContent
+            {
+                To = email,
+                Subject = "🎉 Welcome to TaskFlow – Your New Account is Ready!",
+                Body = $@"
+        <html>
+        <head>
+            <style>
+                .btn {{
+                    display: inline-block;
+                    padding: 10px 20px;
+                    margin-top: 15px;
+                    background-color: #4CAF50;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: bold;
+                }}
+                .footer {{
+                    margin-top: 20px;
+                    font-size: 12px;
+                    color: #999;
+                }}
+            </style>
+        </head>
+        <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333'>
+            <h2>Hi {fullname},</h2>
+            <p>Welcome to <b>TaskFlow</b>! Your account has been successfully created.</p>
+            <p>Here are your login details:</p>
+            <ul>
+                <li><b>Username:</b> {username}</li>
+                <li><b>Password:</b> {password}</li>
+            </ul>
+            <p>👉 Please log in as soon as possible and change your password to keep your account secure.</p>
+
+            <a href='{_frontEndBaseUrl}/login' class='btn' target='_blank'>Login Now</a>
+
+            <hr/>
+            <p class='footer'>This is an automated message from TaskFlow. Do not reply directly to this email.</p>
+        </body>
+        </html>"
+            };
+            return SendMailAsync(content);
+        }
+
+        public Task SendMailReEnrollment(string email, string username, string termName, string fullname)
+        {
+            var content = new MailContent
+            {
+                To = email,
+                Subject = $"📚 Re-enrolled for {termName} — Your Account Details",
+                Body = $@"
+        <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333'>
+            <h2>Hi {fullname},</h2>
+            <p>Welcome back to <b>TaskFlow</b>! You have been re-enrolled for the <b>{termName}</b> term.</p>
+            <p>Here are your account details:</p>
+            <ul>
+                <li><b>Username:</b> {username}</li>
+                <li><b>Password:</b> Your existing password (if you forgot, use the Reset Password button below)</li>
+            </ul>
+            <p>👉 Please log in as soon as possible using your existing password. 
+            If you have forgotten your password, click the link below to reset it:</p>
+            <a href='{_frontEndBaseUrl}/reset-password?email={HttpUtility.UrlEncode(email)}' 
+             style=""display:inline-block;
+                      padding:10px 15px;
+                      margin-top:10px;
+                      background-color:#4CAF50;
+                      color:white;
+                      text-decoration:none;
+                      border-radius:5px;
+                      font-weight:bold;"">
+               Reset Password
+            </a>
+            <br/><br/>
+            <p>Login here: <a href='{_frontEndBaseUrl}/login'>{_frontEndBaseUrl}/login</a></p>
+            <hr/>
+            <p style='font-size:12px;color:#999'>This is an automated message from TaskFlow. Do not reply directly to this email.</p>
+        </div>"
+            };
+            return SendMailAsync(content);
         }
     }
 }
