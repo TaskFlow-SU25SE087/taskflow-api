@@ -152,10 +152,10 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<bool> RemoveMember(Guid projectId, Guid projectMemberId, Guid actorMemberId)
         {
             var member = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(projectMemberId);
-            if (member == null)
-            {
-                throw new AppException(ErrorCode.NoUserFound);
-            }
+            //if (member == null)
+            //{
+            //    throw new AppException(ErrorCode.NoUserFound);
+            //}
             //Remove the member from the project
             await _logService.LogRemoveMember(member.ProjectId, member.Id, actorMemberId);
             member!.IsActive = false;
