@@ -123,9 +123,13 @@ namespace taskflow_api.TaskFlow.Application.Services
         public async Task<string> UpdateResonTask(Guid mettingID, Guid taskId, Guid projectMemberId, int itemVersion, string reason)
         {
             //sprint meeting can update if it is created within 3 days
-            var threshold = _timeProvider.Now.AddDays(-3);
+            //var threshold = _timeProvider.Now.AddDays(-3);
             var sprintmeeting = await _sprintMeetingLogsRepository.GetSprintMettingByID(mettingID);
-            if (sprintmeeting == null || sprintmeeting.CreatedAt < threshold)
+            //if (sprintmeeting == null || sprintmeeting.CreatedAt < threshold)
+            //{
+            //    throw new AppException(ErrorCode.SprintMeetingCannotUpdate);
+            //}
+            if (sprintmeeting == null)
             {
                 throw new AppException(ErrorCode.SprintMeetingCannotUpdate);
             }
