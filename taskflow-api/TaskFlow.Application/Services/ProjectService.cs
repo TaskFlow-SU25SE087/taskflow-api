@@ -78,6 +78,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 TermId = user.Term.Id,
                 Semester = user.Term.Season + user.Term.Year,
                 CreatedAt = _timeProvider.Now,
+                LastUpdate = _timeProvider.Now,
                 IsActive = true
             };
             var projectId = await _projectRepository.CreateProjectAsync(project);

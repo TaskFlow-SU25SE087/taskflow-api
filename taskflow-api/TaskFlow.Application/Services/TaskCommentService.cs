@@ -43,6 +43,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 CommenterId =projectMember.Id,
                 Content = request.Content,
                 CreateAt = _timeProvider.Now,
+                LastUpdatedAt = _timeProvider.Now
             };
             // check file 
             if (request.Files != null && request.Files.Any())

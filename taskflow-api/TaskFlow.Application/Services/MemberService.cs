@@ -157,11 +157,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.NoUserFound);
             }
             //Remove the member from the project
+            await _logService.LogRemoveMember(member.ProjectId, member.Id, actorMemberId);
             member!.IsActive = false;
             member.HasJoinedBefore = true; // Mark as has joined before
             await _projectMemberRepository.UpdateMember(member);
             //log remove user in project
-            await _logService.LogRemoveMember(member.ProjectId, member.Id, actorMemberId);
             await _notificationService.NotifyProjectMemberChangeAsync(projectId, $"Member {(string.IsNullOrEmpty(member.User?.FullName) ? member.User?.Email : member.User?.FullName) ?? member.UserId.ToString()} has been removed from the project.");
             return true;
         }
