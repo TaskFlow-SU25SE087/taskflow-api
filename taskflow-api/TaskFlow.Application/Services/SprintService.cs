@@ -48,7 +48,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (status.Equals(SprintStatus.InProgress)) //start sprint
             {
                 bool checkSprintStart = await _sprintRepository.CheckSprintStartDate(sprint.ProjectId);
-                if (checkSprintStart)
+                if (checkSprintStart || sprint.Status.Equals(SprintStatus.Completed))
                 {
                     throw new AppException(ErrorCode.SprintAlreadyInProgress);
                 }
