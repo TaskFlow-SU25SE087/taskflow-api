@@ -584,11 +584,21 @@ namespace taskflow_api.TaskFlow.Application.Services
             // Collect all StudentID from Excel
             for (int row = 2; row <= rowCount; row++)
             {
+                var studentId = worksheet.Cells[row, 1].Text.Trim();
+                var fullName = worksheet.Cells[row, 2].Text.Trim();
+                var email = worksheet.Cells[row, 3].Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(studentId) &&
+                    string.IsNullOrWhiteSpace(fullName) &&
+                    string.IsNullOrWhiteSpace(email))
+                {
+                    continue;
+                }
                 var st = new ImportStudentRequest
                 {
-                    StudentId = worksheet.Cells[row, 1].Text.Trim(),
-                    FullName = worksheet.Cells[row, 2].Text.Trim(),
-                    Email = worksheet.Cells[row, 3].Text.Trim(),
+                    StudentId = studentId,
+                    FullName = fullName,
+                    Email = email,
                 };
                 //var stId = worksheet.Cells[row, 1].Text.Trim();
                 students.Add(st);
