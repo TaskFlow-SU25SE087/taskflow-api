@@ -173,14 +173,43 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .Include(ta => ta.ProjectMember.User)
                 .ToListAsync();
 
-            // Get tasks for this member
-            var taskIds = taskAssignments.Select(ta => ta.RefId).ToList();
+            // ✅ FIXED: Include tasks that were either created OR completed within the date range
+            // 
+            // PROBLEM: Previous logic only filtered by CreatedAt, which excluded completed tasks
+            // that were created outside the date range but completed within it.
+            // 
+            // SOLUTION: Include tasks that match ANY of these criteria:
+            // 1. Created within the date range (original behavior)
+            // 2. Completed (moved to Done status) within the date range  
+            // 3. Assigned to the member within the date range
+            // 
+            // This ensures completed tasks are always counted correctly regardless of when they were created.
             var tasks = await _context.TaskProjects
                 .Where(t => taskIds.Contains(t.Id) && t.ProjectId == projectId)
                 .Include(t => t.Board)
                 .Include(t => t.Sprint)
-                .Where(t => t.CreatedAt >= startDate && t.CreatedAt <= endDate)
+                .Where(t => 
+                    // Task was created within the date range
+                    (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
+                    // OR task was completed (moved to Done) within the date range
+                    (t.Board.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
+                    // OR task was assigned within the date range (for active assignments)
+                    (taskAssignments.Any(ta => ta.RefId == t.Id && ta.CreatedAt >= startDate && ta.CreatedAt <= endDate))
+                )
                 .ToListAsync();
+
+            // ✅ DEBUG: Log task inclusion for verification
+            var createdTasks = tasks.Where(t => t.CreatedAt >= startDate && t.CreatedAt <= endDate).Count();
+            var completedTasks = tasks.Where(t => t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate).Count();
+            var assignedTasks = tasks.Where(t => taskAssignments.Any(ta => ta.RefId == t.Id && ta.CreatedAt >= startDate && ta.CreatedAt <= endDate)).Count();
+            
+            // Log to console for debugging (remove in production)
+            Console.WriteLine($"[DEBUG] Task filtering for member {memberId}:");
+            Console.WriteLine($"  - Total tasks found: {tasks.Count}");
+            Console.WriteLine($"  - Created in date range: {createdTasks}");
+            Console.WriteLine($"  - Completed in date range: {completedTasks}");
+            Console.WriteLine($"  - Assigned in date range: {assignedTasks}");
+            Console.WriteLine($"  - Date range: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
 
             // Get comments by this member
             var comments = await _context.TaskComments
