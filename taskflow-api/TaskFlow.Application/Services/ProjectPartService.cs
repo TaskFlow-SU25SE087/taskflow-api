@@ -219,6 +219,17 @@ namespace taskflow_api.TaskFlow.Application.Services
 
                 if (string.IsNullOrEmpty(commitId)) continue;
                 // get repo git
+                var added = commit["added"]?.ToObject<List<string>>() ?? new List<string>();
+                var modified = commit["modified"]?.ToObject<List<string>>() ?? new List<string>();
+                var removed = commit["removed"]?.ToObject<List<string>>() ?? new List<string>();
+
+                //not scan commit romove file only
+                if (!added.Any() && !modified.Any() && removed.Any())
+                {
+                    _logger.LogInformation($"Commit {commitId} only deletes files, skipping.");
+                    continue;
+                }
+
                 var repo = await _projectPartRepository.GetByRepoUrlAsync(repoUrl);
                 if (repo == null)
                 {
