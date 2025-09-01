@@ -24,5 +24,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<bool> IsTaskCompleted(Guid taskId);
         Task<TaskCompletionSummaryResponse> GetTaskCompletionReport(Guid projectId, TaskCompletionReportRequest request);
         Task BulkAssignTaskToUsers(Guid TaskId, Guid ProjectId, BulkAssignTaskRequest request);
+        Task UpdateIndividualAssigneeEffortPoints(Guid TaskId, Guid ProjectId, UpdateAssigneeEffortPointsRequest request);
     }
 }
