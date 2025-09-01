@@ -205,8 +205,23 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             else
             {
-                // Single assignee - use requested effort points
-                assignedEffortPoints = request.AssignedEffortPoints;
+                // Single assignee - synchronize task and assignee effort points
+                if (task.EffortPoints.HasValue)
+                {
+                    // Task has effort points - assign all to the single assignee
+                    assignedEffortPoints = task.EffortPoints.Value;
+                }
+                else
+                {
+                    // Task doesn't have effort points - use requested effort points and set task effort points
+                    assignedEffortPoints = request.AssignedEffortPoints;
+                    if (assignedEffortPoints.HasValue)
+                    {
+                        task.EffortPoints = assignedEffortPoints.Value;
+                        await _taskProjectRepository.UpdateTaskAsync(task);
+                    }
+                }
+                
                 var newAssignee = new TaskAssignee
                 {
                     AssignerId = UserAssign.Id,
@@ -640,13 +655,38 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.TaskNotFound);
             }
 
-            // Validate effort points distribution if task has effort points
-            if (task.EffortPoints.HasValue)
+            // Handle effort points based on number of assignees
+            var totalAssignedPoints = request.Assignees.Sum(a => a.AssignedEffortPoints ?? 0);
+            
+            if (request.Assignees.Count == 1)
             {
-                var totalAssignedPoints = request.Assignees.Sum(a => a.AssignedEffortPoints ?? 0);
-                if (totalAssignedPoints != task.EffortPoints.Value)
+                // Single assignee - synchronize task and assignee effort points
+                if (task.EffortPoints.HasValue)
                 {
-                    throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+                    // Task has effort points - assign all to the single assignee
+                    var singleAssignee = request.Assignees.First();
+                    singleAssignee.AssignedEffortPoints = task.EffortPoints.Value;
+                    totalAssignedPoints = task.EffortPoints.Value;
+                }
+                else
+                {
+                    // Task doesn't have effort points - set task effort points to assignee's effort points
+                    if (totalAssignedPoints > 0)
+                    {
+                        task.EffortPoints = totalAssignedPoints;
+                        await _taskProjectRepository.UpdateTaskAsync(task);
+                    }
+                }
+            }
+            else
+            {
+                // Multiple assignees - validate effort points distribution if task has effort points
+                if (task.EffortPoints.HasValue)
+                {
+                    if (totalAssignedPoints != task.EffortPoints.Value)
+                    {
+                        throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+                    }
                 }
             }
 
