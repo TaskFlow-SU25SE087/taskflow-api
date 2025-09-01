@@ -357,18 +357,6 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             var user = await _userManager.Users
                 .Include(u => u.Term)
-                .Select(u => new User
-                {
-                    Id = u.Id,
-                    Avatar = u.Avatar,
-                    FullName = u.FullName,
-                    PhoneNumber = u.PhoneNumber,
-                    Role = u.Role,
-                    Email = u.Email,
-                    StudentId = u.StudentId,
-                    Term = u.Term,
-                    PastTerms = u.PastTerms
-                })
                 .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
