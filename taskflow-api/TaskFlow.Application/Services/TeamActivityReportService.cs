@@ -38,9 +38,11 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<TeamActivityReportResponse> GenerateTeamActivityReportAsync(Guid projectId, TeamActivityReportRequest request)
         {
-            // Validate project exists
-            var project = await _projectRepository.GetProjectByIdAsync(projectId)
-                ?? throw new AppException(ErrorCode.ProjectNotFound);
+            try
+            {
+                // Validate project exists
+                var project = await _projectRepository.GetProjectByIdAsync(projectId)
+                    ?? throw new AppException(ErrorCode.ProjectNotFound);
 
             // Get all project members
             var memberResponses = await _projectMemberRepository.GetAllMembersInProjectAsync(projectId);
@@ -150,31 +152,62 @@ namespace taskflow_api.TaskFlow.Application.Services
                 MemberActivities = memberActivities,
                 Summary = summary
             };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] GenerateTeamActivityReportAsync failed for project {projectId}: {ex.Message}");
+                Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+                throw; // Re-throw to maintain original error handling
+            }
         }
 
         public async Task<MemberActivityResponse> GenerateMemberActivityReportAsync(Guid projectId, Guid memberId, TeamActivityReportRequest request)
         {
-            // Get project member
-            var projectMember = await _projectMemberRepository.FindMemberInProject(projectId, memberId)
-                ?? throw new AppException(ErrorCode.UserNotInProject);
+            try
+            {
+                // Get project member
+                var projectMember = await _projectMemberRepository.FindMemberInProject(projectId, memberId)
+                    ?? throw new AppException(ErrorCode.UserNotInProject);
 
-            // Get user details
-            var user = await _context.Users.FindAsync(memberId)
-                ?? throw new AppException(ErrorCode.NoUserFound);
+                // Get user details
+                var user = await _context.Users.FindAsync(memberId)
+                    ?? throw new AppException(ErrorCode.NoUserFound);
 
             // Build date filter
             var startDate = request.StartDate ?? DateTime.MinValue;
             var endDate = request.EndDate ?? _timeProvider.UtcNow;
 
             // Get task assignments for this member
+            Console.WriteLine($"[DEBUG] Getting task assignments for member {memberId} (ProjectMemberId: {projectMember.Id})");
             var taskAssignments = await _context.TaskAssignees
                 .Where(ta => ta.ImplementerId == projectMember.Id && ta.IsActive)
                 .Include(ta => ta.ProjectMember)
                 .Include(ta => ta.ProjectMember.User)
                 .ToListAsync();
+            Console.WriteLine($"[DEBUG] Found {taskAssignments.Count} task assignments");
 
             // Get task IDs from assignments
             var taskIds = taskAssignments.Select(ta => ta.RefId).ToList();
+            
+            // ✅ SAFETY: Handle case where member has no task assignments
+            if (!taskIds.Any())
+            {
+                Console.WriteLine($"[DEBUG] Member {memberId} has no task assignments, returning empty report");
+                return new MemberActivityResponse
+                {
+                    UserId = user.Id,
+                    ProjectMemberId = projectMember.Id,
+                    FullName = user.FullName,
+                    Avatar = user.Avatar,
+                    Email = user.Email ?? "",
+                    Role = projectMember.Role,
+                    TaskStats = new TaskActivityStats(),
+                    CommentStats = new CommentActivityStats(),
+                    EffortPointStats = new EffortPointStats(),
+                    TaskActivities = new List<TaskActivityDetail>(),
+                    CommentActivities = new List<CommentActivityDetail>()
+                };
+            }
 
             // ✅ FIXED: Include tasks that were either created OR completed within the date range
             // 
@@ -187,19 +220,28 @@ namespace taskflow_api.TaskFlow.Application.Services
             // 3. Assigned to the member within the date range
             // 
             // This ensures completed tasks are always counted correctly regardless of when they were created.
-            var tasks = await _context.TaskProjects
+            // First, get all tasks for this member
+            Console.WriteLine($"[DEBUG] Getting tasks for {taskIds.Count} task IDs");
+            var allTasks = await _context.TaskProjects
                 .Where(t => taskIds.Contains(t.Id) && t.ProjectId == projectId)
                 .Include(t => t.Board)
                 .Include(t => t.Sprint)
-                .Where(t => 
-                    // Task was created within the date range
-                    (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
-                    // OR task was completed (moved to Done) within the date range
-                    (t.Board.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
-                    // OR task was assigned within the date range (for active assignments)
-                    (taskAssignments.Any(ta => ta.RefId == t.Id && ta.CreatedAt >= startDate && ta.CreatedAt <= endDate))
-                )
                 .ToListAsync();
+            Console.WriteLine($"[DEBUG] Found {allTasks.Count} tasks in database");
+
+            // Then filter in memory to avoid LINQ translation issues
+            var tasks = allTasks.Where(t => 
+                // Task was created within the date range
+                (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
+                // OR task was completed (moved to Done) within the date range
+                (t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
+                // OR task was assigned within the date range (for active assignments)
+                (taskAssignments.Any(ta => ta.RefId == t.Id && ta.CreatedAt >= startDate && ta.CreatedAt <= endDate))
+            ).ToList();
+
+            // ✅ SAFETY: Ensure we have valid data
+            if (tasks == null) tasks = new List<TaskProject>();
+            if (taskAssignments == null) taskAssignments = new List<TaskAssignee>();
 
             // ✅ DEBUG: Log task inclusion for verification
             var createdTasks = tasks.Where(t => t.CreatedAt >= startDate && t.CreatedAt <= endDate).Count();
@@ -250,6 +292,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                 TaskActivities = taskActivities,
                 CommentActivities = commentActivities
             };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] GenerateMemberActivityReportAsync failed for member {memberId}: {ex.Message}");
+                Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+                throw; // Re-throw to maintain original error handling
+            }
         }
 
         private TaskActivityStats CalculateTaskStats(List<TaskProject> tasks, List<TaskAssignee> taskAssignments)
