@@ -163,5 +163,14 @@ namespace taskflow_api.TaskFlow.Application.Services
                             SprintId = sprintId,
                         });
         }
+
+        public async Task CreateRessonTaskLog(Guid projectId, Guid taskId, Guid actorMemberId, string reason)
+        {
+            await LogSimple(projectId, actorMemberId, TypeLog.UpdateResson,
+                reason, new LogChangeContext
+                {
+                    TaskProjectID = taskId,
+                });
+        }
     }
 }

@@ -90,6 +90,8 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail WebhookDeletionFailed = new(9018, "Failed to delete webhook", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail InvalidDateRange = new(9019, "Invalid date range", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotRevertSprint = new(9020, "Cannot revert sprint", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail InvalidCurrentPassword = new(9021, "Invalid current password", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail PasswordsDoNotMatch = new(9022, "New password and confirmation password do not match", StatusCodes.Status400BadRequest);
 
     }
 }

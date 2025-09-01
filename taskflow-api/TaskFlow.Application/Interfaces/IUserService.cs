@@ -26,5 +26,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task SendMailResetPassword(string EmailOrUsername);
         Task ImportFileExcelAsync(ImportUserFileRequest file);
         Task<PagedResult<ProcessingFile>> getListFileProcess(int page);
+        Task ChangePassword(ChangePasswordRequest request);
     }
 }
