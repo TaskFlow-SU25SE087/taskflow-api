@@ -90,5 +90,11 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.TaskAssignees.Update(taskAssignee);
             await _context.SaveChangesAsync();
         }
+
+        public async Task UpdateMultipleTaskAssigneesAsync(List<TaskAssignee> taskAssignees)
+        {
+            _context.TaskAssignees.UpdateRange(taskAssignees);
+            await _context.SaveChangesAsync();
+        }
     }
 }

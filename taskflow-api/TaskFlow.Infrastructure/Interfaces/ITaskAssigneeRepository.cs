@@ -12,6 +12,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<TaskAssignee?> GetTaskAssigneeAsync(Guid taskAssigneeId);
         Task<TaskAssignee?> GetTaskAssigneeByTaskIdAndUserIDAsync(Guid taskId, Guid projectmemberId);
         Task UpdateAsync(TaskAssignee taskAssignee);
+        Task UpdateMultipleTaskAssigneesAsync(List<TaskAssignee> taskAssignees);
         Task<List<TaskAssignee>> taskAssigneesAsync(Guid taskId);
         Task<List<UnfinishedTaskResponse>> GetTaskCanUpdateSprintMeeting(List<UnfinishedTaskResponse> ufsTask, Guid projectMemberId);
     }

@@ -23,13 +23,14 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ITaskAssigneeRepository _taskAssigneeRepository;
         private readonly IProjectMemberRepository _projectMemberRepository;
         private readonly INotificationService _notificationService;
+        private readonly IEffortPointsService _effortPointsService;
         private readonly AppTimeProvider _timeProvider;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
             ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
             ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository,
-            AppTimeProvider timeProvider,
+            IEffortPointsService effortPointsService, AppTimeProvider timeProvider,
             INotificationService notificationService)
         {
             _taskProjectRepository = taskProjectRepository;
@@ -41,6 +42,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _taskAssigneeRepository = taskAssigneeRepository;
             _projectMemberRepository = projectMemberRepository;
+            _effortPointsService = effortPointsService;
             _notificationService = notificationService;
             _timeProvider = timeProvider;
         }
@@ -140,34 +142,86 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.TaskNotFound);
             }
 
-            // Validate effort points if task has effort points
-            if (task.EffortPoints.HasValue && request.AssignedEffortPoints.HasValue)
+            // Get current assignees to determine if this will be multiple assignees
+            var currentAssignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
+            var willHaveMultipleAssignees = currentAssignees.Count > 0;
+
+            // Handle effort points based on assignment scenario
+            int? assignedEffortPoints = null;
+            if (willHaveMultipleAssignees)
             {
-                // Get current total assigned effort points
-                var currentAssignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
-                var currentTotalAssigned = currentAssignees.Sum(a => a.AssignedEffortPoints ?? 0);
-                var newTotal = currentTotalAssigned + request.AssignedEffortPoints.Value;
-                
-                if (newTotal > task.EffortPoints.Value)
+                // Multiple assignees - use automatic distribution
+                if (task.EffortPoints.HasValue)
                 {
-                    throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+                    // Task has effort points - distribute equally among all assignees
+                    var allAssignees = new List<TaskAssignee>(currentAssignees);
+                    var newAssignee = new TaskAssignee
+                    {
+                        AssignerId = UserAssign.Id,
+                        ImplementerId = request.ImplementerId,
+                        RefId = TaskId,
+                        Type = RefType.Task,
+                        IsActive = true,
+                        CreatedAt = _timeProvider.Now
+                    };
+                    allAssignees.Add(newAssignee);
+                    
+                    var distribution = _effortPointsService.DistributeEffortPointsEqually(task.EffortPoints.Value, allAssignees.Count);
+                    
+                    // Update existing assignees with new distribution
+                    for (int i = 0; i < currentAssignees.Count; i++)
+                    {
+                        currentAssignees[i].AssignedEffortPoints = distribution[i];
+                    }
+                    await _taskAssigneeRepository.UpdateMultipleTaskAssigneesAsync(currentAssignees);
+                    
+                    // Set effort points for new assignee
+                    assignedEffortPoints = distribution[currentAssignees.Count];
+                    newAssignee.AssignedEffortPoints = assignedEffortPoints;
+                    
+                    await _taskAssigneeRepository.AcceptTaskAsync(newAssignee);
                 }
+                else
+                {
+                    // Task doesn't have effort points - set effort points from assignee request
+                    assignedEffortPoints = request.AssignedEffortPoints;
+                    var newAssignee = new TaskAssignee
+                    {
+                        AssignerId = UserAssign.Id,
+                        ImplementerId = request.ImplementerId,
+                        RefId = TaskId,
+                        Type = RefType.Task,
+                        AssignedEffortPoints = assignedEffortPoints,
+                        IsActive = true,
+                        CreatedAt = _timeProvider.Now
+                    };
+                    await _taskAssigneeRepository.AcceptTaskAsync(newAssignee);
+                    
+                    // Update task effort points to total of all assignees
+                    var totalEffortPoints = await _effortPointsService.CalculateTaskEffortPointsFromAssignees(TaskId);
+                    task.EffortPoints = totalEffortPoints;
+                    await _taskProjectRepository.UpdateTaskAsync(task);
+                }
+            }
+            else
+            {
+                // Single assignee - use requested effort points
+                assignedEffortPoints = request.AssignedEffortPoints;
+                var newAssignee = new TaskAssignee
+                {
+                    AssignerId = UserAssign.Id,
+                    ImplementerId = request.ImplementerId,
+                    RefId = TaskId,
+                    Type = RefType.Task,
+                    AssignedEffortPoints = assignedEffortPoints,
+                    IsActive = true,
+                    CreatedAt = _timeProvider.Now
+                };
+                await _taskAssigneeRepository.AcceptTaskAsync(newAssignee);
             }
 
             // Get assigner information for notification
             var assignerName = UserAssign.User?.FullName ?? UserAssign.User?.UserName ?? "Project Member";
-
-            var newTaskAginee = new TaskAssignee
-            {
-                AssignerId = UserAssign.Id,
-                ImplementerId = request.ImplementerId,
-                RefId = TaskId,
-                Type = RefType.Task,
-                AssignedEffortPoints = request.AssignedEffortPoints,
-                IsActive = true,
-                CreatedAt = _timeProvider.Now
-            };
-            await _taskAssigneeRepository.AcceptTaskAsync(newTaskAginee);
 
             // Send notification to the assigned user
             await _notificationService.NotifyTaskAssignmentAsync(
@@ -424,6 +478,28 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.UserNotAssignedToTask);
             }
+            
+            // Get task information for effort point redistribution
+            var task = await _taskProjectRepository.GetTaskByIdAsync(taskAssignee.RefId);
+            if (task != null && task.EffortPoints.HasValue)
+            {
+                // Get remaining assignees after this one leaves
+                var remainingAssignees = await _taskAssigneeRepository.taskAssigneesAsync(taskAssignee.RefId);
+                remainingAssignees = remainingAssignees.Where(a => a.Id != taskAssigneeId).ToList();
+                
+                if (remainingAssignees.Count > 0)
+                {
+                    // Redistribute effort points among remaining assignees
+                    var redistributedAssignees = await _effortPointsService.RedistributeEffortPointsAfterAssigneeLeaves(
+                        taskAssignee.RefId, task.EffortPoints.Value);
+                    
+                    if (redistributedAssignees.Count > 0)
+                    {
+                        await _taskAssigneeRepository.UpdateMultipleTaskAssigneesAsync(redistributedAssignees);
+                    }
+                }
+            }
+            
             taskAssignee.UpdatedAt = _timeProvider.Now;
             taskAssignee.IsActive = false;
             taskAssignee.CancellationNote = string.IsNullOrWhiteSpace(reason)

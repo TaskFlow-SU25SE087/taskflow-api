@@ -173,6 +173,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .Include(ta => ta.ProjectMember.User)
                 .ToListAsync();
 
+            // Get task IDs from assignments
+            var taskIds = taskAssignments.Select(ta => ta.RefId).ToList();
+
             // ✅ FIXED: Include tasks that were either created OR completed within the date range
             // 
             // PROBLEM: Previous logic only filtered by CreatedAt, which excluded completed tasks
