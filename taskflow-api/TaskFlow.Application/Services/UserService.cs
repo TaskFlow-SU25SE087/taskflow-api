@@ -355,7 +355,21 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.Unauthorized);
             }
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _userManager.Users
+                .Include(u => u.Term)
+                .Select(u => new User
+                {
+                    Id = u.Id,
+                    Avatar = u.Avatar,
+                    FullName = u.FullName,
+                    PhoneNumber = u.PhoneNumber,
+                    Role = u.Role,
+                    Email = u.Email,
+                    StudentId = u.StudentId,
+                    Term = u.Term,
+                    PastTerms = u.PastTerms
+                })
+                .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
                 throw new AppException(ErrorCode.NoUserFound);
@@ -381,8 +395,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.ImageNotCanSave);
             }
-            var result = _mapper.Map<UserResponse>(user);
-            return result;
+            var userResponse = new UserResponse
+            {
+                Id = user.Id,
+                Avatar = user.Avatar,
+                FullName = user.FullName,
+                Role = user.Role,
+                Email = user.Email!,
+                PhoneNumber = user.PhoneNumber!,
+                StudentId = user.StudentId,
+                Season = user.Term.Season,
+                Year = user.Term.Year,
+                PastTerms = user.PastTerms
+            };
+            return userResponse;
         }
 
         private async Task<TokenModel> GenerateToken(User user)
@@ -906,6 +932,33 @@ namespace taskflow_api.TaskFlow.Application.Services
             };
 
             return pagedResult;
+        }
+
+        public async Task ChangePassword(ChangePasswordRequest request)
+        {
+            if (request.NewPassword != request.ConfirmNewPassword)
+            {
+                throw new AppException(ErrorCode.PasswordsDoNotMatch);
+            }
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            var user = await _userManager.Users.
+                Include(u => u.Term)
+                .FirstOrDefaultAsync(u => u.Id == Guid.Parse(UserId!));
+
+            if (user == null) throw new AppException(ErrorCode.NoUserFound);
+            var passwordValid = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+            if (!passwordValid) throw new AppException(ErrorCode.InvalidCurrentPassword);
+            var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errorMessages = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new AppException(new ErrorDetail(
+                    1000,
+                    errorMessages,
+                    StatusCodes.Status400BadRequest
+                    ));
+            }
         }
     }
 }

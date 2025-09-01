@@ -1,34 +1,41 @@
-﻿    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Mvc;
-    using taskflow_api.TaskFlow.Application.DTOs.Common;
-    using taskflow_api.TaskFlow.Application.DTOs.Request;
-    using taskflow_api.TaskFlow.Application.DTOs.Response;
-    using taskflow_api.TaskFlow.Application.Interfaces;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using taskflow_api.TaskFlow.Application.DTOs.Common;
+using taskflow_api.TaskFlow.Application.DTOs.Request;
+using taskflow_api.TaskFlow.Application.DTOs.Response;
+using taskflow_api.TaskFlow.Application.Interfaces;
 
-    namespace taskflow_api.TaskFlow.API.Controllers
+namespace taskflow_api.TaskFlow.API.Controllers
+{
+    [Route("user")]
+    [ApiController]
+    public class UserProfileController : ControllerBase
     {
-        [Route("user")]
-        [ApiController]
-        public class UserProfileController : ControllerBase
+        private readonly IUserService _userService;
+        public UserProfileController(IUserService userService)
         {
-            private readonly IUserService _userService;
-            public UserProfileController(IUserService userService)
-            {
-                _userService = userService;
-            }
+            _userService = userService;
+        }
 
-            [HttpGet("{userId}")]
-            public async Task<ApiResponse<UserResponse>> GetUserById(Guid userId)
-            {
-                var user = await _userService.GetUserById(userId);
-                return ApiResponse<UserResponse>.Success(user);
-            }
+        [HttpGet("{userId}")]
+        public async Task<ApiResponse<UserResponse>> GetUserById(Guid userId)
+        {
+            var user = await _userService.GetUserById(userId);
+            return ApiResponse<UserResponse>.Success(user);
+        }
 
-            [HttpPut("{userId}")]
-            public async Task<ApiResponse<UserResponse>> UpdateUser(Guid userId, [FromForm] UpdateUserRequest model)
-            {
-                var user = await _userService.UpdateUser(userId, model);
-                return ApiResponse<UserResponse>.Success(user);
-            }
+        [HttpPut("{userId}")]
+        public async Task<ApiResponse<UserResponse>> UpdateUser(Guid userId, [FromForm] UpdateUserRequest model)
+        {
+            var user = await _userService.UpdateUser(userId, model);
+            return ApiResponse<UserResponse>.Success(user);
+        }
+
+        [HttpPost("change-password")]
+        public async Task<ApiResponse<bool>> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            await _userService.ChangePassword(request);
+            return ApiResponse<bool>.Success(true);
         }
     }
+}
