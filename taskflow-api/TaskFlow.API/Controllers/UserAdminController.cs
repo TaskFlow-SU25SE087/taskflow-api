@@ -60,5 +60,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
             var files = await _userService.getListFileProcess(page);
             return ApiResponse<PagedResult<ProcessingFile>>.Success(files);
         }
+
+        [HttpPost("update-concurrency-stamp")]
+        public async Task<ApiResponse<bool>> UpdateConcurrencyStamp()
+        {
+            await _userService.UpdateConcurrencyStamp();
+            return ApiResponse<bool>.Success(true);
+        }
     }
 }

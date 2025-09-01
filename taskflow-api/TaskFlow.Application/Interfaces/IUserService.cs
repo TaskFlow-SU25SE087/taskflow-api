@@ -27,5 +27,6 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task ImportFileExcelAsync(ImportUserFileRequest file);
         Task<PagedResult<ProcessingFile>> getListFileProcess(int page);
         Task ChangePassword(ChangePasswordRequest request);
+        Task UpdateConcurrencyStamp();
     }
 }

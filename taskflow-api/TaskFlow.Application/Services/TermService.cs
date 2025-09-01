@@ -36,7 +36,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 Season = request.Season,
                 Year = request.Year,
                 StartDate = request.StartDate,
-                EndDate = request.EndDate,
+                EndDate = request.EndDate.Date.AddDays(1).AddTicks(-1),
                 IsActive = true
             };
             await _termRepository.CreateTermAsync(term);
@@ -155,7 +155,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             term.Season = request.Season;
             term.Year = request.Year;
             term.StartDate = request.StartDate;
-            term.EndDate = request.EndDate;
+            term.EndDate = request.EndDate.Date.AddDays(1).AddTicks(-1);
             await _termRepository.UpdateTermAsync(term);
         }
 
