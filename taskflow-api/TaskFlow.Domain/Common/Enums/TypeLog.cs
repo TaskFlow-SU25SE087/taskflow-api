@@ -10,5 +10,6 @@
         CreateSprint = 6,
         UpdateSprint = 7,
         AddTaskToSprint = 8,
+        UpdateResson = 9,
     }
 }

@@ -324,12 +324,27 @@ namespace taskflow_api.TaskFlow.Application.Services
 
         public async Task<UserResponse> GetUserById(Guid userId)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _userManager.Users
+                .Include(u => u.Term)
+                .Select(u => new UserResponse
+                {
+                    Id = u.Id,
+                    Avatar = u.Avatar,
+                    FullName = u.FullName,
+                    Role = u.Role,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    StudentId = u.StudentId,
+                    Season = u.Term.Season,
+                    Year = u.Term.Year,
+                    PastTerms = u.PastTerms
+                })
+                .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
                 throw new AppException(ErrorCode.NoUserFound);
             }
-            return _mapper.Map<UserResponse>(user);
+            return user;
         }
 
         public async Task<UserResponse> UpdateUser(Guid userId, UpdateUserRequest model)

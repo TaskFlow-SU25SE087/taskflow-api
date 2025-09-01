@@ -20,14 +20,17 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly ISprintRepository _sprintRepository;
         private readonly ISprintMeetingLogsRepository _sprintMeetingLogsRepository;
         private readonly ITaskAssigneeRepository _taskAssigneeRepository;
+        private readonly ILogProjectService _logProject;
 
         public SprintMeetingLogsService(AppTimeProvider timeProvider, ISprintRepository sprintRepository,
-            ISprintMeetingLogsRepository sprintMeetingLogsRepository, ITaskAssigneeRepository taskAssigneeRepository)
+            ISprintMeetingLogsRepository sprintMeetingLogsRepository, ITaskAssigneeRepository taskAssigneeRepository,
+            ILogProjectService logProject)
         {
             _timeProvider = timeProvider;
             _sprintRepository = sprintRepository;
             _sprintMeetingLogsRepository = sprintMeetingLogsRepository;
             _taskAssigneeRepository = taskAssigneeRepository;
+            _logProject = logProject;
         }
         public async Task CreateSprintMetting(Guid SprintId)
         {
@@ -158,6 +161,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             sprintmeeting.UpdatedAt = _timeProvider.Now;
             await _sprintMeetingLogsRepository.UpdateSprintMeetingLog(sprintmeeting);
 
+            //Log update reason
+            //await _logProject.CreateRessonTaskLog(sprintmeeting.Sprint.ProjectId, taskId, projectMemberId, task.Reason);
             //return unfinishedTasks;
             return "update reason succesfully";
         }

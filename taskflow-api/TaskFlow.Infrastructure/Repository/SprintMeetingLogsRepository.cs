@@ -45,6 +45,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             return await _context.SprintMeetingLogs
                 .AsNoTracking()
                 .Include(x => x.Sprint)
+                .ThenInclude(x => x.Project)
                 .FirstOrDefaultAsync(x => x.Id == mettingID);
         }
 
