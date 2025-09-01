@@ -192,6 +192,108 @@ namespace taskflow_api.TaskFlow.Application.Services
             var totalAssigned = assignees.Sum(a => a.AssignedEffortPoints ?? 0);
             return totalAssigned != taskEffortPoints.Value;
         }
+
+        /// <summary>
+        /// Redistributes effort points when task effort points are updated
+        /// </summary>
+        /// <param name="taskId">The task ID</param>
+        /// <param name="newTaskEffortPoints">New task effort points</param>
+        /// <returns>List of TaskAssignee entities with updated effort points</returns>
+        public async Task<List<TaskAssignee>> RedistributeEffortPointsOnTaskUpdate(Guid taskId, int? newTaskEffortPoints)
+        {
+            if (!newTaskEffortPoints.HasValue || newTaskEffortPoints.Value <= 0)
+            {
+                return new List<TaskAssignee>();
+            }
+
+            var assignees = await _taskAssigneeRepository.taskAssigneesAsync(taskId);
+            if (assignees.Count == 0)
+            {
+                return new List<TaskAssignee>();
+            }
+
+            if (assignees.Count == 1)
+            {
+                // Single assignee - assign all effort points to them
+                assignees[0].AssignedEffortPoints = newTaskEffortPoints.Value;
+                return assignees;
+            }
+
+            // Multiple assignees - distribute equally
+            var distribution = DistributeEffortPointsEqually(newTaskEffortPoints.Value, assignees.Count);
+            
+            for (int i = 0; i < assignees.Count; i++)
+            {
+                assignees[i].AssignedEffortPoints = distribution[i];
+            }
+
+            return assignees;
+        }
+
+        /// <summary>
+        /// Updates individual assignee effort points and redistributes remaining effort points among other assignees
+        /// </summary>
+        /// <param name="taskId">The task ID</param>
+        /// <param name="taskEffortPoints">Total task effort points</param>
+        /// <param name="targetProjectMemberId">The project member ID to update</param>
+        /// <param name="newAssignedEffortPoints">New effort points for the target assignee</param>
+        /// <returns>List of TaskAssignee entities with updated effort points</returns>
+        public async Task<List<TaskAssignee>> UpdateIndividualAssigneeEffortPoints(Guid taskId, int taskEffortPoints, Guid targetProjectMemberId, int newAssignedEffortPoints)
+        {
+            var assignees = await _taskAssigneeRepository.taskAssigneesAsync(taskId);
+            if (assignees.Count == 0)
+            {
+                return new List<TaskAssignee>();
+            }
+
+            // Find the target assignee
+            var targetAssignee = assignees.FirstOrDefault(a => a.ImplementerId == targetProjectMemberId);
+            if (targetAssignee == null)
+            {
+                throw new AppException(ErrorCode.UserNotAssignedToTask);
+            }
+
+            // Validate that new effort points don't exceed task effort points
+            if (newAssignedEffortPoints > taskEffortPoints)
+            {
+                throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+            }
+
+            // Calculate remaining effort points for other assignees
+            var remainingEffortPoints = taskEffortPoints - newAssignedEffortPoints;
+            var otherAssignees = assignees.Where(a => a.ImplementerId != targetProjectMemberId).ToList();
+
+            if (otherAssignees.Count == 0)
+            {
+                // Only one assignee - they get all effort points
+                targetAssignee.AssignedEffortPoints = taskEffortPoints;
+                return assignees;
+            }
+
+            // Update target assignee
+            targetAssignee.AssignedEffortPoints = newAssignedEffortPoints;
+
+            // Distribute remaining effort points among other assignees
+            if (remainingEffortPoints > 0)
+            {
+                var distribution = DistributeEffortPointsEqually(remainingEffortPoints, otherAssignees.Count);
+                
+                for (int i = 0; i < otherAssignees.Count; i++)
+                {
+                    otherAssignees[i].AssignedEffortPoints = distribution[i];
+                }
+            }
+            else
+            {
+                // No remaining effort points - set all other assignees to 0
+                foreach (var assignee in otherAssignees)
+                {
+                    assignee.AssignedEffortPoints = 0;
+                }
+            }
+
+            return assignees;
+        }
     }
 }
 

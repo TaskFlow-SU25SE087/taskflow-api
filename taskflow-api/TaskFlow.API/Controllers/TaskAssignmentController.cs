@@ -80,5 +80,20 @@ namespace taskflow_api.TaskFlow.API.Controllers
             await _context.LeaveTask(projectId, taskId, reason);
             return ApiResponse<bool>.Success(true);
         }
+
+        [HttpPut("effort-points")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> UpdateIndividualAssigneeEffortPoints(
+            [FromRoute] Guid projectId, [FromRoute] Guid taskId, [FromBody] UpdateAssigneeEffortPointsRequest request)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(
+                projectId, ProjectRole.Leader, ProjectRole.Member);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+            await _context.UpdateIndividualAssigneeEffortPoints(taskId, projectId, request);
+            return ApiResponse<bool>.Success(true);
+        }
     }
 }

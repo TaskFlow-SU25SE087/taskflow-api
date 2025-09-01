@@ -16,6 +16,8 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task<List<TaskAssignee>> RedistributeEffortPointsAfterAssigneeLeaves(Guid taskId, int? taskEffortPoints);
         Task<int> CalculateTaskEffortPointsFromAssignees(Guid taskId);
         Task<bool> NeedsEffortPointsRedistribution(Guid taskId, int? taskEffortPoints);
+        Task<List<TaskAssignee>> RedistributeEffortPointsOnTaskUpdate(Guid taskId, int? newTaskEffortPoints);
+        Task<List<TaskAssignee>> UpdateIndividualAssigneeEffortPoints(Guid taskId, int taskEffortPoints, Guid targetProjectMemberId, int newAssignedEffortPoints);
     }
 }
 

@@ -411,6 +411,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.TaskNotFound);
             }
+            
+            // Check if effort points are being updated
+            var effortPointsChanged = taskUpdate.EffortPoints != request.EffortPoints;
+            var oldEffortPoints = taskUpdate.EffortPoints;
+            
             taskUpdate.Title = request.Title;
             taskUpdate.Description = request.Description;
             taskUpdate.Priority = request.Priority;
@@ -419,6 +424,16 @@ namespace taskflow_api.TaskFlow.Application.Services
             taskUpdate.UpdatedAt = _timeProvider.Now;
 
             await _taskProjectRepository.UpdateTaskAsync(taskUpdate);
+            
+            // If effort points changed, redistribute among assignees
+            if (effortPointsChanged && request.EffortPoints.HasValue)
+            {
+                var redistributedAssignees = await _effortPointsService.RedistributeEffortPointsOnTaskUpdate(TaskId, request.EffortPoints.Value);
+                if (redistributedAssignees.Count > 0)
+                {
+                    await _taskAssigneeRepository.UpdateMultipleTaskAssigneesAsync(redistributedAssignees);
+                }
+            }
 
             // Notify all assignees about the update
             var assignees = await _taskAssigneeRepository.taskAssigneesAsync(TaskId);
@@ -498,21 +513,31 @@ namespace taskflow_api.TaskFlow.Application.Services
             var task = await _taskProjectRepository.GetTaskByIdAsync(taskAssignee.RefId);
             if (task != null && task.EffortPoints.HasValue)
             {
-                // Get remaining assignees after this one leaves
-                var remainingAssignees = await _taskAssigneeRepository.taskAssigneesAsync(taskAssignee.RefId);
-                remainingAssignees = remainingAssignees.Where(a => a.Id != taskAssigneeId).ToList();
+                // Get remaining assignees after this one leaves (excluding the one leaving)
+                var allAssignees = await _taskAssigneeRepository.taskAssigneesAsync(taskAssignee.RefId);
+                var remainingAssignees = allAssignees.Where(a => a.Id != taskAssigneeId).ToList();
                 
                 if (remainingAssignees.Count > 0)
                 {
-                    // Redistribute effort points among remaining assignees
-                    var redistributedAssignees = await _effortPointsService.RedistributeEffortPointsAfterAssigneeLeaves(
-                        taskAssignee.RefId, task.EffortPoints.Value);
-                    
-                    if (redistributedAssignees.Count > 0)
+                    if (remainingAssignees.Count == 1)
                     {
-                        await _taskAssigneeRepository.UpdateMultipleTaskAssigneesAsync(redistributedAssignees);
+                        // Only one assignee remaining - give them all effort points
+                        remainingAssignees[0].AssignedEffortPoints = task.EffortPoints.Value;
                     }
+                    else
+                    {
+                        // Multiple assignees remaining - redistribute equally
+                        var distribution = _effortPointsService.DistributeEffortPointsEqually(task.EffortPoints.Value, remainingAssignees.Count);
+                        
+                        for (int i = 0; i < remainingAssignees.Count; i++)
+                        {
+                            remainingAssignees[i].AssignedEffortPoints = distribution[i];
+                        }
+                    }
+                    
+                    await _taskAssigneeRepository.UpdateMultipleTaskAssigneesAsync(remainingAssignees);
                 }
+                // If no assignees remain, task keeps its original effort points (no change needed)
             }
             
             taskAssignee.UpdatedAt = _timeProvider.Now;
@@ -738,6 +763,54 @@ namespace taskflow_api.TaskFlow.Application.Services
                     assignerName
                 );
             }
+        }
+
+        public async Task UpdateIndividualAssigneeEffortPoints(Guid TaskId, Guid ProjectId, UpdateAssigneeEffortPointsRequest request)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var UserId = httpContext?.User.FindFirst("id")?.Value;
+            
+            // Check user is in project
+            var UserAssign = await _projectMemberRepository.FindMemberInProject(ProjectId, Guid.Parse(UserId!));
+            if (UserAssign == null)
+            {
+                throw new AppException(ErrorCode.UserNotInProject);
+            }
+
+            // Get task information
+            var task = await _taskProjectRepository.GetTaskByIdAsync(TaskId);
+            if (task == null)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+
+            // Validate task has effort points
+            if (!task.EffortPoints.HasValue)
+            {
+                throw new AppException(ErrorCode.InvalidEffortPointsDistribution);
+            }
+
+            // Update individual assignee effort points and redistribute among others
+            var updatedAssignees = await _effortPointsService.UpdateIndividualAssigneeEffortPoints(
+                TaskId, 
+                task.EffortPoints.Value, 
+                request.ProjectMemberId, 
+                request.AssignedEffortPoints
+            );
+
+            if (updatedAssignees.Count > 0)
+            {
+                await _taskAssigneeRepository.UpdateMultipleTaskAssigneesAsync(updatedAssignees);
+            }
+
+            // Send notification to the updated assignee
+            var assignerName = UserAssign.User?.FullName ?? UserAssign.User?.UserName ?? "Project Member";
+            await _notificationService.NotifyTaskUpdateAsync(
+                request.ProjectMemberId,
+                ProjectId,
+                TaskId,
+                $"Your effort points for task '{task.Title}' have been updated to {request.AssignedEffortPoints} points by {assignerName}."
+            );
         }
     }
 }
