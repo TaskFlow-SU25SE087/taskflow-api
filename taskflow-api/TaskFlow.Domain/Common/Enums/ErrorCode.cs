@@ -95,6 +95,8 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail InvalidCurrentPassword = new(9021, "Invalid current password", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail PasswordsDoNotMatch = new(9022, "New password and confirmation password do not match", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail SomeTasksNotFound = new(9023, "Some tasks not found", StatusCodes.Status404NotFound);
+        public static readonly ErrorDetail CannotMoveTaskToCompletedSprint = new(9024, "Cannot move task to completed sprint", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail CannotMoveTaskFromCompletedSprint = new(9025, "Cannot move task from completed sprint", StatusCodes.Status400BadRequest);
 
     }
 }

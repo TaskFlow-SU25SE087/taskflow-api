@@ -852,6 +852,12 @@ namespace taskflow_api.TaskFlow.Application.Services
                 {
                     throw new AppException(ErrorCode.SprintNotFound);
                 }
+
+                // Prevent moving tasks to completed sprints
+                if (sprint.Status == SprintStatus.Completed)
+                {
+                    throw new AppException(ErrorCode.CannotMoveTaskToCompletedSprint);
+                }
             }
 
             var tasks = await _taskProjectRepository.GetListTasksByIdsAsync(taskIds);
@@ -860,6 +866,19 @@ namespace taskflow_api.TaskFlow.Application.Services
             if (validTasks.Count != taskIds.Count)
             {
                 throw new AppException(ErrorCode.SomeTasksNotFound);
+            }
+
+            // Validate current sprint status for all tasks
+            foreach (var task in validTasks)
+            {
+                if (task.SprintId.HasValue)
+                {
+                    var currentSprint = await _sprintRepository.GetSprintByIdAsync(task.SprintId.Value);
+                    if (currentSprint != null && currentSprint.Status == SprintStatus.Completed)
+                    {
+                        throw new AppException(ErrorCode.CannotMoveTaskFromCompletedSprint);
+                    }
+                }
             }
 
             foreach (var task in validTasks)

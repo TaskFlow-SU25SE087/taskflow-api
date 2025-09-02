@@ -19,5 +19,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task CreateRessonTaskLog(Guid projectId, Guid taskId, Guid actorMemberId, string reason);
         Task LogTaskSprintChange(Guid projectId, Guid actorMemberId, Guid taskId, Guid? sprintId);
         Task LogBulkTaskSprintChange(Guid projectId, Guid actorMemberId, List<Guid> taskIds, Guid? sprintId);
+        Task LogMoveTasksToSprint(Guid sprintId, int taskCount, string sourceSprintName);
+        Task LogMoveTasksToBacklog(Guid projectId, int taskCount, string sourceSprintName);
     }
 }

@@ -202,5 +202,31 @@ namespace taskflow_api.TaskFlow.Application.Services
                 $"Bulk moved {taskIds.Count} tasks to {destination}",
                 new LogChangeContext { SprintId = sprintId });
         }
+
+        public async Task LogMoveTasksToSprint(Guid sprintId, int taskCount, string sourceSprintName)
+        {
+            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
+            if (sprint != null)
+            {
+                var member = await _projectMemberRepository.FindLeader(sprint.ProjectId);
+                if (member != null)
+                {
+                    await LogSimple(sprint.ProjectId, member.Id, TypeLog.MoveTasksToSprint,
+                        $"Moved {taskCount} tasks from deleted sprint '{sourceSprintName}' to sprint '{sprint.Name}'", 
+                        new LogChangeContext { SprintId = sprintId });
+                }
+            }
+        }
+
+        public async Task LogMoveTasksToBacklog(Guid projectId, int taskCount, string sourceSprintName)
+        {
+            var member = await _projectMemberRepository.FindLeader(projectId);
+            if (member != null)
+            {
+                await LogSimple(projectId, member.Id, TypeLog.MoveTasksToBacklog,
+                    $"Moved {taskCount} tasks from deleted sprint '{sourceSprintName}' to backlog", 
+                    new LogChangeContext());
+            }
+        }
     }
 }

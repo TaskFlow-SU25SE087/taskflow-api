@@ -280,15 +280,42 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.CannotDeleteSprint);
             }
 
-            // Remove sprint from all tasks
+            // Get all tasks in the sprint
             var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(SprintId);
-            foreach (var task in tasks)
-            {
-                task.SprintId = null;
-            }
+            
             if (tasks.Any())
             {
-                await _taskProjectRepository.UpdateListTaskAsync(tasks);
+                // Try to find the most recent sprint that is not in progress or completed
+                var mostRecentSprint = await _sprintRepository.GetMostRecentSuitableSprint(ProjectId, SprintId);
+                
+                if (mostRecentSprint != null)
+                {
+                    // Move tasks to the most recent suitable sprint
+                    foreach (var task in tasks)
+                    {
+                        task.SprintId = mostRecentSprint.Id;
+                        task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] Moved from deleted sprint: {sprint.Name}" + " ;";
+                    }
+                    
+                    await _taskProjectRepository.UpdateListTaskAsync(tasks);
+                    
+                    // Log the task movement
+                    await _logService.LogMoveTasksToSprint(mostRecentSprint.Id, tasks.Count, sprint.Name);
+                }
+                else
+                {
+                    // No suitable sprint found, move tasks to backlog
+                    foreach (var task in tasks)
+                    {
+                        task.SprintId = null;
+                        task.Note = (task.Note ?? "") + $" [{_timeProvider.Now}] Moved to backlog from deleted sprint: {sprint.Name}" + " ;";
+                    }
+                    
+                    await _taskProjectRepository.UpdateListTaskAsync(tasks);
+                    
+                    // Log the task movement to backlog
+                    await _logService.LogMoveTasksToBacklog(ProjectId, tasks.Count, sprint.Name);
+                }
             }
 
             // Delete the sprint

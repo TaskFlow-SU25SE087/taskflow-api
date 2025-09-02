@@ -18,5 +18,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<List<TaskCompleteDTO>> GetTaskCompletes(Guid sprintId, Guid projectId);
         Task<List<UnfinishedTaskDto>> GetUnFinishTasks(Guid sprintId, Guid projectId);
         Task<List<SprintTaskWithBoardInfo>> GetSprintTasksWithBoardInfo(Guid sprintId, Guid projectId);
+        Task<Sprint?> GetMostRecentSuitableSprint(Guid projectId, Guid excludeSprintId);
     }
 }

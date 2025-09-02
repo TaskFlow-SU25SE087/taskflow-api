@@ -171,5 +171,17 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<Sprint?> GetMostRecentSuitableSprint(Guid projectId, Guid excludeSprintId)
+        {
+            return await _context.Sprints
+                .Where(s => s.ProjectId == projectId 
+                    && s.Id != excludeSprintId 
+                    && s.IsActive
+                    && s.Status != SprintStatus.InProgress 
+                    && s.Status != SprintStatus.Completed)
+                .OrderByDescending(s => s.StartDate)
+                .FirstOrDefaultAsync();
+        }
     }
 }
