@@ -17,5 +17,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task LogRemoveMember(Guid projectId, Guid id, Guid actorMemberId);
         Task UpdateTitleSprint(Guid sprintId, Guid actorMemberId, ChangedField field, string oldValue, string newValue);
         Task CreateRessonTaskLog(Guid projectId, Guid taskId, Guid actorMemberId, string reason);
+        Task LogTaskSprintChange(Guid projectId, Guid actorMemberId, Guid taskId, Guid? sprintId);
+        Task LogBulkTaskSprintChange(Guid projectId, Guid actorMemberId, List<Guid> taskIds, Guid? sprintId);
     }
 }

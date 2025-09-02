@@ -186,5 +186,21 @@ namespace taskflow_api.TaskFlow.Application.Services
                     TaskProjectID = taskId,
                 });
         }
+
+        public async Task LogTaskSprintChange(Guid projectId, Guid actorMemberId, Guid taskId, Guid? sprintId)
+        {
+            string destination = sprintId.HasValue ? $"sprint {sprintId}" : "backlog";
+            await LogSimple(projectId, actorMemberId, TypeLog.UpdateSprint, // Use appropriate TypeLog or add TaskSprintChange
+                $"Moved task {taskId} to {destination}",
+                new LogChangeContext { TaskProjectID = taskId, SprintId = sprintId });
+        }
+
+        public async Task LogBulkTaskSprintChange(Guid projectId, Guid actorMemberId, List<Guid> taskIds, Guid? sprintId)
+        {
+            string destination = sprintId.HasValue ? $"sprint {sprintId}" : "backlog";
+            await LogSimple(projectId, actorMemberId, TypeLog.UpdateSprint, // Use appropriate TypeLog
+                $"Bulk moved {taskIds.Count} tasks to {destination}",
+                new LogChangeContext { SprintId = sprintId });
+        }
     }
 }

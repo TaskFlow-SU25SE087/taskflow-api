@@ -12,5 +12,6 @@
         AddTaskToSprint = 8,
         UpdateResson = 9,
         DeleteSprint = 10,
+        TaskSprintChange,
     }
 }

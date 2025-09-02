@@ -199,6 +199,28 @@ namespace taskflow_api.TaskFlow.API.Controllers
             return ApiResponse<bool>.Success(true);
         }
 
+        [HttpPut("{taskId}/move-sprint")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> MoveTaskToSprint(
+            [FromRoute] Guid projectId, 
+            [FromRoute] Guid taskId, 
+            [FromQuery] Guid? sprintId)
+        {
+            var leaderId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+            await _context.MoveTaskToSprint(projectId, taskId, sprintId);
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpPut("bulk-move-sprint")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> BulkMoveTasksToSprint(
+            [FromRoute] Guid projectId, 
+            [FromBody] BulkMoveToSprintRequest request)
+        {
+            var leaderId = await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+            await _context.BulkMoveTasksToSprint(projectId, request.TaskIds, request.SprintId);
+            return ApiResponse<bool>.Success(true);
+        }
 
 
         /// <summary>

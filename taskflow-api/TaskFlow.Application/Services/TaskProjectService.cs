@@ -25,13 +25,15 @@ namespace taskflow_api.TaskFlow.Application.Services
         private readonly INotificationService _notificationService;
         private readonly IEffortPointsService _effortPointsService;
         private readonly AppTimeProvider _timeProvider;
+        private readonly ILogProjectService _logService;
+        private readonly ISprintRepository _sprintRepository;
 
         public TaskProjectService(ITaskProjectRepository taskProjectRepository, IBoardRepository boardRepository,
             IFileService fileService, IMapper mapper, ITaskTagRepository taskTagRepository,
             ITagRepository tagRepository, IHttpContextAccessor httpContextAccessor, 
             ITaskAssigneeRepository taskAssigneeRepository, IProjectMemberRepository projectMemberRepository,
             IEffortPointsService effortPointsService, AppTimeProvider timeProvider,
-            INotificationService notificationService)
+            INotificationService notificationService, ILogProjectService logService, ISprintRepository sprintRepository)
         {
             _taskProjectRepository = taskProjectRepository;
             _boardRepository = boardRepository;
@@ -45,6 +47,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             _effortPointsService = effortPointsService;
             _notificationService = notificationService;
             _timeProvider = timeProvider;
+            _logService = logService;
+            _sprintRepository = sprintRepository;
         }
 
         public async Task AddTagForTask(Guid TaskId, Guid TagId)
@@ -811,6 +815,64 @@ namespace taskflow_api.TaskFlow.Application.Services
                 TaskId,
                 $"Your effort points for task '{task.Title}' have been updated to {request.AssignedEffortPoints} points by {assignerName}."
             );
+        }
+
+        public async Task MoveTaskToSprint(Guid projectId, Guid taskId, Guid? sprintId)
+        {
+            var task = await _taskProjectRepository.GetTaskByIdAsync(taskId);
+            if (task == null || task.ProjectId != projectId)
+            {
+                throw new AppException(ErrorCode.TaskNotFound);
+            }
+
+            if (sprintId.HasValue)
+            {
+                var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId.Value);
+                if (sprint == null || sprint.ProjectId != projectId)
+                {
+                    throw new AppException(ErrorCode.SprintNotFound);
+                }
+            }
+
+            task.SprintId = sprintId;
+            task.UpdatedAt = _timeProvider.Now;
+            await _taskProjectRepository.UpdateTaskAsync(task);
+
+            // Log the movement
+            var leader = await _projectMemberRepository.FindLeader(projectId);
+            await _logService.LogTaskSprintChange(projectId, leader.Id, taskId, sprintId);
+        }
+
+        public async Task BulkMoveTasksToSprint(Guid projectId, List<Guid> taskIds, Guid? sprintId)
+        {
+            if (sprintId.HasValue)
+            {
+                var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId.Value);
+                if (sprint == null || sprint.ProjectId != projectId)
+                {
+                    throw new AppException(ErrorCode.SprintNotFound);
+                }
+            }
+
+            var tasks = await _taskProjectRepository.GetListTasksByIdsAsync(taskIds);
+            var validTasks = tasks.Where(t => t.ProjectId == projectId && t.IsActive).ToList();
+
+            if (validTasks.Count != taskIds.Count)
+            {
+                throw new AppException(ErrorCode.SomeTasksNotFound);
+            }
+
+            foreach (var task in validTasks)
+            {
+                task.SprintId = sprintId;
+                task.UpdatedAt = _timeProvider.Now;
+            }
+
+            await _taskProjectRepository.UpdateListTaskAsync(validTasks);
+
+            // Log the bulk movement
+            var leader = await _projectMemberRepository.FindLeader(projectId);
+            await _logService.LogBulkTaskSprintChange(projectId, leader.Id, taskIds, sprintId);
         }
     }
 }
