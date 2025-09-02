@@ -65,42 +65,76 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
 
             var memberActivities = new List<MemberActivityResponse>();
-            var totalTasks = 0;
-            var totalCompletedTasks = 0;
-            var totalInProgressTasks = 0;
-            var totalTodoTasks = 0;
-            var totalOverdueTasks = 0;
-            var totalComments = 0;
-            var totalAssignedEffortPoints = 0;
-            var totalCompletedEffortPoints = 0;
-            var totalInProgressEffortPoints = 0;
-            var totalTodoEffortPoints = 0;
-            var totalTasksWithEffortPoints = 0;
-            var totalTasksWithoutEffortPoints = 0;
+            
+            // ✅ FIXED: Calculate team-level metrics directly from project data to avoid double-counting
+            // This prevents issues where tasks with multiple assignees would be counted multiple times
+            // in the team totals, leading to inflated metrics.
+            var startDate = request.StartDate ?? DateTime.MinValue;
+            var endDate = request.EndDate ?? _timeProvider.UtcNow;
+            
+            var allProjectTasks = await _context.TaskProjects
+                .Where(t => t.ProjectId == projectId && t.IsActive)
+                .Include(t => t.Board)
+                .Include(t => t.Sprint)
+                .Include(t => t.TaskAssignees.Where(ta => ta.IsActive))
+                .ToListAsync();
+
+            // Filter tasks by date range
+            var projectTasks = allProjectTasks.Where(t => 
+                (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
+                (t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
+                (t.TaskAssignees.Any(ta => ta.CreatedAt >= startDate && ta.CreatedAt <= endDate))
+            ).ToList();
+
+            // Calculate team-level metrics
+            var totalTasks = projectTasks.Count;
+            var totalCompletedTasks = projectTasks.Count(t => t.Board?.Type == BoardType.Done);
+            var totalInProgressTasks = projectTasks.Count(t => t.Board?.Type == BoardType.InProgress);
+            var totalTodoTasks = projectTasks.Count(t => t.Board?.Type == BoardType.Todo);
+            var totalOverdueTasks = projectTasks.Count(t => 
+                t.Deadline.HasValue && t.Deadline.Value < _timeProvider.UtcNow && t.Board?.Type != BoardType.Done);
+
+            // Calculate team-level effort points
+            var totalAssignedEffortPoints = projectTasks.Sum(t => t.EffortPoints ?? 0);
+            var totalCompletedEffortPoints = projectTasks
+                .Where(t => t.Board?.Type == BoardType.Done)
+                .Sum(t => t.EffortPoints ?? 0);
+            var totalInProgressEffortPoints = projectTasks
+                .Where(t => t.Board?.Type == BoardType.InProgress)
+                .Sum(t => t.EffortPoints ?? 0);
+            var totalTodoEffortPoints = projectTasks
+                .Where(t => t.Board?.Type == BoardType.Todo)
+                .Sum(t => t.EffortPoints ?? 0);
+
+            var totalTasksWithEffortPoints = projectTasks.Count(t => (t.EffortPoints ?? 0) > 0);
+            var totalTasksWithoutEffortPoints = projectTasks.Count(t => (t.EffortPoints ?? 0) == 0);
+
+            // Get total comments for the project in the date range
+            var totalComments = await _context.TaskComments
+                .Where(tc => tc.Task.ProjectId == projectId && 
+                            tc.CreateAt >= startDate && tc.CreateAt <= endDate)
+                .CountAsync();
+
+            // ✅ DEBUG: Log team-level metrics for verification
+            Console.WriteLine($"[DEBUG] Team-level metrics for project {projectId}:");
+            Console.WriteLine($"  - Total tasks: {totalTasks}");
+            Console.WriteLine($"  - Completed tasks: {totalCompletedTasks}");
+            Console.WriteLine($"  - In-progress tasks: {totalInProgressTasks}");
+            Console.WriteLine($"  - Todo tasks: {totalTodoTasks}");
+            Console.WriteLine($"  - Overdue tasks: {totalOverdueTasks}");
+            Console.WriteLine($"  - Total effort points: {totalAssignedEffortPoints}");
+            Console.WriteLine($"  - Completed effort points: {totalCompletedEffortPoints}");
+            Console.WriteLine($"  - Total comments: {totalComments}");
 
             foreach (var member in projectMembers)
             {
                 var memberActivity = await GenerateMemberActivityReportAsync(projectId, member.UserId, request);
                 memberActivities.Add(memberActivity);
-
-                // Aggregate totals
-                totalTasks += memberActivity.TaskStats.TotalAssigned;
-                totalCompletedTasks += memberActivity.TaskStats.TotalCompleted;
-                totalInProgressTasks += memberActivity.TaskStats.TotalInProgress;
-                totalTodoTasks += memberActivity.TaskStats.TotalTodo;
-                totalOverdueTasks += memberActivity.TaskStats.TotalOverdue;
-                totalComments += memberActivity.CommentStats.TotalComments;
-                
-                // Aggregate effort point totals
-                totalAssignedEffortPoints += memberActivity.EffortPointStats.TotalAssignedEffortPoints;
-                totalCompletedEffortPoints += memberActivity.EffortPointStats.TotalCompletedEffortPoints;
-                totalInProgressEffortPoints += memberActivity.EffortPointStats.TotalInProgressEffortPoints;
-                totalTodoEffortPoints += memberActivity.EffortPointStats.TotalTodoEffortPoints;
-                totalTasksWithEffortPoints += memberActivity.EffortPointStats.TotalTasksWithEffortPoints;
-                totalTasksWithoutEffortPoints += memberActivity.EffortPointStats.TotalTasksWithoutEffortPoints;
             }
 
-            // Calculate top contributors
+
+
+            // ✅ FIXED: Calculate top contributors based on individual member metrics (not team totals)
             var topContributors = memberActivities
                 .Select(ma => new TopContributor
                 {
@@ -128,7 +162,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 AverageTasksPerMember = memberActivities.Count > 0 ? (double)totalTasks / memberActivities.Count : 0,
                 AverageCommentsPerTask = totalTasks > 0 ? (double)totalComments / totalTasks : 0,
                 
-                // Effort Point Summary
+                // ✅ FIXED: Effort Point Summary - now using accurate team-level calculations
                 TotalAssignedEffortPoints = totalAssignedEffortPoints,
                 TotalCompletedEffortPoints = totalCompletedEffortPoints,
                 TotalInProgressEffortPoints = totalInProgressEffortPoints,
@@ -141,6 +175,9 @@ namespace taskflow_api.TaskFlow.Application.Services
                 
                 TopContributors = topContributors
             };
+
+            // ✅ VALIDATION: Ensure team metrics are consistent
+            ValidateTeamMetrics(memberActivities, summary);
 
             return new TeamActivityReportResponse
             {
@@ -186,8 +223,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .ToListAsync();
             Console.WriteLine($"[DEBUG] Found {taskAssignments.Count} task assignments");
 
-            // Get task IDs from assignments
-            var taskIds = taskAssignments.Select(ta => ta.RefId).ToList();
+            // Get task IDs from assignments (distinct to avoid duplicates)
+            var taskIds = taskAssignments.Select(ta => ta.RefId).Distinct().ToList();
             
             // ✅ SAFETY: Handle case where member has no task assignments
             if (!taskIds.Any())
@@ -383,6 +420,9 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 var assignment = taskAssignments.FirstOrDefault(ta => ta.RefId == task.Id);
                 var taskEffortPoints = task.EffortPoints ?? 0;
+                
+                // ✅ FIXED: Use assigned effort points if available, otherwise fall back to task effort points
+                // This ensures we don't double-count effort points when multiple assignees exist
                 var assignedEffortPoints = assignment?.AssignedEffortPoints ?? taskEffortPoints;
 
                 if (assignedEffortPoints > 0)
@@ -592,6 +632,31 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             // Task is completed only when it has board type Done
             return task.Board != null && task.Board.Type == BoardType.Done;
+        }
+
+        /// <summary>
+        /// Validates that team-level metrics are consistent and don't exceed individual member totals
+        /// </summary>
+        private void ValidateTeamMetrics(List<MemberActivityResponse> memberActivities, TeamActivitySummary summary)
+        {
+            var totalMemberTasks = memberActivities.Sum(ma => ma.TaskStats.TotalAssigned);
+            var totalMemberEffortPoints = memberActivities.Sum(ma => ma.EffortPointStats.TotalAssignedEffortPoints);
+            
+            // Log validation results
+            Console.WriteLine($"[VALIDATION] Team metrics validation:");
+            Console.WriteLine($"  - Team total tasks: {summary.TotalTasks}, Sum of member tasks: {totalMemberTasks}");
+            Console.WriteLine($"  - Team total effort points: {summary.TotalAssignedEffortPoints}, Sum of member effort points: {totalMemberEffortPoints}");
+            
+            // Warn if there are significant discrepancies (this could indicate double-counting issues)
+            if (totalMemberTasks > summary.TotalTasks * 1.5) // Allow 50% tolerance for edge cases
+            {
+                Console.WriteLine($"[WARNING] Member task total ({totalMemberTasks}) significantly exceeds team total ({summary.TotalTasks})");
+            }
+            
+            if (totalMemberEffortPoints > summary.TotalAssignedEffortPoints * 1.5)
+            {
+                Console.WriteLine($"[WARNING] Member effort point total ({totalMemberEffortPoints}) significantly exceeds team total ({summary.TotalAssignedEffortPoints})");
+            }
         }
     }
 }

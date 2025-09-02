@@ -157,5 +157,19 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
             _context.Sprints.Update(sprint);
             await _context.SaveChangesAsync();
         }
+
+        public async Task DeleteSprintAsync(Guid sprintId)
+        {
+            var sprint = await _context.Sprints
+                .Where(s => s.Id == sprintId && s.IsActive)
+                .FirstOrDefaultAsync();
+
+            if (sprint != null)
+            {
+                sprint.IsActive = false;
+                _context.Sprints.Update(sprint);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

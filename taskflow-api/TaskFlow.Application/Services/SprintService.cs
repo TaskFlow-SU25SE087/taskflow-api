@@ -266,5 +266,39 @@ namespace taskflow_api.TaskFlow.Application.Services
             return report;
         }
 
+        public async Task<bool> DeleteSprint(Guid ProjectId, Guid SprintId)
+        {
+            var sprint = await _sprintRepository.GetSprintByIdAsync(SprintId);
+            if (sprint == null || sprint.ProjectId != ProjectId)
+            {
+                throw new AppException(ErrorCode.CannotUpdateSprint);
+            }
+
+            // Check if sprint is in progress or completed
+            if (sprint.Status == SprintStatus.InProgress || sprint.Status == SprintStatus.Completed)
+            {
+                throw new AppException(ErrorCode.CannotDeleteSprint);
+            }
+
+            // Remove sprint from all tasks
+            var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(SprintId);
+            foreach (var task in tasks)
+            {
+                task.SprintId = null;
+            }
+            if (tasks.Any())
+            {
+                await _taskProjectRepository.UpdateListTaskAsync(tasks);
+            }
+
+            // Delete the sprint
+            await _sprintRepository.DeleteSprintAsync(SprintId);
+            
+            // Log the deletion
+            await _logService.LogDeleteSprint(SprintId);
+            
+            return true;
+        }
+
     }
 }

@@ -9,6 +9,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
     {
         public Task<bool> CreateSprint(Guid ProjectId, CreateSprintRequest request);
         public Task<bool> UpdateSprint(Guid ProjectId, Guid actorMemberId, Guid SprintId, UpdateSprintRequest request);
+        public Task<bool> DeleteSprint(Guid ProjectId, Guid SprintId);
         public Task<List<SprintResponse>> ListPrints(Guid ProjectId);
         Task AddTasksToSprint(Guid ProjectId, Guid SprintId, List<Guid> TaskID, Guid memberId);
         Task ChangeStatusSprint(Guid SpringId, SprintStatus status);

@@ -11,6 +11,7 @@ namespace taskflow_api.TaskFlow.Application.Interfaces
         Task LogCreateProject(Guid projectId, Guid projectMemberId);
         Task LogCreateSprint(Guid sprintId);
         Task LogDeleteProject(Guid projectId, Guid projectMemberId);
+        Task LogDeleteSprint(Guid sprintId);
         Task LogJoinProject(Guid projectId, Guid projectMemberId);
         Task LogLeaveProject(Guid projectId, Guid projectMemberId);
         Task LogRemoveMember(Guid projectId, Guid id, Guid actorMemberId);

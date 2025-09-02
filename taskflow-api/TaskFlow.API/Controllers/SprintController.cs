@@ -119,5 +119,19 @@ namespace taskflow_api.TaskFlow.API.Controllers
 
             return ApiResponse<SprintSummaryReportResponse?>.Success(result);
         }
+
+        [HttpDelete("{sprintId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> DeleteSprint([FromRoute] Guid projectId, [FromRoute] Guid sprintId)
+        {
+            var isAuthorized = await _authorization.AuthorizeAsync(projectId, ProjectRole.Leader);
+            if (!isAuthorized)
+            {
+                return ApiResponse<bool>.Error(9002, "Unauthorized access");
+            }
+
+            var result = await _context.DeleteSprint(projectId, sprintId);
+            return ApiResponse<bool>.Success(result);
+        }
     }
 }

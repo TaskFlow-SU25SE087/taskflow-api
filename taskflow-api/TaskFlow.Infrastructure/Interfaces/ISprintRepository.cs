@@ -8,6 +8,7 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
     {
         Task CreateSprintAsync(Sprint sprint);
         Task UpdateSprintAsync(Sprint sprint);
+        Task DeleteSprintAsync(Guid sprintId);
         Task<List<SprintResponse>> GetListPrintAsync(Guid projectId);
         Task<Sprint?> GetSprintByIdAsync(Guid sprintId);
         Task<bool> CheckSprintName(Guid projectId, string name);

@@ -136,6 +136,20 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
+        public async Task LogDeleteSprint(Guid sprintId)
+        {
+            var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);
+            if (sprint != null)
+            {
+                var member = await _projectMemberRepository.FindLeader(sprint.ProjectId);
+                if (member != null)
+                {
+                    await LogSimple(sprint.ProjectId, member.Id, TypeLog.DeleteSprint,
+                        $"{member.User.FullName} deleted sprint {sprint.Name}", new LogChangeContext());
+                }
+            }
+        }
+
         public async Task UpdateTitleSprint(Guid sprintId, Guid actorMemberId, ChangedField field , string oldValue, string newValue)
         {
             var sprint = await _sprintRepository.GetSprintByIdAsync(sprintId);

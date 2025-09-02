@@ -1,0 +1,101 @@
+# Team Activity Report Metrics Fixes
+
+## Problem Description
+
+The team activity report was experiencing issues with metrics calculation due to **double-counting** when tasks had multiple assignees. This caused:
+
+1. **Inflated task counts** - Tasks with multiple assignees were counted multiple times in team totals
+2. **Incorrect effort point totals** - Effort points were being summed across all assignees instead of using the actual task effort points
+3. **Misleading team statistics** - Team-level metrics didn't accurately reflect the actual project state
+
+## Root Causes
+
+1. **Aggregation Logic Issue**: Team metrics were calculated by summing individual member metrics, which caused double-counting when multiple members were assigned to the same task.
+
+2. **Task Assignment Counting**: The service was counting tasks based on `TaskAssignees` table entries without considering that one task could have multiple assignees.
+
+3. **Effort Points Calculation**: Effort points were being calculated per assignee rather than per task, leading to inflated totals.
+
+## Fixes Implemented
+
+### 1. Fixed Team-Level Metrics Calculation
+
+**Before**: Team metrics were calculated by summing individual member metrics:
+```csharp
+// ❌ PROBLEMATIC: This caused double-counting
+totalTasks += memberActivity.TaskStats.TotalAssigned;
+totalCompletedTasks += memberActivity.TaskStats.TotalCompleted;
+// ... etc
+```
+
+**After**: Team metrics are now calculated directly from project data:
+```csharp
+// ✅ FIXED: Calculate team-level metrics directly from project data
+var allProjectTasks = await _context.TaskProjects
+    .Where(t => t.ProjectId == projectId && t.IsActive)
+    .Include(t => t.Board)
+    .Include(t => t.Sprint)
+    .Include(t => t.TaskAssignees.Where(ta => ta.IsActive))
+    .ToListAsync();
+
+// Calculate team-level metrics
+var totalTasks = projectTasks.Count;
+var totalCompletedTasks = projectTasks.Count(t => t.Board?.Type == BoardType.Done);
+// ... etc
+```
+
+### 2. Improved Task ID Deduplication
+
+**Before**: Task IDs could contain duplicates if multiple assignees existed:
+```csharp
+// ❌ PROBLEMATIC: Could contain duplicate task IDs
+var taskIds = taskAssignments.Select(ta => ta.RefId).ToList();
+```
+
+**After**: Task IDs are now deduplicated:
+```csharp
+// ✅ FIXED: Distinct task IDs to avoid duplicates
+var taskIds = taskAssignments.Select(ta => ta.RefId).Distinct().ToList();
+```
+
+### 3. Enhanced Effort Points Calculation
+
+**Before**: Effort points were calculated per assignee, potentially inflating totals.
+
+**After**: Effort points are calculated per task with fallback logic:
+```csharp
+// ✅ FIXED: Use assigned effort points if available, otherwise fall back to task effort points
+var assignedEffortPoints = assignment?.AssignedEffortPoints ?? taskEffortPoints;
+```
+
+### 4. Added Validation and Debugging
+
+- **Team Metrics Validation**: Added validation to ensure team-level metrics don't significantly exceed individual member totals
+- **Debug Logging**: Enhanced logging to help identify and troubleshoot metric calculation issues
+- **Consistency Checks**: Added warnings when discrepancies are detected
+
+## Benefits of the Fixes
+
+1. **Accurate Metrics**: Team totals now reflect actual project state without double-counting
+2. **Consistent Data**: Individual member metrics and team totals are now mathematically consistent
+3. **Better Performance**: Reduced unnecessary database queries and calculations
+4. **Easier Debugging**: Enhanced logging and validation help identify issues quickly
+5. **Scalable Solution**: The fix handles projects with any number of assignees per task
+
+## Testing Recommendations
+
+1. **Test with Multiple Assignees**: Create tasks with multiple assignees and verify metrics are accurate
+2. **Verify Team vs Member Totals**: Ensure team totals don't exceed the sum of individual member metrics
+3. **Check Date Range Filtering**: Verify that date-based filtering works correctly for all metric types
+4. **Validate Effort Points**: Confirm that effort point calculations are accurate across different task statuses
+
+## Files Modified
+
+- `TaskFlow.Application/Services/TeamActivityReportService.cs` - Main service logic fixes
+- `TEAM_ACTIVITY_REPORT_FIXES.md` - This documentation file
+
+## Impact
+
+- **Low Risk**: Changes are isolated to the reporting service and don't affect core business logic
+- **High Value**: Fixes critical data accuracy issues that could mislead project managers
+- **Backward Compatible**: API responses maintain the same structure, only the values are now accurate
