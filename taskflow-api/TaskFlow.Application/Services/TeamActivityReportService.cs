@@ -611,36 +611,20 @@ namespace taskflow_api.TaskFlow.Application.Services
                     StartDate = startDate,
                     EndDate = endDate,
                     TotalDays = totalDays,
-                    PriorityEfforts = new List<PriorityEffortData>(),
+                    TotalEffortPoints = 0,
+                    CompletedEffortPoints = 0,
+                    RemainingEffortPoints = 0,
+                    CompletionPercentage = 0,
                     DailyProgress = new List<DailyProgressData>(),
                     IdealBurndown = new List<DailyProgressData>()
                 };
             }
             
-            // Calculate effort points by priority using actual task effort points
-            var priorityEfforts = new List<PriorityEffortData>();
-            var totalEffortPoints = 0;
-            var completedEffortPoints = 0;
-
-            foreach (TaskPriority priority in Enum.GetValues(typeof(TaskPriority)))
-            {
-                var priorityTasks = tasks.Where(t => t.Priority == priority).ToList();
-                var priorityTotalPoints = priorityTasks.Sum(t => t.EffortPoints ?? 0);
-                var priorityCompletedPoints = priorityTasks.Where(t => IsTaskCompleted(t)).Sum(t => t.EffortPoints ?? 0);
-
-                priorityEfforts.Add(new PriorityEffortData
-                {
-                    Priority = priority,
-                    PriorityName = priority.ToString(),
-                    TotalEffortPoints = priorityTotalPoints,
-                    CompletedEffortPoints = priorityCompletedPoints,
-                    RemainingEffortPoints = priorityTotalPoints - priorityCompletedPoints,
-                    CompletionPercentage = priorityTotalPoints > 0 ? (double)priorityCompletedPoints / priorityTotalPoints * 100 : 0
-                });
-
-                totalEffortPoints += priorityTotalPoints;
-                completedEffortPoints += priorityCompletedPoints;
-            }
+            // Calculate total effort points for the sprint (no priority breakdown)
+            var totalEffortPoints = tasks.Sum(t => t.EffortPoints ?? 0);
+            var completedEffortPoints = tasks.Where(t => IsTaskCompleted(t)).Sum(t => t.EffortPoints ?? 0);
+            var remainingEffortPoints = totalEffortPoints - completedEffortPoints;
+            var completionPercentage = totalEffortPoints > 0 ? (double)completedEffortPoints / totalEffortPoints * 100 : 0;
 
             // ✅ FIXED: Calculate daily progress with improved date handling
             var dailyProgress = new List<DailyProgressData>();
@@ -707,7 +691,10 @@ namespace taskflow_api.TaskFlow.Application.Services
                 StartDate = startDate, // Use normalized date
                 EndDate = endDate,     // Use normalized date
                 TotalDays = totalDays,
-                PriorityEfforts = priorityEfforts,
+                TotalEffortPoints = totalEffortPoints,
+                CompletedEffortPoints = completedEffortPoints,
+                RemainingEffortPoints = remainingEffortPoints,
+                CompletionPercentage = completionPercentage,
                 DailyProgress = dailyProgress,
                 IdealBurndown = idealBurndown
             };
