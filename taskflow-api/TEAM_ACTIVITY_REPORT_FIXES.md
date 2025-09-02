@@ -74,6 +74,29 @@ var assignedEffortPoints = assignment?.AssignedEffortPoints ?? taskEffortPoints;
 - **Debug Logging**: Enhanced logging to help identify and troubleshoot metric calculation issues
 - **Consistency Checks**: Added warnings when discrepancies are detected
 
+### 5. Fixed Real-Time Task Updates
+
+**Before**: Date filtering could exclude newly created or recently updated tasks:
+```csharp
+// ❌ PROBLEMATIC: Date filtering could exclude current tasks
+var projectTasks = allProjectTasks.Where(t => 
+    (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
+    // ... other date conditions
+).ToList();
+```
+
+**After**: ALL current project tasks are always included:
+```csharp
+// ✅ FIXED: Always include ALL current tasks for real-time accuracy
+var projectTasks = allProjectTasks; // Include ALL current tasks
+```
+
+**What this fixes:**
+- **New tasks** are immediately reflected in metrics
+- **Updated tasks** (status changes, board moves) are immediately reflected
+- **Deleted tasks** are immediately reflected (via IsActive = false)
+- **Date filtering** is only applied to comments for historical analysis
+
 ## Benefits of the Fixes
 
 1. **Accurate Metrics**: Team totals now reflect actual project state without double-counting
@@ -83,6 +106,7 @@ var assignedEffortPoints = assignment?.AssignedEffortPoints ?? taskEffortPoints;
 5. **Scalable Solution**: The fix handles projects with any number of assignees per task
 6. **Global Project View**: Team activity report now shows complete project metrics, not just sprint-specific data
 7. **Sprint-Specific Burndown**: Burndown chart remains sprint-focused for detailed sprint analysis
+8. **Real-Time Updates**: Task metrics now immediately reflect new/updated/deleted tasks without date filtering delays
 
 ## Testing Recommendations
 

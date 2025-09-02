@@ -86,13 +86,10 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .Include(t => t.TaskAssignees.Where(ta => ta.IsActive))
                 .ToListAsync();
 
-            // Filter tasks by date range for historical analysis, but include ALL project tasks
-            // This gives a complete view of the project regardless of sprint assignments
-            var projectTasks = allProjectTasks.Where(t => 
-                (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
-                (t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
-                (t.TaskAssignees.Any(ta => ta.CreatedAt >= startDate && ta.CreatedAt <= endDate))
-            ).ToList();
+            // ✅ FIXED: Always include ALL current project tasks for accurate real-time metrics
+            // Date filtering is only used for historical analysis (comments, activity tracking)
+            // This ensures new/updated/deleted tasks are immediately reflected in the report
+            var projectTasks = allProjectTasks; // Include ALL current tasks
 
             // Calculate team-level metrics
             var totalTasks = projectTasks.Count;
@@ -117,7 +114,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             var totalTasksWithEffortPoints = projectTasks.Count(t => (t.EffortPoints ?? 0) > 0);
             var totalTasksWithoutEffortPoints = projectTasks.Count(t => (t.EffortPoints ?? 0) == 0);
 
-            // Get total comments for the project in the date range
+            // ✅ Date filtering is ONLY applied to comments for historical analysis
+            // Task metrics always include ALL current tasks regardless of date
             var totalComments = await _context.TaskComments
                 .Where(tc => tc.Task.ProjectId == projectId && 
                             tc.CreateAt >= startDate && tc.CreateAt <= endDate)
@@ -125,14 +123,14 @@ namespace taskflow_api.TaskFlow.Application.Services
 
             // ✅ DEBUG: Log team-level metrics for verification
             Console.WriteLine($"[DEBUG] Team-level metrics for project {projectId}:");
-            Console.WriteLine($"  - Total tasks: {totalTasks}");
+            Console.WriteLine($"  - Total tasks: {totalTasks} (ALL current tasks included)");
             Console.WriteLine($"  - Completed tasks: {totalCompletedTasks}");
             Console.WriteLine($"  - In-progress tasks: {totalInProgressTasks}");
             Console.WriteLine($"  - Todo tasks: {totalTodoTasks}");
             Console.WriteLine($"  - Overdue tasks: {totalOverdueTasks}");
             Console.WriteLine($"  - Total effort points: {totalAssignedEffortPoints}");
             Console.WriteLine($"  - Completed effort points: {totalCompletedEffortPoints}");
-            Console.WriteLine($"  - Total comments: {totalComments}");
+            Console.WriteLine($"  - Total comments: {totalComments} (filtered by date range: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})");
 
             foreach (var member in projectMembers)
             {
