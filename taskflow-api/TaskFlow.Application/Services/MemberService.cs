@@ -104,6 +104,30 @@ namespace taskflow_api.TaskFlow.Application.Services
             return _projectMemberRepository.CreateProjectMemeberAsync(systemUser);
         }
 
+        public async Task ChangeLeader(Guid newLeId)
+        {
+            var newLe = await _projectMemberRepository.FindMemberInProjectByProjectMemberID(newLeId);
+            if (newLe == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            var currentLe = await _projectMemberRepository.GetProjectLeader(newLe.ProjectId);
+            if (currentLe == null)
+            {
+                throw new AppException(ErrorCode.NoUserFound);
+            }
+            if (currentLe.Id == newLe.Id)
+            {
+                throw new AppException(ErrorCode.CannotChangeToSameLeader);
+            }
+            //Change role
+            currentLe.Role = ProjectRole.Member;
+            newLe.Role = ProjectRole.Leader;
+            await _projectMemberRepository.UpdateMember(currentLe);
+            await _projectMemberRepository.UpdateMember(newLe);
+            //log change leader
+        }
+
         public async Task<List<MemberResponse>> GetAllMemberInProject(Guid projectId)
         {
             return await _projectMemberRepository.GetAllMembersInProjectAsync(projectId);

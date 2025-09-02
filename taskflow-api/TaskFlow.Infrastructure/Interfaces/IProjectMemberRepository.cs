@@ -19,5 +19,6 @@ namespace taskflow_api.TaskFlow.Infrastructure.Interfaces
         Task<Guid> GetSystemMemberId(Guid projectId);
         Task<int> GetProjectCountByProjectID(Guid projectId);
         Task<ProjectMember?> FindLeader(Guid projectId);
+        Task<ProjectMember?> GetProjectLeader(Guid projectId);
     }
 }

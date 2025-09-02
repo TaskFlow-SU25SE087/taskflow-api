@@ -7,6 +7,7 @@ using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using taskflow_api.TaskFlow.Domain.Entities;
 using taskflow_api.TaskFlow.Shared.Exceptions;
 
 namespace taskflow_api.TaskFlow.API.Controllers
@@ -106,6 +107,15 @@ namespace taskflow_api.TaskFlow.API.Controllers
         public async Task<ApiResponse<bool>> AddSystemUser([FromRoute] Guid projectId)
         {
             await _context.AddSystemUSer(projectId);
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpPost("change-leader/{newLeaderId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> ChangeLeader([FromRoute] Guid newLeaderId, [FromRoute] Guid projectId)
+        {
+            await _authorization.AuthorizeAndGetMemberAsync(projectId, ProjectRole.Leader);
+            await _context.ChangeLeader(newLeaderId);
             return ApiResponse<bool>.Success(true);
         }
     }
