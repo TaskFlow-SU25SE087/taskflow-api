@@ -573,6 +573,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             // Get all tasks in the sprint
             var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(sprintId);
             
+            // ✅ FIXED: Calculate date variables early to avoid scope issues
+            var startDate = sprint.StartDate.Date;
+            var endDate = sprint.EndDate.Date;
+            var totalDays = (endDate - startDate).Days + 1;
+            
             // ✅ FIXED: Add validation for empty sprint
             if (!tasks.Any())
             {
@@ -621,9 +626,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             var idealBurndown = new List<DailyProgressData>();
             
             // Ensure we're working with date-only values to avoid timezone issues
-            var startDate = sprint.StartDate.Date;
-            var endDate = sprint.EndDate.Date;
-            var totalDays = (endDate - startDate).Days + 1;
+            // Note: startDate, endDate, and totalDays are already calculated above
             
             // ✅ FIXED: Prevent division by zero and handle edge cases
             if (totalDays <= 0)
