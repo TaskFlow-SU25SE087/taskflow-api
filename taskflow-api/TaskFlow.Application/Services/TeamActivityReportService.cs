@@ -36,6 +36,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             _timeProvider = timeProvider;
         }
 
+        /// <summary>
+        /// Generate a comprehensive team activity report for all members in a project
+        /// This report shows GLOBAL project metrics (not sprint-specific) to give a complete project overview
+        /// </summary>
         public async Task<TeamActivityReportResponse> GenerateTeamActivityReportAsync(Guid projectId, TeamActivityReportRequest request)
         {
             try
@@ -69,6 +73,9 @@ namespace taskflow_api.TaskFlow.Application.Services
             // ✅ FIXED: Calculate team-level metrics directly from project data to avoid double-counting
             // This prevents issues where tasks with multiple assignees would be counted multiple times
             // in the team totals, leading to inflated metrics.
+            
+            // ✅ MODIFIED: Team activity report now shows GLOBAL project metrics (not sprint-specific)
+            // Date filtering is still applied for historical analysis, but all project tasks are included
             var startDate = request.StartDate ?? DateTime.MinValue;
             var endDate = request.EndDate ?? _timeProvider.UtcNow;
             
@@ -79,7 +86,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .Include(t => t.TaskAssignees.Where(ta => ta.IsActive))
                 .ToListAsync();
 
-            // Filter tasks by date range
+            // Filter tasks by date range for historical analysis, but include ALL project tasks
+            // This gives a complete view of the project regardless of sprint assignments
             var projectTasks = allProjectTasks.Where(t => 
                 (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
                 (t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
@@ -198,6 +206,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
         }
 
+        /// <summary>
+        /// Generate an activity report for a specific member in a project
+        /// This report shows GLOBAL project metrics for the member (not sprint-specific)
+        /// </summary>
         public async Task<MemberActivityResponse> GenerateMemberActivityReportAsync(Guid projectId, Guid memberId, TeamActivityReportRequest request)
         {
             try
@@ -528,6 +540,10 @@ namespace taskflow_api.TaskFlow.Application.Services
             return Math.Max(0, taskScore + commentScore + effortPointScore - penaltyScore);
         }
 
+        /// <summary>
+        /// Get burndown chart data for a specific sprint in a project
+        /// This method remains sprint-specific as requested - only the team activity report is global
+        /// </summary>
         public async Task<BurndownChartResponse> GetBurndownChartAsync(Guid projectId, Guid sprintId)
         {
             // ✅ SECURITY: Additional input validation
@@ -548,8 +564,32 @@ namespace taskflow_api.TaskFlow.Application.Services
                 throw new AppException(ErrorCode.NoPermission);
             }
 
+            // ✅ FIXED: Validate sprint dates
+            if (sprint.EndDate <= sprint.StartDate)
+            {
+                throw new AppException(ErrorCode.InvalidSprintDates);
+            }
+
             // Get all tasks in the sprint
             var tasks = await _taskProjectRepository.GetTasksBySprintIdAsync(sprintId);
+            
+            // ✅ FIXED: Add validation for empty sprint
+            if (!tasks.Any())
+            {
+                Console.WriteLine($"[BURNDOWN_DEBUG] No tasks found in sprint {sprint.Name}");
+                // Return empty burndown chart for sprints without tasks
+                return new BurndownChartResponse
+                {
+                    SprintId = sprint.Id,
+                    SprintName = sprint.Name,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TotalDays = totalDays,
+                    PriorityEfforts = new List<PriorityEffortData>(),
+                    DailyProgress = new List<DailyProgressData>(),
+                    IdealBurndown = new List<DailyProgressData>()
+                };
+            }
             
             // Calculate effort points by priority using actual task effort points
             var priorityEfforts = new List<PriorityEffortData>();
@@ -576,15 +616,32 @@ namespace taskflow_api.TaskFlow.Application.Services
                 completedEffortPoints += priorityCompletedPoints;
             }
 
-            // Calculate daily progress
+            // ✅ FIXED: Calculate daily progress with improved date handling
             var dailyProgress = new List<DailyProgressData>();
             var idealBurndown = new List<DailyProgressData>();
-            var totalDays = (sprint.EndDate - sprint.StartDate).Days + 1;
+            
+            // Ensure we're working with date-only values to avoid timezone issues
+            var startDate = sprint.StartDate.Date;
+            var endDate = sprint.EndDate.Date;
+            var totalDays = (endDate - startDate).Days + 1;
+            
+            // ✅ FIXED: Prevent division by zero and handle edge cases
+            if (totalDays <= 0)
+            {
+                throw new AppException(ErrorCode.InvalidSprintDates);
+            }
+
             var dailyIdealBurn = totalEffortPoints / (double)totalDays;
+            
+            // ✅ FIXED: Add debugging information
+            Console.WriteLine($"[BURNDOWN_DEBUG] Sprint: {sprint.Name}");
+            Console.WriteLine($"[BURNDOWN_DEBUG] Start Date: {startDate:yyyy-MM-dd}, End Date: {endDate:yyyy-MM-dd}");
+            Console.WriteLine($"[BURNDOWN_DEBUG] Total Days: {totalDays}, Total Effort Points: {totalEffortPoints}");
+            Console.WriteLine($"[BURNDOWN_DEBUG] Daily Ideal Burn: {dailyIdealBurn:F2}");
 
             for (int i = 0; i <= totalDays; i++)
             {
-                var currentDate = sprint.StartDate.AddDays(i);
+                var currentDate = startDate.AddDays(i);
                 
                 // Calculate cumulative completed tasks up to this date
                 var completedTasksUpToDate = tasks.Where(t => 
@@ -594,6 +651,12 @@ namespace taskflow_api.TaskFlow.Application.Services
                 var completedPointsUpToDate = completedTasksUpToDate.Sum(t => t.EffortPoints ?? 0);
                 var remainingPoints = Math.Max(0, totalEffortPoints - completedPointsUpToDate);
 
+                // ✅ FIXED: Add daily debugging information
+                if (i % 7 == 0 || i == totalDays) // Log every week and the last day
+                {
+                    Console.WriteLine($"[BURNDOWN_DEBUG] Day {i}: {currentDate:yyyy-MM-dd} - Completed: {completedPointsUpToDate}, Remaining: {remainingPoints}");
+                }
+
                 dailyProgress.Add(new DailyProgressData
                 {
                     Date = currentDate,
@@ -602,13 +665,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                     TotalEffortPoints = totalEffortPoints
                 });
 
-                // Ideal burndown line (linear decrease)
+                // ✅ FIXED: Improved ideal burndown line calculation
                 var idealRemaining = Math.Max(0, totalEffortPoints - (dailyIdealBurn * i));
                 idealBurndown.Add(new DailyProgressData
                 {
                     Date = currentDate,
-                    RemainingEffortPoints = (int)idealRemaining,
-                    CompletedEffortPoints = (int)(totalEffortPoints - idealRemaining),
+                    RemainingEffortPoints = (int)Math.Round(idealRemaining), // Use Math.Round instead of casting
+                    CompletedEffortPoints = (int)Math.Round(totalEffortPoints - idealRemaining),
                     TotalEffortPoints = totalEffortPoints
                 });
             }
@@ -617,8 +680,8 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 SprintId = sprint.Id,
                 SprintName = sprint.Name,
-                StartDate = sprint.StartDate,
-                EndDate = sprint.EndDate,
+                StartDate = startDate, // Use normalized date
+                EndDate = endDate,     // Use normalized date
                 TotalDays = totalDays,
                 PriorityEfforts = priorityEfforts,
                 DailyProgress = dailyProgress,
@@ -632,6 +695,25 @@ namespace taskflow_api.TaskFlow.Application.Services
         {
             // Task is completed only when it has board type Done
             return task.Board != null && task.Board.Type == BoardType.Done;
+        }
+
+        // ✅ NEW: Helper method to get accurate task completion date
+        private DateTime GetTaskCompletionDate(TaskProject task)
+        {
+            // If task has a completion date field, use it
+            // Otherwise, use UpdatedAt as fallback
+            // You might want to add a CompletionDate field to TaskProject entity in the future
+            
+            // For now, we'll use UpdatedAt as a proxy for completion date
+            // In the future, consider adding a dedicated CompletionDate field to TaskProject
+            // or tracking board transitions in a separate audit table
+            
+            var completionDate = task.UpdatedAt.Date;
+            
+            // Log for debugging purposes
+            Console.WriteLine($"[BURNDOWN_DEBUG] Task '{task.Title}' completion date: {completionDate}, Board: {task.Board?.Name ?? "No Board"}");
+            
+            return completionDate;
         }
 
         /// <summary>

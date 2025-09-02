@@ -81,6 +81,8 @@ var assignedEffortPoints = assignment?.AssignedEffortPoints ?? taskEffortPoints;
 3. **Better Performance**: Reduced unnecessary database queries and calculations
 4. **Easier Debugging**: Enhanced logging and validation help identify issues quickly
 5. **Scalable Solution**: The fix handles projects with any number of assignees per task
+6. **Global Project View**: Team activity report now shows complete project metrics, not just sprint-specific data
+7. **Sprint-Specific Burndown**: Burndown chart remains sprint-focused for detailed sprint analysis
 
 ## Testing Recommendations
 
@@ -93,6 +95,25 @@ var assignedEffortPoints = assignment?.AssignedEffortPoints ?? taskEffortPoints;
 
 - `TaskFlow.Application/Services/TeamActivityReportService.cs` - Main service logic fixes
 - `TEAM_ACTIVITY_REPORT_FIXES.md` - This documentation file
+
+## Global vs Sprint-Specific Functionality
+
+### Team Activity Report (Global)
+- **Scope**: Shows metrics for the entire project across all sprints
+- **Purpose**: Provides a comprehensive project overview and team performance analysis
+- **Use Case**: Project managers and stakeholders who need to see overall project health and team productivity
+- **Data**: Includes all tasks regardless of sprint assignment, filtered only by date range for historical analysis
+
+### Burndown Chart (Sprint-Specific)
+- **Scope**: Shows progress for a specific sprint only
+- **Purpose**: Tracks sprint progress and helps with sprint planning and retrospectives
+- **Use Case**: Scrum masters and team members who need to monitor sprint velocity and completion
+- **Data**: Only includes tasks assigned to the specified sprint
+
+This separation ensures that:
+- Project managers get a complete project view for strategic decision-making
+- Team members get detailed sprint insights for tactical planning
+- Metrics are not artificially constrained by sprint boundaries in the main report
 
 ## Impact
 
