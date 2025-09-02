@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Net;
 using taskflow_api.TaskFlow.Application.DTOs.Common;
 using taskflow_api.TaskFlow.Application.DTOs.Request;
 using taskflow_api.TaskFlow.Application.DTOs.Response;
 using taskflow_api.TaskFlow.Application.Interfaces;
+using taskflow_api.TaskFlow.Application.Services;
+using taskflow_api.TaskFlow.Domain.Common.Enums;
 using taskflow_api.TaskFlow.Domain.Entities;
 
 namespace taskflow_api.TaskFlow.API.Controllers
@@ -15,9 +19,12 @@ namespace taskflow_api.TaskFlow.API.Controllers
     public class UserAdminController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UserAdminController(IUserService userService)
+        private readonly IMemberService _memberService;
+
+        public UserAdminController(IUserService userService, IMemberService memberService)
         {
             _userService = userService;
+            _memberService = memberService;
         }
 
         [HttpGet]
@@ -59,6 +66,21 @@ namespace taskflow_api.TaskFlow.API.Controllers
         {
             var files = await _userService.getListFileProcess(page);
             return ApiResponse<PagedResult<ProcessingFile>>.Success(files);
+        }
+
+        [HttpPost("update-concurrency-stamp")]
+        public async Task<ApiResponse<bool>> UpdateConcurrencyStamp()
+        {
+            await _userService.UpdateConcurrencyStamp();
+            return ApiResponse<bool>.Success(true);
+        }
+
+        [HttpPost("change-leader/{newLeaderId}")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> ChangeLeader([FromRoute] Guid newLeaderId)
+        {
+            await _memberService.ChangeLeader(newLeaderId);
+            return ApiResponse<bool>.Success(true);
         }
     }
 }

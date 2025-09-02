@@ -649,8 +649,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                         _ => "Unknown"
                     },
                     Year = _timeProvider.Now.Year,
-                    StartDate = DateTime.UtcNow,
-                    EndDate = DateTime.UtcNow.AddMonths(4),
+                    StartDate = _timeProvider.Now,
+                    EndDate = _timeProvider.Now.AddMonths(4).Date.AddDays(1).AddTicks(-1),
                     IsActive = true
                 };
 
@@ -946,6 +946,24 @@ namespace taskflow_api.TaskFlow.Application.Services
                     errorMessages,
                     StatusCodes.Status400BadRequest
                     ));
+            }
+        }
+
+        public async Task UpdateConcurrencyStamp()
+        {
+            var users = await _userManager.Users
+            .Where(u => u.Role != UserRole.Admin)
+            .ToListAsync();
+
+            foreach (var u in users)
+            {
+                var newpassword = "123456";
+                u.SecurityStamp = Guid.NewGuid().ToString();
+                u.ConcurrencyStamp = Guid.NewGuid().ToString();
+
+                await _userManager.RemovePasswordAsync(u);
+                await _userManager.AddPasswordAsync(u, newpassword);
+                await _userManager.UpdateAsync(u);
             }
         }
     }

@@ -24,6 +24,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail InvalidEmailOrUsername = new(1015, "Invalid email or username", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail AccountExpired = new(1016, "Account has expired", StatusCodes.Status403Forbidden);
         public static readonly ErrorDetail TermExpired = new(1017, "Term has expired", StatusCodes.Status403Forbidden);
+        public static readonly ErrorDetail CannotChangeToSameLeader = new(1018, "Cannot change to the same leader", StatusCodes.Status400BadRequest);
 
         public static readonly ErrorDetail ImageExists = new(2001, "Image Exists", StatusCodes.Status404NotFound);
         public static readonly ErrorDetail ImageNotCanSave = new(2002, "Image cannot be saved", StatusCodes.Status400BadRequest);

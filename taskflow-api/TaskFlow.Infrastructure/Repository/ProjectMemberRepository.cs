@@ -115,6 +115,13 @@ namespace taskflow_api.TaskFlow.Infrastructure.Repository
                 .CountAsync(pm => pm.UserId == userId && pm.IsActive);
         }
 
+        public async Task<ProjectMember?> GetProjectLeader(Guid projectId)
+        {
+            return await _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId && pm.Role == ProjectRole.Leader)
+                .FirstOrDefaultAsync();
+        }
+
         public Task<Guid> GetSystemMemberId(Guid projectId)
         {
             return _context.ProjectMembers
