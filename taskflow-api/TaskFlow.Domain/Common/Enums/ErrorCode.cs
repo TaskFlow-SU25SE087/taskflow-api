@@ -98,6 +98,7 @@ namespace taskflow_api.TaskFlow.Domain.Common.Enums
         public static readonly ErrorDetail CannotMoveTaskToCompletedSprint = new(9024, "Cannot move task to completed sprint", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail CannotMoveTaskFromCompletedSprint = new(9025, "Cannot move task from completed sprint", StatusCodes.Status400BadRequest);
         public static readonly ErrorDetail InvalidSprintDates = new(9026, "Invalid sprint dates. End date must be after start date", StatusCodes.Status400BadRequest);
+        public static readonly ErrorDetail CannotCompleteSprint = new(9027, "Cannot complete sprint. All tasks must be in the 'Done' status", StatusCodes.Status400BadRequest);
 
     }
 }

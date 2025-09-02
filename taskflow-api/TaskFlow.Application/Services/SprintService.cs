@@ -69,6 +69,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             else if (status.Equals(SprintStatus.Completed))// complete sprint
             {
+                if (sprint.Status.Equals(SprintStatus.NotStarted) ||
+                    sprint.Status.Equals(SprintStatus.Completed))
+                {
+                    throw new AppException(ErrorCode.CannotCompleteSprint);
+                }
                 //create sprint meeting logs
                 await _sprintMeetingLogs.CreateSprintMetting(SpringId);
 
@@ -125,7 +130,7 @@ namespace taskflow_api.TaskFlow.Application.Services
             {
                 throw new AppException(ErrorCode.SprintNameAlreadyExists);
             }
-            if (request.StartDate < DateTime.UtcNow)
+            if (request.StartDate.Date < _timeProvider.Now.Date)
             {
                 throw new AppException(ErrorCode.CannotCreateSprint);
             }
@@ -170,8 +175,8 @@ namespace taskflow_api.TaskFlow.Application.Services
                 // Sprint not found or Project mismatch
                 throw new AppException(ErrorCode.CannotUpdateSprint);
             }
-
-            if (request.StartDate > request.EndDate)
+            
+            if (request.StartDate > request.EndDate || request.StartDate.Date < _timeProvider.Now.Date)
             {
                 throw new AppException(ErrorCode.InvalidDateRange);
             }
