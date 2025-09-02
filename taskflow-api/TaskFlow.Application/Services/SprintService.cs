@@ -69,6 +69,11 @@ namespace taskflow_api.TaskFlow.Application.Services
             }
             else if (status.Equals(SprintStatus.Completed))// complete sprint
             {
+                if (sprint.Status.Equals(SprintStatus.NotStarted) ||
+                    sprint.Status.Equals(SprintStatus.Completed))
+                {
+                    throw new AppException(ErrorCode.CannotCompleteSprint);
+                }
                 //create sprint meeting logs
                 await _sprintMeetingLogs.CreateSprintMetting(SpringId);
 
