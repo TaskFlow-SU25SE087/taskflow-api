@@ -96,6 +96,31 @@ var projectTasks = allProjectTasks; // Include ALL current tasks
 - **Updated tasks** (status changes, board moves) are immediately reflected
 - **Deleted tasks** are immediately reflected (via IsActive = false)
 - **Date filtering** is only applied to comments for historical analysis
+- **Top contributors** now work correctly with complete member data
+- **Recent activity** and **comment activity** work correctly with date filtering
+
+### 6. Fixed Separation of Concerns
+
+**Problem**: The system was trying to use the same data for both metrics and recent activity, causing conflicts.
+
+**Solution**: Separated data into two distinct sets:
+```csharp
+// ✅ FIXED: Separate concerns - task metrics vs recent activity
+var tasksForMetrics = allTasks; // ALL tasks for accurate metrics and top contributors
+
+// Filter tasks for recent activity analysis (date-based)
+var tasksForRecentActivity = allTasks.Where(t => 
+    (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
+    (t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
+    (taskAssignments.Any(ta => ta.RefId == t.Id && ta.CreatedAt >= startDate && ta.CreatedAt <= endDate))
+).ToList();
+```
+
+**What this enables:**
+- **Task metrics** use ALL current tasks for accurate totals and top contributors
+- **Recent activity** uses date-filtered tasks for showing recent work
+- **Comment activity** uses date-filtered comments for showing recent communication
+- **Both features work correctly** without interfering with each other
 
 ## Benefits of the Fixes
 

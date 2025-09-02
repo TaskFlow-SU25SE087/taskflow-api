@@ -155,6 +155,13 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .Take(request.TopContributorsCount)
                 .ToList();
 
+            // ✅ DEBUG: Log top contributors for verification
+            Console.WriteLine($"[DEBUG] Top contributors calculation:");
+            foreach (var contributor in topContributors)
+            {
+                Console.WriteLine($"  - {contributor.FullName}: Score={contributor.ContributionScore}, Completed={contributor.CompletedTasks}, Comments={contributor.TotalComments}, EffortPoints={contributor.CompletedEffortPoints}");
+            }
+
             var summary = new TeamActivitySummary
             {
                 TotalMembers = memberActivities.Count,
@@ -276,51 +283,50 @@ namespace taskflow_api.TaskFlow.Application.Services
                 .ToListAsync();
             Console.WriteLine($"[DEBUG] Found {allTasks.Count} tasks in database");
 
-            // Then filter in memory to avoid LINQ translation issues
-            var tasks = allTasks.Where(t => 
-                // Task was created within the date range
+            // ✅ FIXED: Separate concerns - task metrics vs recent activity
+            // Task metrics (for top contributors): Include ALL current tasks
+            // Recent activity (for activity details): Filter by date range
+            var tasksForMetrics = allTasks; // ALL tasks for accurate metrics and top contributors
+            
+            // Filter tasks for recent activity analysis (date-based)
+            var tasksForRecentActivity = allTasks.Where(t => 
                 (t.CreatedAt >= startDate && t.CreatedAt <= endDate) ||
-                // OR task was completed (moved to Done) within the date range
                 (t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate) ||
-                // OR task was assigned within the date range (for active assignments)
                 (taskAssignments.Any(ta => ta.RefId == t.Id && ta.CreatedAt >= startDate && ta.CreatedAt <= endDate))
             ).ToList();
 
             // ✅ SAFETY: Ensure we have valid data
-            if (tasks == null) tasks = new List<TaskProject>();
+            if (tasksForMetrics == null) tasksForMetrics = new List<TaskProject>();
+            if (tasksForRecentActivity == null) tasksForRecentActivity = new List<TaskProject>();
             if (taskAssignments == null) taskAssignments = new List<TaskAssignee>();
 
             // ✅ DEBUG: Log task inclusion for verification
-            var createdTasks = tasks.Where(t => t.CreatedAt >= startDate && t.CreatedAt <= endDate).Count();
-            var completedTasks = tasks.Where(t => t.Board?.Type == BoardType.Done && t.UpdatedAt >= startDate && t.UpdatedAt <= endDate).Count();
-            var assignedTasks = tasks.Where(t => taskAssignments.Any(ta => ta.RefId == t.Id && ta.CreatedAt >= startDate && ta.CreatedAt <= endDate)).Count();
-            
-            // Log to console for debugging (remove in production)
-            Console.WriteLine($"[DEBUG] Task filtering for member {memberId}:");
-            Console.WriteLine($"  - Total tasks found: {tasks.Count}");
-            Console.WriteLine($"  - Created in date range: {createdTasks}");
-            Console.WriteLine($"  - Completed in date range: {completedTasks}");
-            Console.WriteLine($"  - Assigned in date range: {assignedTasks}");
-            Console.WriteLine($"  - Date range: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+            Console.WriteLine($"[DEBUG] Member {memberId} task metrics:");
+            Console.WriteLine($"  - Total tasks assigned (for metrics): {tasksForMetrics.Count} (ALL current tasks included)");
+            Console.WriteLine($"  - Recent activity tasks (for details): {tasksForRecentActivity.Count} (filtered by date range)");
+            Console.WriteLine($"  - Completed tasks: {tasksForMetrics.Count(t => t.Board?.Type == BoardType.Done)}");
+            Console.WriteLine($"  - In-progress tasks: {tasksForMetrics.Count(t => t.Board?.Type == BoardType.InProgress)}");
+            Console.WriteLine($"  - Todo tasks: {tasksForMetrics.Count(t => t.Board?.Type == BoardType.Todo)}");
+            Console.WriteLine($"  - Date range for recent activity: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
 
-            // Get comments by this member
+            // Get comments by this member (date-filtered for recent activity)
             var comments = await _context.TaskComments
                 .Where(tc => tc.CommenterId == projectMember.Id)
                 .Include(tc => tc.Task)
                 .Where(tc => tc.CreateAt >= startDate && tc.CreateAt <= endDate)
                 .ToListAsync();
 
-            // Calculate task statistics
-            var taskStats = CalculateTaskStats(tasks, taskAssignments);
-            var commentStats = CalculateCommentStats(comments, tasks.Count);
-            var effortPointStats = CalculateEffortPointStats(tasks, taskAssignments);
+            // Calculate task statistics using ALL tasks (for accurate metrics and top contributors)
+            var taskStats = CalculateTaskStats(tasksForMetrics, taskAssignments);
+            var commentStats = CalculateCommentStats(comments, tasksForMetrics.Count);
+            var effortPointStats = CalculateEffortPointStats(tasksForMetrics, taskAssignments);
 
-            // Get detailed task activities if requested
+            // Get detailed task activities using recent activity tasks (date-filtered)
             var taskActivities = request.IncludeTaskDetails 
-                ? await GetTaskActivityDetails(tasks, taskAssignments)
+                ? await GetTaskActivityDetails(tasksForRecentActivity, taskAssignments)
                 : new List<TaskActivityDetail>();
 
-            // Get detailed comment activities if requested
+            // Get detailed comment activities (already date-filtered)
             var commentActivities = request.IncludeCommentDetails
                 ? await GetCommentActivityDetails(comments)
                 : new List<CommentActivityDetail>();
