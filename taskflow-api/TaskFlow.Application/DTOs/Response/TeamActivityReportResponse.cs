@@ -1,4 +1,6 @@
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace taskflow_api.TaskFlow.Application.DTOs.Response
 {
@@ -67,7 +69,9 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
     {
         public Guid TaskId { get; set; }
         public string TaskTitle { get; set; } = string.Empty;
+        [JsonConverter(typeof(StringEnumConverter))]
         public TaskPriority Priority { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
         public BoardType Status { get; set; }
         public DateTime AssignedAt { get; set; }
         public DateTime? CompletedAt { get; set; }

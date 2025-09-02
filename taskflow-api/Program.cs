@@ -85,7 +85,11 @@ builder.Services.AddScoped<ILogProjectRepository, LogProjectRepository>();
 builder.Services.AddScoped<IProcessingFileRepository, ProcessingFileRepository>();
 
 //Signalr
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

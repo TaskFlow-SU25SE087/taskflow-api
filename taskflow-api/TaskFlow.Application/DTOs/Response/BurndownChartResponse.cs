@@ -1,4 +1,6 @@
 using taskflow_api.TaskFlow.Domain.Common.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace taskflow_api.TaskFlow.Application.DTOs.Response
 {
@@ -16,6 +18,7 @@ namespace taskflow_api.TaskFlow.Application.DTOs.Response
 
     public class PriorityEffortData
     {
+        [JsonConverter(typeof(StringEnumConverter))]
         public TaskPriority Priority { get; set; }
         public string PriorityName { get; set; } = string.Empty;
         public int TotalEffortPoints { get; set; }

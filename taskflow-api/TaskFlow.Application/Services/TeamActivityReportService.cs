@@ -355,6 +355,14 @@ namespace taskflow_api.TaskFlow.Application.Services
             var stats = new TaskActivityStats();
             var now = _timeProvider.UtcNow;
 
+            // ✅ DEBUG: Log priority breakdown calculation
+            Console.WriteLine($"[DEBUG] Calculating task stats for {tasks.Count} tasks");
+            var priorityCounts = new Dictionary<TaskPriority, int>();
+            foreach (TaskPriority priority in Enum.GetValues(typeof(TaskPriority)))
+            {
+                priorityCounts[priority] = 0;
+            }
+
             foreach (var task in tasks)
             {
                 stats.TotalAssigned++;
@@ -374,6 +382,7 @@ namespace taskflow_api.TaskFlow.Application.Services
                 }
 
                 // Count by priority
+                priorityCounts[task.Priority]++;
                 switch (task.Priority)
                 {
                     case TaskPriority.High:
@@ -388,6 +397,11 @@ namespace taskflow_api.TaskFlow.Application.Services
                     case TaskPriority.Urgent:
                         stats.UrgentPriorityTasks++;
                         break;
+                    default:
+                        // Handle any unexpected priority values by defaulting to High
+                        Console.WriteLine($"[WARNING] Task '{task.Title}' has unexpected priority value: {task.Priority}. Defaulting to High.");
+                        stats.HighPriorityTasks++;
+                        break;
                 }
 
                 // Check if overdue
@@ -401,6 +415,13 @@ namespace taskflow_api.TaskFlow.Application.Services
             stats.CompletionRate = stats.TotalAssigned > 0 
                 ? (double)stats.TotalCompleted / stats.TotalAssigned * 100 
                 : 0;
+
+            // ✅ DEBUG: Log priority breakdown results
+            Console.WriteLine($"[DEBUG] Priority breakdown results:");
+            Console.WriteLine($"  - High: {stats.HighPriorityTasks} (expected: {priorityCounts[TaskPriority.High]})");
+            Console.WriteLine($"  - Medium: {stats.MediumPriorityTasks} (expected: {priorityCounts[TaskPriority.Medium]})");
+            Console.WriteLine($"  - Low: {stats.LowPriorityTasks} (expected: {priorityCounts[TaskPriority.Low]})");
+            Console.WriteLine($"  - Urgent: {stats.UrgentPriorityTasks} (expected: {priorityCounts[TaskPriority.Urgent]})");
 
             return stats;
         }
